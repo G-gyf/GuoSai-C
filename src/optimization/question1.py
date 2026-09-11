@@ -43,7 +43,9 @@ class Q1Parameters:
     max_soc_kwh: float = 10800.0
     max_charge_power_kw: float = 5000.0
     max_discharge_power_kw: float = 5000.0
-    max_battery_ramp_power_kw: float = 2000.0
+    # The formal Question 1 model has no hard battery-ramp limit.  A positive
+    # value activates that engineering extension for sensitivity analysis only.
+    max_battery_ramp_power_kw: float | None = None
     smoothing_cost_slack_rate: float = 0.0005
     charge_efficiency: float = 0.9
     discharge_efficiency: float = 0.9
@@ -59,7 +61,9 @@ class Q1Parameters:
         return self.max_discharge_power_kw * self.interval_hours
 
     @property
-    def max_battery_ramp_kwh(self) -> float:
+    def max_battery_ramp_kwh(self) -> float | None:
+        if self.max_battery_ramp_power_kw is None:
+            return None
         return self.max_battery_ramp_power_kw * self.interval_hours
 
 
@@ -80,7 +84,13 @@ def _display_time_label(value: Any) -> str:
 
 
 def load_question1_inputs(path: Path | str) -> pd.DataFrame:
-    """Read and validate the 144-row representative day in attachment 1."""
+    """Read attachment 1 and align every value to its physical delivery interval.
+
+    Attachment 1 records endpoint load/PV observations (00:10, ..., 00:00+1)
+    but interval-start tariffs.  Hence interval [t, t+10 min] uses the tariff
+    in the row labelled t and the load/PV in the following row.  The returned
+    frame is ordered chronologically from 00:00--00:10 to 23:50--00:00+1.
+    """
     source = Path(path)
     frame = pd.read_excel(source, sheet_name=0)
     if frame.shape != (SLOTS_PER_DAY, 4):
@@ -95,17 +105,53 @@ def load_question1_inputs(path: Path | str) -> pd.DataFrame:
     if (numeric < 0).any().any():
         raise ValueError("Price, load and photovoltaic power must be non-negative")
 
-    return pd.DataFrame(
+    source_labels = np.asarray(
+        [_display_time_label(value) for value in frame.iloc[:, 0]], dtype=object
+    )
+    # Raw rows are 00:10, ..., 23:50, 00:00+1.  For physical interval k:
+    # price row = k-1 (cyclic), demand row = k, result-template row = k-1.
+    price_source = np.r_[SLOTS_PER_DAY - 1, np.arange(SLOTS_PER_DAY - 1)]
+    demand_source = np.arange(SLOTS_PER_DAY)
+    result_row_index = np.r_[SLOTS_PER_DAY, np.arange(1, SLOTS_PER_DAY)]
+    start_minutes = np.arange(SLOTS_PER_DAY, dtype=int) * 10
+
+    def clock_label(minute: int, *, endpoint: bool = False) -> str:
+        if endpoint and minute == 24 * 60:
+            return "0:00+1"
+        minute %= 24 * 60
+        return f"{minute // 60:02d}:{minute % 60:02d}"
+
+    result = pd.DataFrame(
         {
             "slot_index": np.arange(1, SLOTS_PER_DAY + 1, dtype=int),
-            "time_label": [_display_time_label(value) for value in frame.iloc[:, 0]],
-            "clock_minute": [parse_time_label(value)[0] for value in frame.iloc[:, 0]],
-            "is_next_day": [parse_time_label(value)[1] for value in frame.iloc[:, 0]],
-            "price_yuan_per_kwh": numeric.iloc[:, 0].to_numpy(dtype=float),
-            "load_kw": numeric.iloc[:, 1].to_numpy(dtype=float),
-            "pv_kw": numeric.iloc[:, 2].to_numpy(dtype=float),
+            "time_label": [clock_label(value) for value in start_minutes],
+            "delivery_interval": [
+                f"{clock_label(value)}-{clock_label(value + 10, endpoint=True)}"
+                for value in start_minutes
+            ],
+            "clock_minute": start_minutes,
+            "is_next_day": np.zeros(SLOTS_PER_DAY, dtype=bool),
+            "price_source_row_index": price_source + 1,
+            "price_source_time_label": source_labels[price_source],
+            "demand_source_row_index": demand_source + 1,
+            "demand_source_time_label": source_labels[demand_source],
+            # 1-based data-row order in result1.xlsx: 1 is 00:10-00:20 and
+            # 144 is 00:00+1-00:10+1.
+            "result_row_index": result_row_index,
+            "price_yuan_per_kwh": numeric.iloc[price_source, 0].to_numpy(dtype=float),
+            "load_kw": numeric.iloc[demand_source, 1].to_numpy(dtype=float),
+            "pv_kw": numeric.iloc[demand_source, 2].to_numpy(dtype=float),
         }
     )
+    if not (
+        result.iloc[0]["time_label"] == "00:00"
+        and result.iloc[0]["price_source_time_label"] == "0:00+1"
+        and result.iloc[0]["demand_source_time_label"] == "00:10"
+        and result.iloc[-1]["time_label"] == "23:50"
+        and result.iloc[-1]["demand_source_time_label"] == "0:00+1"
+    ):
+        raise RuntimeError("Question 1 tariff/demand temporal alignment failed")
+    return result
 
 
 def _build_equalities(
@@ -113,7 +159,13 @@ def _build_equalities(
     pv_kwh: np.ndarray,
     parameters: Q1Parameters,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Build balance, storage-transition and terminal-state equalities."""
+    """Build the physical-interval balance and SOC equalities.
+
+    ``load_kwh[t]`` and ``pv_kwh[t]`` are the endpoint observations for the
+    interval, while the price paired with the decision is the preceding source
+    row.  With the loader's physical ordering, SOC starts at 6000 kWh at 00:00
+    and the last transition ends at 6000 kWh at 00:00+1.
+    """
     n = len(load_kwh)
     variable_count = 5 * n
     grid, charge, discharge, curtailment, soc = 0, n, 2 * n, 3 * n, 4 * n
@@ -142,12 +194,16 @@ def _build_equalities(
     return matrix, rhs
 
 
-def _variable_bounds(n: int, parameters: Q1Parameters) -> list[tuple[float, float | None]]:
+def _variable_bounds(
+    n: int,
+    parameters: Q1Parameters,
+    pv_kwh: np.ndarray,
+) -> list[tuple[float, float | None]]:
     return (
         [(0.0, None)] * n
         + [(0.0, parameters.max_charge_kwh)] * n
         + [(0.0, parameters.max_discharge_kwh)] * n
-        + [(0.0, None)] * n
+        + [(0.0, float(value)) for value in pv_kwh]
         + [(parameters.min_soc_kwh, parameters.max_soc_kwh)] * n
     )
 
@@ -158,8 +214,8 @@ def _build_battery_ramp_inequalities(
     variable_count: int,
     *,
     include_variation_epigraphs: bool,
-) -> tuple[np.ndarray, np.ndarray]:
-    """Build the cyclic battery ramp constraint and its variation epigraph."""
+) -> tuple[np.ndarray | None, np.ndarray | None]:
+    """Build optional hard ramp rows and/or the cyclic variation epigraph."""
     rows: list[np.ndarray] = []
     rhs: list[float] = []
     charge, discharge = n, 2 * n
@@ -173,13 +229,14 @@ def _build_battery_ramp_inequalities(
         battery_delta[charge + previous] = -1.0
         battery_delta[discharge + previous] = 1.0
 
-        rows.extend([battery_delta, -battery_delta])
-        rhs.extend(
-            [
-                parameters.max_battery_ramp_kwh,
-                parameters.max_battery_ramp_kwh,
-            ]
-        )
+        if parameters.max_battery_ramp_kwh is not None:
+            rows.extend([battery_delta, -battery_delta])
+            rhs.extend(
+                [
+                    parameters.max_battery_ramp_kwh,
+                    parameters.max_battery_ramp_kwh,
+                ]
+            )
 
         if include_variation_epigraphs:
             positive_battery = battery_delta.copy()
@@ -189,17 +246,103 @@ def _build_battery_ramp_inequalities(
             rows.extend([positive_battery, negative_battery])
             rhs.extend([0.0, 0.0])
 
+    if not rows:
+        return None, None
     return np.asarray(rows), np.asarray(rhs)
 
 
-def _solve_three_stage_lp(inputs: pd.DataFrame, parameters: Q1Parameters) -> tuple[np.ndarray, dict[str, Any]]:
-    """Solve cost, smoothness and throughput objectives in strict lexicographic order."""
+def _solve_main_two_stage_lp(
+    inputs: pd.DataFrame,
+    parameters: Q1Parameters,
+) -> tuple[np.ndarray, dict[str, Any]]:
+    """Solve pure arbitrage, then minimize throughput at the same optimal cost."""
+    if parameters.max_battery_ramp_power_kw is not None:
+        raise ValueError("The formal main model cannot include a hard battery-ramp limit")
+
     n = len(inputs)
     price = inputs["price_yuan_per_kwh"].to_numpy(dtype=float)
     load_kwh = inputs["load_kw"].to_numpy(dtype=float) * parameters.interval_hours
     pv_kwh = inputs["pv_kw"].to_numpy(dtype=float) * parameters.interval_hours
     equalities, equality_rhs = _build_equalities(load_kwh, pv_kwh, parameters)
-    bounds = _variable_bounds(n, parameters)
+    bounds = _variable_bounds(n, parameters, pv_kwh)
+
+    cost_objective = np.zeros(5 * n, dtype=float)
+    cost_objective[:n] = price
+    first = linprog(
+        cost_objective,
+        A_eq=equalities,
+        b_eq=equality_rhs,
+        bounds=bounds,
+        method="highs",
+        options={"presolve": True},
+    )
+    if not first.success:
+        raise RuntimeError(f"Question 1 main cost LP failed: {first.message}")
+
+    balance_shadow_price = np.asarray(first.eqlin.marginals[:n], dtype=float)
+    storage_water_value = -np.asarray(first.eqlin.marginals[n : 2 * n], dtype=float)
+    soc_lower_shadow_value = np.maximum(
+        np.asarray(first.lower.marginals[4 * n : 5 * n], dtype=float), 0.0
+    )
+    soc_upper_shadow_value = np.maximum(
+        -np.asarray(first.upper.marginals[4 * n : 5 * n], dtype=float), 0.0
+    )
+
+    # This is only a numerical feasibility allowance.  It is roughly 1e-10 of
+    # the optimal bill, not the 0.05% economic allowance used by the extension.
+    cost_tolerance = max(1e-7, 1e-10 * abs(float(first.fun)))
+    tie_break_cost_cap = float(first.fun) + cost_tolerance
+    throughput_objective = np.zeros(5 * n, dtype=float)
+    throughput_objective[n : 3 * n] = 1.0
+    second = linprog(
+        throughput_objective,
+        A_ub=cost_objective.reshape(1, -1),
+        b_ub=np.asarray([tie_break_cost_cap]),
+        A_eq=equalities,
+        b_eq=equality_rhs,
+        bounds=bounds,
+        method="highs",
+        options={"presolve": True},
+    )
+    if not second.success:
+        raise RuntimeError(f"Question 1 main throughput LP failed: {second.message}")
+
+    metadata = {
+        "solver": "scipy.optimize.linprog(method='highs')",
+        "model_class": "continuous_linear_programming",
+        "model_variant": "formal_main_no_ramp_pure_arbitrage",
+        "optimization_stages": 2,
+        "hard_battery_ramp_constraint_active": False,
+        "unconstrained_reference_cost_yuan": float(first.fun),
+        "primary_status": int(first.status),
+        "primary_message": first.message,
+        "primary_optimal_cost_yuan": float(first.fun),
+        "cost_tolerance_yuan": float(cost_tolerance),
+        "tie_break_cost_cap_yuan": float(tie_break_cost_cap),
+        "secondary_status": int(second.status),
+        "secondary_message": second.message,
+        "secondary_cost_yuan": float(cost_objective @ second.x),
+        "secondary_throughput_kwh": float(throughput_objective @ second.x),
+        "_primary_balance_shadow_price": balance_shadow_price,
+        "_primary_storage_water_value": storage_water_value,
+        "_primary_soc_lower_shadow_value": soc_lower_shadow_value,
+        "_primary_soc_upper_shadow_value": soc_upper_shadow_value,
+        "_primary_battery_ramp_shadow_value": np.zeros(n, dtype=float),
+        "_primary_battery_ramp_binding": np.zeros(n, dtype=bool),
+    }
+    return second.x, metadata
+
+
+def _solve_three_stage_lp(inputs: pd.DataFrame, parameters: Q1Parameters) -> tuple[np.ndarray, dict[str, Any]]:
+    """Solve the hard-ramp extension: cost, smoothness, then throughput."""
+    if parameters.max_battery_ramp_power_kw is None:
+        raise ValueError("The three-stage extension requires a hard battery-ramp limit")
+    n = len(inputs)
+    price = inputs["price_yuan_per_kwh"].to_numpy(dtype=float)
+    load_kwh = inputs["load_kw"].to_numpy(dtype=float) * parameters.interval_hours
+    pv_kwh = inputs["pv_kw"].to_numpy(dtype=float) * parameters.interval_hours
+    equalities, equality_rhs = _build_equalities(load_kwh, pv_kwh, parameters)
+    bounds = _variable_bounds(n, parameters, pv_kwh)
 
     cost_objective = np.zeros(5 * n, dtype=float)
     cost_objective[:n] = price
@@ -245,14 +388,18 @@ def _solve_three_stage_lp(inputs: pd.DataFrame, parameters: Q1Parameters) -> tup
     soc_upper_shadow_value = np.maximum(
         -np.asarray(first.upper.marginals[4 * n : 5 * n], dtype=float), 0.0
     )
-    ramp_marginals = np.asarray(first.ineqlin.marginals, dtype=float)
-    ramp_residuals = np.asarray(first.ineqlin.residual, dtype=float)
-    battery_ramp_shadow_value = -(
-        ramp_marginals[0::2] + ramp_marginals[1::2]
-    )
-    battery_ramp_binding = (
-        np.minimum(ramp_residuals[0::2], ramp_residuals[1::2]) <= 1e-7
-    )
+    if ramp_matrix is None:
+        battery_ramp_shadow_value = np.zeros(n, dtype=float)
+        battery_ramp_binding = np.zeros(n, dtype=bool)
+    else:
+        ramp_marginals = np.asarray(first.ineqlin.marginals, dtype=float)
+        ramp_residuals = np.asarray(first.ineqlin.residual, dtype=float)
+        battery_ramp_shadow_value = -(
+            ramp_marginals[0::2] + ramp_marginals[1::2]
+        )
+        battery_ramp_binding = (
+            np.minimum(ramp_residuals[0::2], ramp_residuals[1::2]) <= 1e-7
+        )
 
     cost_tolerance = max(1e-7, 1e-10 * abs(float(first.fun)))
     smoothing_cost_cap = (
@@ -314,7 +461,11 @@ def _solve_three_stage_lp(inputs: pd.DataFrame, parameters: Q1Parameters) -> tup
     metadata = {
         "solver": "scipy.optimize.linprog(method='highs')",
         "model_class": "continuous_linear_programming",
+        "model_variant": "extension_hard_ramp_three_stage",
         "optimization_stages": 3,
+        "hard_battery_ramp_constraint_active": (
+            parameters.max_battery_ramp_power_kw is not None
+        ),
         "unconstrained_reference_cost_yuan": float(unconstrained_reference.fun),
         "primary_status": int(first.status),
         "primary_message": first.message,
@@ -398,10 +549,11 @@ def _build_outputs(
     schedule["primary_soc_upper_shadow_value_yuan_per_kwh"] = (
         soc_upper_shadow_value
     )
-    schedule["primary_battery_ramp_shadow_value_yuan_per_kwh"] = (
-        battery_ramp_shadow_value
-    )
-    schedule["primary_battery_ramp_binding"] = battery_ramp_binding
+    if parameters.max_battery_ramp_power_kw is not None:
+        schedule["extension_battery_ramp_shadow_value_yuan_per_kwh"] = (
+            battery_ramp_shadow_value
+        )
+        schedule["extension_battery_ramp_binding"] = battery_ramp_binding
     schedule["block"] = schedule["clock_minute"].map(_block_name)
 
     block_order = [f"{hour}:00-{hour + 4}:00" for hour in range(0, 24, 4)]
@@ -424,9 +576,12 @@ def _build_outputs(
     baseline_purchase = np.maximum(schedule["load_kwh"] - schedule["pv_kwh"], 0.0)
     baseline_cost = float(np.dot(schedule["price_yuan_per_kwh"], baseline_purchase))
     total_cost = float(schedule["interval_cost_yuan"].sum())
+    parameter_payload = asdict(parameters)
+    if not solver_metadata["hard_battery_ramp_constraint_active"]:
+        parameter_payload.pop("smoothing_cost_slack_rate", None)
     summary: dict[str, Any] = {
         **solver_metadata,
-        "parameters": asdict(parameters),
+        "parameters": parameter_payload,
         "total_purchase_kwh": float(grid.sum()),
         "total_cost_yuan": total_cost,
         "total_charge_kwh": float(charge.sum()),
@@ -438,13 +593,27 @@ def _build_outputs(
         "baseline_cost_yuan": baseline_cost,
         "cost_saving_yuan": baseline_cost - total_cost,
         "cost_saving_rate": (baseline_cost - total_cost) / baseline_cost,
-        "engineering_cost_increase_yuan": (
-            total_cost - solver_metadata["unconstrained_reference_cost_yuan"]
+        "final_cost_increase_vs_primary_yuan": (
+            total_cost - solver_metadata["primary_optimal_cost_yuan"]
         ),
-        "engineering_cost_increase_rate": (
-            total_cost / solver_metadata["unconstrained_reference_cost_yuan"] - 1.0
+        "final_cost_increase_vs_primary_rate": (
+            total_cost / solver_metadata["primary_optimal_cost_yuan"] - 1.0
         ),
     }
+    if solver_metadata["hard_battery_ramp_constraint_active"]:
+        summary["engineering_cost_increase_yuan"] = (
+            total_cost - solver_metadata["unconstrained_reference_cost_yuan"]
+        )
+        summary["engineering_cost_increase_rate"] = (
+            total_cost / solver_metadata["unconstrained_reference_cost_yuan"] - 1.0
+        )
+    else:
+        summary["pure_arbitrage_cost_gap_yuan"] = (
+            total_cost - solver_metadata["primary_optimal_cost_yuan"]
+        )
+        summary["pure_arbitrage_cost_gap_rate"] = (
+            total_cost / solver_metadata["primary_optimal_cost_yuan"] - 1.0
+        )
     validation = validate_solution(schedule, summary, parameters)
     return Q1Solution(schedule, block_summary, selected, summary, validation)
 
@@ -490,9 +659,23 @@ def validate_solution(
         1,
         np.where(schedule["discharge_kwh"].to_numpy(dtype=float) > tol, -1, 0),
     )
+    cost_cap = float(
+        summary.get(
+            "smoothing_cost_cap_yuan",
+            summary.get("tie_break_cost_cap_yuan", summary["total_cost_yuan"]),
+        )
+    )
+    variation_target = summary.get("secondary_total_variation_kwh")
+    variation_tolerance = float(summary.get("variation_tolerance_kwh", 0.0))
+    variation_gap = (
+        final_battery_total_variation_kwh - float(variation_target)
+        if variation_target is not None
+        else 0.0
+    )
     checks = {
         "status": "PASS",
         "slot_count": int(len(schedule)),
+        "initial_soc_kwh": float(schedule["soc_start_kwh"].iloc[0]),
         "max_balance_residual_kwh": float(balance.abs().max()),
         "max_soc_transition_residual_kwh": float(soc_transition.abs().max()),
         "min_soc_kwh": float(schedule["soc_end_kwh"].min()),
@@ -504,7 +687,7 @@ def validate_solution(
         "minimum_grid_purchase_kwh": float(schedule["grid_purchase_kwh"].min()),
         "minimum_curtailment_kwh": float(schedule["curtailment_kwh"].min()),
         "observed_max_grid_ramp_power_kw": float(grid_ramp_kw.max()),
-        "max_battery_ramp_power_kw": float(battery_ramp_kw.max()),
+        "observed_max_battery_net_power_change_kw": float(battery_ramp_kw.max()),
         "final_battery_total_variation_kwh": final_battery_total_variation_kwh,
         "operating_mode_changes_including_wrap": int(
             (operating_mode != np.roll(operating_mode, 1)).sum()
@@ -515,13 +698,10 @@ def validate_solution(
                 - np.dot(schedule["price_yuan_per_kwh"], schedule["grid_purchase_kwh"])
             )
         ),
-        "smoothing_cost_cap_margin_yuan": float(
-            summary["smoothing_cost_cap_yuan"] - summary["total_cost_yuan"]
+        "objective_cost_cap_margin_yuan": float(
+            cost_cap - summary["total_cost_yuan"]
         ),
-        "variation_preservation_gap_kwh": float(
-            final_battery_total_variation_kwh
-            - summary["secondary_total_variation_kwh"]
-        ),
+        "variation_preservation_gap_kwh": float(variation_gap),
     }
     failures = []
     if len(schedule) != SLOTS_PER_DAY:
@@ -530,6 +710,8 @@ def validate_solution(
         failures.append("power_balance")
     if checks["max_soc_transition_residual_kwh"] > tol:
         failures.append("soc_transition")
+    if abs(checks["initial_soc_kwh"] - parameters.initial_soc_kwh) > tol:
+        failures.append("initial_soc")
     if checks["min_soc_kwh"] < parameters.min_soc_kwh - tol:
         failures.append("soc_lower_bound")
     if checks["max_soc_kwh"] > parameters.max_soc_kwh + tol:
@@ -546,13 +728,17 @@ def validate_solution(
         failures.append("grid_purchase_nonnegative")
     if checks["minimum_curtailment_kwh"] < -tol:
         failures.append("curtailment_nonnegative")
-    if checks["max_battery_ramp_power_kw"] > parameters.max_battery_ramp_power_kw + tol:
+    if (
+        parameters.max_battery_ramp_power_kw is not None
+        and checks["observed_max_battery_net_power_change_kw"]
+        > parameters.max_battery_ramp_power_kw + tol
+    ):
         failures.append("battery_ramp_limit")
     if checks["cost_recalculation_error_yuan"] > tol:
         failures.append("cost_recalculation")
-    if checks["smoothing_cost_cap_margin_yuan"] < -tol:
-        failures.append("smoothing_cost_cap")
-    if checks["variation_preservation_gap_kwh"] > summary["variation_tolerance_kwh"] + tol:
+    if checks["objective_cost_cap_margin_yuan"] < -tol:
+        failures.append("objective_cost_cap")
+    if variation_target is not None and checks["variation_preservation_gap_kwh"] > variation_tolerance + tol:
         failures.append("lexicographic_variation")
     if failures:
         checks["status"] = "FAIL"
@@ -567,6 +753,15 @@ def solve_question1(
     parameters: Q1Parameters | None = None,
 ) -> Q1Solution:
     parameters = parameters or Q1Parameters()
+    vector, metadata = _solve_main_two_stage_lp(inputs, parameters)
+    return _build_outputs(inputs, vector, metadata, parameters)
+
+
+def solve_question1_ramp_extension(
+    inputs: pd.DataFrame,
+    parameters: Q1Parameters,
+) -> Q1Solution:
+    """Solve the three-stage hard-ramp extension used only for sensitivity."""
     vector, metadata = _solve_three_stage_lp(inputs, parameters)
     return _build_outputs(inputs, vector, metadata, parameters)
 
@@ -585,7 +780,7 @@ def run_battery_ramp_sensitivity(
             raise ValueError("Battery ramp-power limits must be positive finite values")
         parameters = replace(base, max_battery_ramp_power_kw=value)
         try:
-            solution = solve_question1(inputs, parameters)
+            solution = solve_question1_ramp_extension(inputs, parameters)
         except RuntimeError as error:
             rows.append(
                 {
@@ -616,7 +811,7 @@ def run_battery_ramp_sensitivity(
                 "final_cost_increase_rate": summary["engineering_cost_increase_rate"],
                 "cost_saving_rate": summary["cost_saving_rate"],
                 "observed_max_battery_ramp_power_kw": validation[
-                    "max_battery_ramp_power_kw"
+                    "observed_max_battery_net_power_change_kw"
                 ],
                 "battery_total_variation_kwh": validation[
                     "final_battery_total_variation_kwh"
@@ -675,7 +870,6 @@ def _write_battery_ramp_sensitivity(
         academic_green = "#72AD98"
         warm_gray = "#D4A35F"
         cool_gray = "#9275A8"
-        reference_gray = "#C4C8CD"
         marker_style = {"markersize": 3.0, "markeredgewidth": 0.7}
 
         axes[0].plot(
@@ -697,9 +891,6 @@ def _write_battery_ramp_sensitivity(
             linewidth=1.05,
             label="最终成本增幅",
             **marker_style,
-        )
-        axes[0].axvline(
-            2000.0, color=reference_gray, linestyle="--", linewidth=0.9, zorder=0
         )
         axes[0].set_title("(a) 经济性代价", loc="left", fontweight="bold")
         axes[0].set_xlabel("储能净功率变化上限（kW/10 min）")
@@ -727,9 +918,6 @@ def _write_battery_ramp_sensitivity(
             label="模式切换次数",
             **marker_style,
         )
-        axes[1].axvline(
-            2000.0, color=reference_gray, linestyle="--", linewidth=0.9, zorder=0
-        )
         axes[1].set_title("(b) 运行平滑性", loc="left", fontweight="bold")
         axes[1].set_xlabel("储能净功率变化上限（kW/10 min）")
         axes[1].set_ylabel("净动作总变差（MWh）")
@@ -750,18 +938,10 @@ def _write_battery_ramp_sensitivity(
         switch_axis.spines["top"].set_visible(False)
         switch_axis.spines["right"].set_color("#8F969E")
         switch_axis.tick_params(direction="out", length=2.5, width=0.6, colors="#40464D")
-        axes[0].annotate(
-            "基准",
-            xy=(2000.0, np.interp(2000.0, x, final_cost)),
-            xytext=(5, 7),
-            textcoords="offset points",
-            fontsize=6.8,
-            color="#777D84",
-        )
         fig.text(
             0.5,
             0.012,
-            "注：横轴采用对数尺度；浅灰虚线为基准情景 2000 kW/10 min。成本增幅均相对无爬坡理论最优成本计算。",
+            "注：本图仅为拓展分析，横轴采用对数尺度；正式主结果不设置硬爬坡约束。成本增幅均相对无硬爬坡约束的第一阶段最优成本计算。",
             ha="center",
             va="bottom",
             fontsize=6.8,
@@ -1036,7 +1216,7 @@ def _write_figures_cn(solution: Q1Solution, output_dir: Path) -> list[Path]:
         figure1.text(
             0.5,
             0.012,
-            "注：无储能基准为逐时段购电量 max(负荷电量−光伏电量, 0)，不配置储能且不售电。基准情景：储能净功率变化上限 2000 kW/10 min，ε=0.05%，充放电效率均为 90%，SOC 为 1200–10800 kWh，0:00 与 24:00 储电量均为 6000 kWh。",
+            "注：无储能基准为逐时段购电量 max(负荷电量−光伏电量, 0)，不配置储能且不售电。主结果为无硬爬坡约束的纯套利最优方案；第二阶段仅在数值容差内最小化吞吐量，不设置经济成本裕度。充放电效率均为 90%，SOC 为 1200–10800 kWh，00:00 与 00:00+1 储电量均为 6000 kWh。",
             ha="center",
             va="bottom",
             fontsize=7.0,
@@ -1141,7 +1321,7 @@ def _write_figures_cn(solution: Q1Solution, output_dir: Path) -> list[Path]:
             time_hours,
             optimized_cumulative / 1000.0,
             color=colors["blue"],
-            label="三阶段最优方案",
+            label="无爬坡套利主结果",
         )
         axes2[2].fill_between(
             time_hours,
@@ -1173,7 +1353,7 @@ def _write_figures_cn(solution: Q1Solution, output_dir: Path) -> list[Path]:
         figure2.text(
             0.5,
             0.012,
-            "注：累计成本按各时段电价×购电量计算；节省归因为高价时段少购电形成的费用减少，扣除低价时段为储能充电而增加的购电费用。基准情景参数同图1。",
+            "注：累计成本按各时段电价×购电量计算；节省归因为高价时段少购电形成的费用减少，扣除低价时段为储能充电而增加的购电费用。正式主结果参数同图1。",
             ha="center",
             va="bottom",
             fontsize=7.0,
@@ -1207,9 +1387,6 @@ def _write_figures_cn(solution: Q1Solution, output_dir: Path) -> list[Path]:
         ].to_numpy(dtype=float)
         soc_upper_shadow = schedule[
             "primary_soc_upper_shadow_value_yuan_per_kwh"
-        ].to_numpy(dtype=float)
-        ramp_shadow = schedule[
-            "primary_battery_ramp_shadow_value_yuan_per_kwh"
         ].to_numpy(dtype=float)
         charge_efficiency = float(parameters["charge_efficiency"])
         discharge_efficiency = float(parameters["discharge_efficiency"])
@@ -1274,9 +1451,8 @@ def _write_figures_cn(solution: Q1Solution, output_dir: Path) -> list[Path]:
             )
 
         shadow_rows = [
-            (ramp_shadow, 1.0, colors["purple"]),
-            (soc_lower_shadow, 2.0, colors["blue"]),
-            (soc_upper_shadow, 3.0, colors["vermillion"]),
+            (soc_lower_shadow, 1.0, colors["blue"]),
+            (soc_upper_shadow, 2.0, colors["vermillion"]),
         ]
         for shadow_values, row, base_color in shadow_rows:
             active = shadow_values > 1e-10
@@ -1291,14 +1467,13 @@ def _write_figures_cn(solution: Q1Solution, output_dir: Path) -> list[Path]:
                 linewidth=0,
             )
         axes3[1].set_yticks(
-            [1, 2, 3],
+            [1, 2],
             [
-                f"储能爬坡  max={ramp_shadow.max():.3f}",
                 f"SOC 下限  max={soc_lower_shadow.max():.3f}",
                 f"SOC 上限  max={soc_upper_shadow.max():.3f}",
             ],
         )
-        axes3[1].set_ylim(0.55, 3.45)
+        axes3[1].set_ylim(0.55, 2.45)
         axes3[1].set_title(
             "(b) 约束触界时段及影子价格强度",
             loc="left",
@@ -1320,7 +1495,7 @@ def _write_figures_cn(solution: Q1Solution, output_dir: Path) -> list[Path]:
         figure3.text(
             0.5,
             0.012,
-            "注：对偶量及约束影子价格均来自第一阶段成本最小化 LP；η=0.90。π/η 与 η·π 分别给出理想充电和放电边界；(b) 各行独立归一化色阶，仅比较同类约束内部强度。基准情景参数同图1。",
+            "注：对偶量及约束影子价格均来自无硬爬坡约束的第一阶段成本最小化 LP；η=0.90。π/η 与 η·π 分别给出理想充电和放电边界；(b) 各行独立归一化色阶，仅比较同类约束内部强度。主结果参数同图1。",
             ha="center",
             va="bottom",
             fontsize=7.0,
@@ -1652,7 +1827,7 @@ def _write_word_combined_figure(solution: Q1Solution, output_dir: Path) -> Path:
             optimized_cumulative / 1000.0,
             color=colors["blue"],
             linewidth=1.2,
-            label="三阶段最优",
+            label="无爬坡套利主结果",
         )
         right_axes[2].fill_between(
             time_hours,
@@ -1684,7 +1859,7 @@ def _write_word_combined_figure(solution: Q1Solution, output_dir: Path) -> Path:
         figure.text(
             0.5,
             0.025,
-            "注：无储能基准为逐时段购电量 max(负荷电量−光伏电量, 0)，不配置储能且不售电；基准情景为储能净功率变化上限 2000 kW/10 min、ε=0.05%、充放电效率均为 90%。",
+            "注：无储能基准为逐时段购电量 max(负荷电量−光伏电量, 0)，不配置储能且不售电；主结果为无硬爬坡约束的纯套利最优方案，第二阶段只作等成本最小吞吐量择优。充放电效率均为 90%，00:00 与 00:00+1 储电量均为 6000 kWh。",
             ha="center",
             va="bottom",
             fontsize=6.7,
@@ -1712,7 +1887,9 @@ def _write_csv_and_json(solution: Q1Solution, output_dir: Path) -> tuple[Path, P
     }
     summary_path.write_text(json.dumps(summary_payload, ensure_ascii=False, indent=2), encoding="utf-8")
     workbook_payload = {
-        "purchase_kwh": solution.schedule["grid_purchase_kwh"].tolist(),
+        "purchase_kwh": solution.schedule.sort_values("result_row_index")[
+            "grid_purchase_kwh"
+        ].tolist(),
         "blocks": solution.block_summary.to_dict(orient="records"),
         "soc_0_kwh": solution.summary["parameters"]["initial_soc_kwh"],
         "soc_24_kwh": solution.summary["parameters"]["terminal_soc_kwh"],

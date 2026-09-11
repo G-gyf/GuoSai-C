@@ -2,23 +2,19 @@
   "summary": {
     "solver": "scipy.optimize.linprog(method='highs')",
     "model_class": "continuous_linear_programming",
-    "optimization_stages": 3,
-    "unconstrained_reference_cost_yuan": 35126.94858928963,
+    "model_variant": "formal_main_no_ramp_pure_arbitrage",
+    "optimization_stages": 2,
+    "hard_battery_ramp_constraint_active": false,
+    "unconstrained_reference_cost_yuan": 35245.30722900463,
     "primary_status": 0,
     "primary_message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
-    "primary_optimal_cost_yuan": 35243.806608481376,
+    "primary_optimal_cost_yuan": 35245.30722900463,
+    "cost_tolerance_yuan": 3.5245307229004635e-06,
+    "tie_break_cost_cap_yuan": 35245.307232529165,
     "secondary_status": 0,
     "secondary_message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
-    "cost_tolerance_yuan": 3.5243806608481377e-06,
-    "smoothing_cost_cap_yuan": 35261.42851530999,
-    "secondary_cost_yuan": 35261.428515309985,
-    "secondary_total_variation_kwh": 6557.015841187359,
-    "variation_tolerance_kwh": 6.55701584118736e-06,
-    "tertiary_status": 0,
-    "tertiary_message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
-    "tertiary_cost_yuan": 35261.42851530998,
-    "tertiary_total_variation_kwh": 6557.015847744375,
-    "tertiary_throughput_objective": 38292.555127846805,
+    "secondary_cost_yuan": 35245.30723252917,
+    "secondary_throughput_kwh": 36297.819370010875,
     "parameters": {
       "interval_hours": 0.16666666666666666,
       "initial_soc_kwh": 6000.0,
@@ -27,79 +23,81 @@
       "max_soc_kwh": 10800.0,
       "max_charge_power_kw": 5000.0,
       "max_discharge_power_kw": 5000.0,
-      "max_battery_ramp_power_kw": 2000.0,
-      "smoothing_cost_slack_rate": 0.0005,
+      "max_battery_ramp_power_kw": null,
       "charge_efficiency": 0.9,
       "discharge_efficiency": 0.9,
       "feasibility_tolerance": 1e-06,
       "zero_tolerance": 1e-09
     },
-    "total_purchase_kwh": 59561.63291636697,
-    "total_cost_yuan": 35261.428515309985,
-    "total_charge_kwh": 21156.107805440224,
-    "total_discharge_kwh": 17136.44732240658,
+    "total_purchase_kwh": 59352.24076499194,
+    "total_cost_yuan": 35245.30723252917,
+    "total_charge_kwh": 20054.04385083474,
+    "total_discharge_kwh": 16243.775519176133,
     "total_curtailment_kwh": 0.0,
     "min_soc_kwh": 1200.0,
     "max_soc_kwh": 10800.0,
     "baseline_purchase_kwh": 61789.9354,
-    "baseline_cost_yuan": 48052.046590846665,
-    "cost_saving_yuan": 12790.61807553668,
-    "cost_saving_rate": 0.26618258706952014,
-    "engineering_cost_increase_yuan": 134.4799260203581,
-    "engineering_cost_increase_rate": 0.003828397609844325
+    "baseline_cost_yuan": 47921.77408152167,
+    "cost_saving_yuan": 12676.466848992495,
+    "cost_saving_rate": 0.26452415612635805,
+    "final_cost_increase_vs_primary_yuan": 3.524539351928979e-06,
+    "final_cost_increase_vs_primary_rate": 1.0000023031864202e-10,
+    "pure_arbitrage_cost_gap_yuan": 3.524539351928979e-06,
+    "pure_arbitrage_cost_gap_rate": 1.0000023031864202e-10
   },
   "validation": {
     "status": "PASS",
     "slot_count": 144,
+    "initial_soc_kwh": 6000.0,
     "max_balance_residual_kwh": 1.1368683772161603e-13,
-    "max_soc_transition_residual_kwh": 1.9326762412674725e-12,
+    "max_soc_transition_residual_kwh": 9.094947017729282e-13,
     "min_soc_kwh": 1200.0,
     "max_soc_kwh": 10800.0,
     "terminal_soc_kwh": 6000.0,
     "max_charge_kwh": 833.3333333333333,
-    "max_discharge_kwh": 715.28415,
+    "max_discharge_kwh": 715.8689166666666,
     "simultaneous_charge_discharge_slots": 0,
     "minimum_grid_purchase_kwh": 0.0,
     "minimum_curtailment_kwh": 0.0,
-    "observed_max_grid_ramp_power_kw": 2006.8172000000009,
-    "max_battery_ramp_power_kw": 2000.0,
-    "final_battery_total_variation_kwh": 6557.015847744375,
-    "operating_mode_changes_including_wrap": 9,
-    "cost_recalculation_error_yuan": 7.275957614183426e-12,
-    "smoothing_cost_cap_margin_yuan": 7.275957614183426e-12,
-    "variation_preservation_gap_kwh": 6.557015694852453e-06,
+    "observed_max_grid_ramp_power_kw": 5244.882500000001,
+    "observed_max_battery_net_power_change_kw": 5000.0,
+    "final_battery_total_variation_kwh": 15601.932190123454,
+    "operating_mode_changes_including_wrap": 22,
+    "cost_recalculation_error_yuan": 0.0,
+    "objective_cost_cap_margin_yuan": -7.275957614183426e-12,
+    "variation_preservation_gap_kwh": 0.0,
     "failed_checks": []
   },
   "four_hour_blocks": [
     {
       "time_block": "0:00-4:00",
-      "charge_kwh": 5727.272727272727,
+      "charge_kwh": 4500.0,
       "discharge_kwh": 0.0
     },
     {
       "time_block": "4:00-8:00",
-      "charge_kwh": 0.0,
-      "discharge_kwh": 6283.9275057399145
+      "charge_kwh": 833.3333333333333,
+      "discharge_kwh": 5697.587285842802
     },
     {
       "time_block": "8:00-12:00",
-      "charge_kwh": 4565.52086181883,
-      "discharge_kwh": 2121.4184333333333
+      "charge_kwh": 3434.177889106347,
+      "discharge_kwh": 1702.9969833333334
     },
     {
       "time_block": "12:00-16:00",
-      "charge_kwh": 5923.920276954731,
-      "discharge_kwh": 91.1013833333335
+      "charge_kwh": 5953.199295061729,
+      "discharge_kwh": 203.1912500000002
     },
     {
       "time_block": "16:00-20:00",
       "charge_kwh": 0.0,
-      "discharge_kwh": 4784.339883333333
+      "discharge_kwh": 5064.262966666665
     },
     {
       "time_block": "20:00-24:00",
-      "charge_kwh": 4939.393939393939,
-      "discharge_kwh": 3855.6601166666665
+      "charge_kwh": 5333.333333333333,
+      "discharge_kwh": 3575.737033333333
     }
   ],
   "paper_table_intervals": [
@@ -109,7 +107,7 @@
     },
     {
       "time_label": "12:00",
-      "grid_purchase_kwh": 486.40289999999993
+      "grid_purchase_kwh": 480.4124499999999
     },
     {
       "time_label": "14:00",
@@ -117,11 +115,11 @@
     },
     {
       "time_label": "16:00",
-      "grid_purchase_kwh": 394.9314833333333
+      "grid_purchase_kwh": 445.4316500000001
     },
     {
       "time_label": "18:00",
-      "grid_purchase_kwh": 636.9826166666667
+      "grid_purchase_kwh": 641.1612999999999
     },
     {
       "time_label": "20:00",
