@@ -10,9 +10,9 @@ main{background:#fff;padding:34px 44px;box-shadow:0 2px 16px #dfe4ec}h1,h2,h3{co
 code{background:#eef1f5;padding:2px 5px}@media(max-width:760px){main{padding:20px}.grid{grid-template-columns:1fr}}
 </style></head><body><main>
 <h1>数据预处理与前置分析报告</h1>
-<p class="meta">生成时间：2026-09-11 13:09 CST。本报告仅使用题目附件，不引入日历、节假日、天气或其他外部特征；不包含优化策略与求解结果。</p>
+<p class="meta">生成时间：2026-09-12 02:18 CST。本报告仅使用题目附件，不引入日历、节假日、天气或其他外部特征；不包含优化策略与求解结果。</p>
 <h2>1. 数据契约与质量结论</h2>
-<p>实际运行主表共 <strong>52,560</strong> 条记录，正式结果期共 <strong>48,096</strong> 个计划区间。质量检查共 25 项，失败项为 <span class="pass">0</span>。</p>
+<p>日历物理区间主表共 <strong>52,560</strong> 条记录，正式结果期共 <strong>48,096</strong> 个10分钟物理区间。质量检查共 29 项，失败项为 <span class="pass">0</span>。</p>
 <table class="dataframe data-table">
   <thead>
     <tr style="text-align: right;">
@@ -36,7 +36,7 @@ code{background:#eef1f5;padding:2px 5px}@media(max-width:760px){main{padding:20p
       <td>PASS</td>
       <td>52560</td>
       <td>52560</td>
-      <td>全年实际运行主表行数</td>
+      <td>全年日历物理区间主表行数</td>
     </tr>
     <tr>
       <td>hourly_forecast_row_count</td>
@@ -78,28 +78,56 @@ code{background:#eef1f5;padding:2px 5px}@media(max-width:760px){main{padding:20p
       <td>PASS</td>
       <td>min=144, max=144</td>
       <td>all=144</td>
-      <td>每个计划日期均含144个时段</td>
+      <td>每个源日期均含144个日历物理区间</td>
     </tr>
     <tr>
       <td>ten_minute_continuity</td>
       <td>PASS</td>
       <td>[10.0]</td>
       <td>[10.0]</td>
-      <td>同一计划日期相邻区间间隔恒为10分钟</td>
+      <td>同一源日期相邻区间起点间隔恒为10分钟</td>
     </tr>
     <tr>
-      <td>plan_day_boundaries</td>
+      <td>calendar_day_boundaries</td>
       <td>PASS</td>
       <td>True</td>
       <td>True</td>
-      <td>首段为00:10，末段为次日00:00</td>
+      <td>源日期覆盖00:00至次日00:00的144个物理区间</td>
+    </tr>
+    <tr>
+      <td>load_pv_endpoint_semantics</td>
+      <td>PASS</td>
+      <td>True</td>
+      <td>True</td>
+      <td>负荷与光伏观测时刻严格等于对应物理区间终点</td>
+    </tr>
+    <tr>
+      <td>price_start_semantics</td>
+      <td>PASS</td>
+      <td>True</td>
+      <td>True</td>
+      <td>购电价格时刻严格等于对应物理区间起点</td>
+    </tr>
+    <tr>
+      <td>template_mapping</td>
+      <td>PASS</td>
+      <td>True</td>
+      <td>True</td>
+      <td>日历物理区间到正式结果模板采用明确的日期与行号映射</td>
     </tr>
     <tr>
       <td>actual_numeric_finite</td>
       <td>PASS</td>
       <td>True</td>
       <td>True</td>
-      <td>实际运行主表数值字段无空值或无穷值</td>
+      <td>负荷、光伏、净负荷与固定电价字段无空值或无穷值</td>
+    </tr>
+    <tr>
+      <td>variable_price_availability</td>
+      <td>PASS</td>
+      <td>52559</td>
+      <td>52559</td>
+      <td>波动电价可用性标志与源数据覆盖范围一致</td>
     </tr>
     <tr>
       <td>forecast_numeric_finite</td>
@@ -134,14 +162,14 @@ code{background:#eef1f5;padding:2px 5px}@media(max-width:760px){main{padding:20p
       <td>PASS</td>
       <td>True</td>
       <td>True</td>
-      <td>固定价格逐时段与附件1一致</td>
+      <td>固定价格按物理区间起点与附件1时刻标签对齐</td>
     </tr>
     <tr>
       <td>variable_price_alignment</td>
       <td>PASS</td>
       <td>True</td>
       <td>True</td>
-      <td>波动价格逐日期逐时段与附件4一致</td>
+      <td>波动价格按物理区间起点与附件4时刻标签对齐</td>
     </tr>
     <tr>
       <td>hourly_issue_structure</td>
@@ -176,7 +204,7 @@ code{background:#eef1f5;padding:2px 5px}@media(max-width:760px){main{padding:20p
       <td>PASS</td>
       <td>48096</td>
       <td>48096</td>
-      <td>正式结果期计划区间数</td>
+      <td>正式结果期日历物理区间数</td>
     </tr>
     <tr>
       <td>baseline_daily_completeness</td>
@@ -262,7 +290,7 @@ code{background:#eef1f5;padding:2px 5px}@media(max-width:760px){main{padding:20p
   </tbody>
 </table>
 <h2>2. 代表性日与全年数据关系</h2>
-<p>附件1与全年相同时段均值按官方列序比较。负载及电价差异仅体现源表精度，光伏差异集中于黎明、傍晚的小功率区间，说明附件1适合作为问题1的确定性代表日，并为问题1—3提供固定价格；后续实际运行与预测评价仍以附件2—4为准。</p>
+<p>附件1与全年数据按统一物理时刻比较：负荷和光伏记录对应10分钟区间终点，购电价格对应区间起点。负载及电价差异仅体现源表精度，光伏差异集中于黎明、傍晚的小功率区间，说明附件1适合作为问题1的确定性代表日，并为问题1—3提供固定价格；后续实际运行与预测评价仍以附件2—4为准。</p>
 <table class="dataframe data-table">
   <thead>
     <tr style="text-align: right;">
@@ -321,7 +349,7 @@ code{background:#eef1f5;padding:2px 5px}@media(max-width:760px){main{padding:20p
 <img src="figures/average_dispatch_profile.png" alt="平均功率曲线"><img src="figures/net_load_surplus.png" alt="净负荷与光伏剩余">
 <img src="figures/daily_energy_distribution.png" alt="每日能量总体分布">
 <h2>4. 电价特征</h2>
-<p>固定电价按附件1逐时段复制；波动电价保留逐日逐时段差异。前置分析仅讨论其分布、时段范围及与供需变量的统计关系，不据此预判优化策略。</p>
+<p>固定电价与波动电价均按交易区间起点对齐，波动电价保留逐日逐时段差异。前置分析仅讨论其分布、时段范围及与供需变量的统计关系，不据此预判优化策略。</p>
 <table class="dataframe data-table">
   <thead>
     <tr style="text-align: right;">
@@ -332,19 +360,19 @@ code{background:#eef1f5;padding:2px 5px}@media(max-width:760px){main{padding:20p
   <tbody>
     <tr>
       <td>波动电价—负载相关系数</td>
-      <td>0.5077</td>
+      <td>0.4959</td>
     </tr>
     <tr>
       <td>波动电价—光伏相关系数</td>
-      <td>0.0284</td>
+      <td>0.0298</td>
     </tr>
     <tr>
       <td>波动电价—净负荷相关系数</td>
-      <td>0.2602</td>
+      <td>0.2516</td>
     </tr>
     <tr>
       <td>高价与高净负荷同时出现比例</td>
-      <td>0.0327</td>
+      <td>0.0328</td>
     </tr>
     <tr>
       <td>固定电价变异系数</td>
@@ -358,7 +386,7 @@ code{background:#eef1f5;padding:2px 5px}@media(max-width:760px){main{padding:20p
 </table>
 <img src="figures/fixed_price_profile.png" alt="固定电价"><img src="figures/variable_price_distribution.png" alt="波动电价分布">
 <h2>5. 光伏预报质量</h2>
-<p>误差定义为预测值减实际值。可评价样本的总体 MAE 为 <strong>186.61 kW</strong>，RMSE 为 <strong>438.56 kW</strong>，偏差为 <strong>-30.76 kW</strong>。年末超出实际数据范围的预测予以保留，但不进入误差统计。</p>
+<p>误差定义为预测值减实际值，并仅在预测目标时刻存在对应实际观测时计算。可评价样本的总体 MAE 为 <strong>186.61 kW</strong>，RMSE 为 <strong>438.56 kW</strong>，偏差为 <strong>-30.76 kW</strong>。</p>
 <table class="dataframe data-table">
   <thead>
     <tr style="text-align: right;">
@@ -490,13 +518,13 @@ code{background:#eef1f5;padding:2px 5px}@media(max-width:760px){main{padding:20p
       <td>5,838.5445</td>
       <td>0.3713</td>
       <td>1.3952</td>
-      <td>0.2794</td>
+      <td>0.3484</td>
       <td>1.3228</td>
       <td>283.6109</td>
       <td>4</td>
       <td>360</td>
-      <td>2025-03-20 00:10:00</td>
-      <td>2025-03-21</td>
+      <td>2025-03-20</td>
+      <td>2025-03-20 23:50:00</td>
     </tr>
     <tr>
       <td>2025-06-21</td>
@@ -515,8 +543,8 @@ code{background:#eef1f5;padding:2px 5px}@media(max-width:760px){main{padding:20p
       <td>99.6935</td>
       <td>4</td>
       <td>360</td>
-      <td>2025-06-21 00:10:00</td>
-      <td>2025-06-22</td>
+      <td>2025-06-21</td>
+      <td>2025-06-21 23:50:00</td>
     </tr>
     <tr>
       <td>2025-09-23</td>
@@ -535,8 +563,8 @@ code{background:#eef1f5;padding:2px 5px}@media(max-width:760px){main{padding:20p
       <td>116.8265</td>
       <td>4</td>
       <td>360</td>
-      <td>2025-09-23 00:10:00</td>
-      <td>2025-09-24</td>
+      <td>2025-09-23</td>
+      <td>2025-09-23 23:50:00</td>
     </tr>
     <tr>
       <td>2025-12-21</td>
@@ -555,13 +583,13 @@ code{background:#eef1f5;padding:2px 5px}@media(max-width:760px){main{padding:20p
       <td>60.8440</td>
       <td>4</td>
       <td>360</td>
-      <td>2025-12-21 00:10:00</td>
-      <td>2025-12-22</td>
+      <td>2025-12-21</td>
+      <td>2025-12-21 23:50:00</td>
     </tr>
   </tbody>
 </table><img src="figures/key_dates_profiles.png" alt="关键日期曲线">
 <h2>7. 数据使用边界</h2>
-<p>日初基线在 2025-01-01 使用附件1，随后仅使用此前已有计划日期的相同时段观测；第8日起固定使用最近7个计划日。问题3与问题4-3中，负载预测固定为0:00版本，光伏可在0:00、6:00、12:00、18:00按附件3更新。实际同日负载与光伏仅供执行仿真、结算和回测使用。</p>
+<p>日初基线在 2025-01-01 使用附件1，随后仅使用决策时刻之前已经完成的同终点时刻观测；第8日起固定使用最近7个完整日。问题3与问题4-3中，负载预测固定为0:00版本，光伏可在0:00、6:00、12:00、18:00按附件3更新。实际同日负载与光伏仅供执行仿真、结算和回测使用。</p>
 <h2>8. 异常标记</h2>
 <p>采用 Tukey 外围栏（低于 Q1−3IQR 或高于 Q3+3IQR）形成统计标记，共识别 <strong>0</strong> 条记录。该标记仅用于提示复核，不等同于数据错误；所有原值均保留，未删除、平滑或缩尾。</p>
 <p>未发现外围栏标记。</p>

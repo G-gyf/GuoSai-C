@@ -45,7 +45,7 @@ def validate_datasets(
         "attachment_4": (365, 145),
     }
     add("source_table_dimensions", source_shapes == expected_shapes, source_shapes, expected_shapes, "五张源数据表的行列数符合数据契约")
-    add("dispatch_row_count", len(dispatch) == expected["dispatch_10min"], len(dispatch), expected["dispatch_10min"], "全年实际运行主表行数")
+    add("dispatch_row_count", len(dispatch) == expected["dispatch_10min"], len(dispatch), expected["dispatch_10min"], "全年日历物理区间主表行数")
     add("hourly_forecast_row_count", len(hourly) == expected["pv_forecast_hourly"], len(hourly), expected["pv_forecast_hourly"], "附件3小时长表行数")
     add("ten_min_forecast_row_count", len(ten_minute) == expected["pv_forecast_10min"], len(ten_minute), expected["pv_forecast_10min"], "线性插值后的10分钟预报行数")
     add("baseline_row_count", len(baseline) == expected["day_ahead_baseline_10min"], len(baseline), expected["day_ahead_baseline_10min"], "日初基线预报行数")
@@ -56,25 +56,69 @@ def validate_datasets(
     add("forecast_primary_key", forecast_key_unique, forecast_key_unique, True, "issue_ts与horizon_10min组合键唯一")
 
     counts = dispatch.groupby("plan_date")["slot_index"].count()
-    add("daily_slot_completeness", counts.eq(144).all(), f"min={counts.min()}, max={counts.max()}", "all=144", "每个计划日期均含144个时段")
+    add("daily_slot_completeness", counts.eq(144).all(), f"min={counts.min()}, max={counts.max()}", "all=144", "每个源日期均含144个日历物理区间")
     diffs = dispatch.groupby("plan_date")["interval_start"].diff().dropna().dt.total_seconds().div(60)
-    add("ten_minute_continuity", diffs.eq(10).all(), sorted(diffs.unique().tolist()), [10.0], "同一计划日期相邻区间间隔恒为10分钟")
-    boundary = dispatch.groupby("plan_date").agg(first=("interval_start", "first"), last=("interval_start", "last"))
-    boundary_ok = ((boundary["first"] - boundary.index).eq(pd.Timedelta(minutes=10)) & (boundary["last"] - boundary.index).eq(pd.Timedelta(days=1))).all()
-    add("plan_day_boundaries", boundary_ok, boundary_ok, True, "首段为00:10，末段为次日00:00")
+    add("ten_minute_continuity", diffs.eq(10).all(), sorted(diffs.unique().tolist()), [10.0], "同一源日期相邻区间起点间隔恒为10分钟")
+    boundary = dispatch.groupby("plan_date").agg(
+        first_start=("interval_start", "first"),
+        first_end=("interval_end", "first"),
+        last_start=("interval_start", "last"),
+        last_end=("interval_end", "last"),
+    )
+    boundary_ok = (
+        (boundary["first_start"] - boundary.index).eq(pd.Timedelta(0))
+        & (boundary["first_end"] - boundary.index).eq(pd.Timedelta(minutes=10))
+        & (boundary["last_start"] - boundary.index).eq(pd.Timedelta(hours=23, minutes=50))
+        & (boundary["last_end"] - boundary.index).eq(pd.Timedelta(days=1))
+    ).all()
+    add("calendar_day_boundaries", boundary_ok, boundary_ok, True, "源日期覆盖00:00至次日00:00的144个物理区间")
+
+    endpoint_ok = (
+        dispatch["observation_ts"].eq(dispatch["interval_end"]).all()
+        and dispatch["load_pv_source_ts"].eq(dispatch["interval_end"]).all()
+    )
+    price_start_ok = dispatch["price_source_ts"].eq(dispatch["interval_start"]).all()
+    add("load_pv_endpoint_semantics", endpoint_ok, endpoint_ok, True, "负荷与光伏观测时刻严格等于对应物理区间终点")
+    add("price_start_semantics", price_start_ok, price_start_ok, True, "购电价格时刻严格等于对应物理区间起点")
+
+    slot1 = dispatch["slot_index"].eq(1)
+    template_mapping_ok = (
+        dispatch.loc[slot1, "template_slot_index"].eq(144).all()
+        and dispatch.loc[slot1, "template_plan_date"].eq(
+            dispatch.loc[slot1, "plan_date"] - pd.Timedelta(days=1)
+        ).all()
+        and dispatch.loc[~slot1, "template_slot_index"].eq(
+            dispatch.loc[~slot1, "slot_index"] - 1
+        ).all()
+        and dispatch.loc[~slot1, "template_plan_date"].eq(
+            dispatch.loc[~slot1, "plan_date"]
+        ).all()
+    )
+    add("template_mapping", template_mapping_ok, template_mapping_ok, True, "日历物理区间到正式结果模板采用明确的日期与行号映射")
 
     numeric_columns = [
         "load_actual_kw", "pv_actual_kw", "net_load_actual_kw", "load_actual_kwh",
         "pv_actual_kwh", "net_load_actual_kwh", "price_fixed_yuan_per_kwh",
-        "price_variable_yuan_per_kwh",
     ]
     finite = np.isfinite(dispatch[numeric_columns].to_numpy(float)).all()
-    add("actual_numeric_finite", finite, finite, True, "实际运行主表数值字段无空值或无穷值")
+    add("actual_numeric_finite", finite, finite, True, "负荷、光伏、净负荷与固定电价字段无空值或无穷值")
+    variable_available = dispatch["price_variable_available"].to_numpy(bool)
+    variable_values = dispatch["price_variable_yuan_per_kwh"].to_numpy(float)
+    variable_availability_ok = (
+        np.array_equal(variable_available, np.isfinite(variable_values))
+        and int((~variable_available).sum()) == 1
+        and not variable_available[0]
+        and pd.Timestamp(dispatch["interval_start"].iloc[0]) == pd.Timestamp("2025-01-01 00:00")
+    )
+    add("variable_price_availability", variable_availability_ok, int(variable_available.sum()), len(dispatch) - 1, "波动电价可用性标志与源数据覆盖范围一致")
     forecast_finite = np.isfinite(hourly["pv_forecast_kw"].to_numpy(float)).all() and np.isfinite(ten_minute["pv_forecast_kw"].to_numpy(float)).all()
     baseline_finite = np.isfinite(baseline[["load_forecast_kw", "pv_forecast_kw"]].to_numpy(float)).all()
     add("forecast_numeric_finite", forecast_finite, forecast_finite, True, "小时及10分钟光伏预报无空值或无穷值")
     add("baseline_numeric_finite", baseline_finite, baseline_finite, True, "日初负载与光伏基线无空值或无穷值")
-    nonnegative = dispatch[["load_actual_kw", "pv_actual_kw", "price_fixed_yuan_per_kwh", "price_variable_yuan_per_kwh"]].ge(0).all().all()
+    nonnegative = (
+        dispatch[["load_actual_kw", "pv_actual_kw", "price_fixed_yuan_per_kwh"]].ge(0).all().all()
+        and dispatch.loc[dispatch["price_variable_available"], "price_variable_yuan_per_kwh"].ge(0).all()
+    )
     add("source_values_nonnegative", nonnegative, nonnegative, True, "负载、光伏和两类电价非负；净负荷允许为负")
 
     energy_ok = all(
@@ -88,11 +132,22 @@ def validate_datasets(
     add("power_energy_conversion", energy_ok, energy_ok, True, "10分钟电量严格等于功率乘以1/6")
 
     fixed_source = pd.to_numeric(raw["attachment_1"].iloc[:, 1], errors="raise").to_numpy(float)
-    fixed_ok = np.allclose(dispatch["price_fixed_yuan_per_kwh"].to_numpy().reshape(-1, 144), fixed_source[None, :])
-    variable_source = raw["attachment_4"].iloc[:, 1:145].apply(pd.to_numeric, errors="raise").to_numpy(float).reshape(-1)
-    variable_ok = np.allclose(dispatch["price_variable_yuan_per_kwh"].to_numpy(), variable_source)
-    add("fixed_price_alignment", fixed_ok, fixed_ok, True, "固定价格逐时段与附件1一致")
-    add("variable_price_alignment", variable_ok, variable_ok, True, "波动价格逐日期逐时段与附件4一致")
+    fixed_expected = np.r_[fixed_source[-1], fixed_source[:-1]]
+    fixed_ok = np.allclose(
+        dispatch["price_fixed_yuan_per_kwh"].to_numpy().reshape(-1, 144),
+        fixed_expected[None, :],
+    )
+    variable_source = raw["attachment_4"].iloc[:, 1:145].apply(pd.to_numeric, errors="raise").to_numpy(float)
+    variable_expected = np.full_like(variable_source, np.nan, dtype=float)
+    variable_expected[:, 1:] = variable_source[:, :-1]
+    variable_expected[1:, 0] = variable_source[:-1, -1]
+    variable_ok = np.allclose(
+        dispatch["price_variable_yuan_per_kwh"].to_numpy().reshape(-1, 144),
+        variable_expected,
+        equal_nan=True,
+    )
+    add("fixed_price_alignment", fixed_ok, fixed_ok, True, "固定价格按物理区间起点与附件1时刻标签对齐")
+    add("variable_price_alignment", variable_ok, variable_ok, True, "波动价格按物理区间起点与附件4时刻标签对齐")
 
     issue_counts = hourly.groupby("issue_ts")["horizon_hour"].count()
     issue_hours = hourly[["issue_ts"]].drop_duplicates()["issue_ts"].dt.hour.value_counts().sort_index().to_dict()
@@ -113,7 +168,7 @@ def validate_datasets(
     add("interpolation_nonnegative", ten_minute["pv_forecast_kw"].ge(0).all(), float(ten_minute["pv_forecast_kw"].min()), ">=0", "插值结果非负")
 
     result_count = int(dispatch["is_result_period"].sum())
-    add("result_period_count", result_count == expected["result_period_intervals"], result_count, expected["result_period_intervals"], "正式结果期计划区间数")
+    add("result_period_count", result_count == expected["result_period_intervals"], result_count, expected["result_period_intervals"], "正式结果期日历物理区间数")
     baseline_counts = baseline.groupby("plan_date")["slot_index"].count()
     baseline_causal = (baseline.loc[baseline["training_end"].notna(), "training_end"] < baseline.loc[baseline["training_end"].notna(), "issue_ts"]).all()
     add("baseline_daily_completeness", baseline_counts.eq(144).all(), f"min={baseline_counts.min()}, max={baseline_counts.max()}", "all=144", "每日基线含144个时段")

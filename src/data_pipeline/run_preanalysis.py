@@ -45,6 +45,13 @@ def _save_figure(fig: plt.Figure, path: Path) -> None:
     plt.close(fig)
 
 
+def _endpoint_label(slot_index: int) -> str:
+    minute = int(slot_index) * 10
+    if minute == 24 * 60:
+        return "0:00+1"
+    return f"{minute // 60:02d}:{minute % 60:02d}"
+
+
 def _profile_summary(dispatch: pd.DataFrame) -> pd.DataFrame:
     variables = [
         "load_actual_kw", "pv_actual_kw", "net_load_actual_kw",
@@ -53,12 +60,14 @@ def _profile_summary(dispatch: pd.DataFrame) -> pd.DataFrame:
     grouped = dispatch.groupby("slot_index")[variables].agg(["mean", "std", "min", "max"])
     grouped.columns = [f"{variable}_{stat}" for variable, stat in grouped.columns]
     grouped = grouped.reset_index()
-    grouped.insert(1, "time_label", (pd.to_timedelta(grouped["slot_index"] * 10, unit="m") % pd.Timedelta(days=1)).astype(str))
+    grouped.insert(1, "observation_time_label", grouped["slot_index"].map(_endpoint_label))
     return grouped
 
 
 def _forecast_evaluation(hourly: pd.DataFrame, dispatch: pd.DataFrame) -> pd.DataFrame:
-    actual = dispatch[["interval_start", "pv_actual_kw"]].rename(columns={"interval_start": "target_ts"})
+    actual = dispatch[["observation_ts", "pv_actual_kw"]].rename(
+        columns={"observation_ts": "target_ts"}
+    )
     evaluated = hourly.merge(actual, on="target_ts", how="left", validate="many_to_one")
     evaluated = evaluated[evaluated["pv_actual_kw"].notna()].copy()
     evaluated["error_kw"] = evaluated["pv_forecast_kw"] - evaluated["pv_actual_kw"]
@@ -128,8 +137,8 @@ def _key_dates_summary(
             )
         ]
         day_forecasts = issues.merge(
-            group[["interval_start", "pv_actual_kw"]],
-            left_on="target_ts", right_on="interval_start", how="inner"
+            group[["observation_ts", "pv_actual_kw"]],
+            left_on="target_ts", right_on="observation_ts", how="inner"
         )
         day_forecasts["abs_error_kw"] = (
             day_forecasts["pv_forecast_kw"] - day_forecasts["pv_actual_kw"]
@@ -205,14 +214,15 @@ def _make_figures(
     figures_dir: Path,
 ) -> None:
     _configure_plots()
-    x = profile["slot_index"] * 10 / 60
+    endpoint_hours = profile["slot_index"] * 10 / 60
+    start_hours = (profile["slot_index"] - 1) * 10 / 60
 
     fig, ax = plt.subplots(figsize=(9.2, 4.6))
-    ax.plot(x, profile["load_actual_kw_mean"], label="平均负载", linewidth=2)
-    ax.plot(x, profile["pv_actual_kw_mean"], label="平均光伏", linewidth=2)
-    ax.plot(x, profile["net_load_actual_kw_mean"], label="平均净负荷", linewidth=2)
+    ax.plot(endpoint_hours, profile["load_actual_kw_mean"], label="平均负载", linewidth=2)
+    ax.plot(endpoint_hours, profile["pv_actual_kw_mean"], label="平均光伏", linewidth=2)
+    ax.plot(endpoint_hours, profile["net_load_actual_kw_mean"], label="平均净负荷", linewidth=2)
     ax.axhline(0, color="#555", linewidth=0.8)
-    ax.set(xlabel="计划日时刻 / h", ylabel="功率 / kW", title="全年同一计划时段平均功率曲线")
+    ax.set(xlabel="区间终点时刻 / h", ylabel="功率 / kW", title="全年同一终点时刻平均功率曲线")
     ax.set_xlim(0, 24)
     ax.legend(ncol=3)
     _save_figure(fig, figures_dir / "average_dispatch_profile.png")
@@ -228,19 +238,24 @@ def _make_figures(
     _save_figure(fig, figures_dir / "net_load_surplus.png")
 
     fig, ax = plt.subplots(figsize=(9, 3.9))
-    ax.step(x, profile["price_fixed_yuan_per_kwh_mean"], where="mid", color="#c44e52", linewidth=1.8)
-    ax.set(xlabel="计划日时刻 / h", ylabel="电价 / 元/kWh", title="附件1固定电价曲线")
+    ax.step(start_hours, profile["price_fixed_yuan_per_kwh_mean"], where="post", color="#c44e52", linewidth=1.8)
+    ax.set(xlabel="交易区间起点 / h", ylabel="电价 / 元/kWh", title="附件1固定电价曲线")
     ax.set_xlim(0, 24)
     _save_figure(fig, figures_dir / "fixed_price_profile.png")
 
     variable_group = dispatch.groupby("slot_index")["price_variable_yuan_per_kwh"]
     q10, q50, q90 = (variable_group.quantile(q) for q in (0.1, 0.5, 0.9))
     fig, axes = plt.subplots(1, 2, figsize=(10, 4.1))
-    axes[0].hist(dispatch["price_variable_yuan_per_kwh"], bins=55, color="#8172b3", alpha=0.85)
+    axes[0].hist(
+        dispatch.loc[dispatch["price_variable_available"], "price_variable_yuan_per_kwh"],
+        bins=55,
+        color="#8172b3",
+        alpha=0.85,
+    )
     axes[0].set(xlabel="波动电价 / 元/kWh", ylabel="时段数", title="全年波动电价分布")
-    axes[1].fill_between(x, q10.to_numpy(), q90.to_numpy(), alpha=0.25, label="10%—90%分位带")
-    axes[1].plot(x, q50.to_numpy(), linewidth=1.8, label="中位数")
-    axes[1].set(xlabel="计划日时刻 / h", ylabel="电价 / 元/kWh", title="同一时段波动价格范围")
+    axes[1].fill_between(start_hours, q10.to_numpy(), q90.to_numpy(), alpha=0.25, label="10%—90%分位带")
+    axes[1].plot(start_hours, q50.to_numpy(), linewidth=1.8, label="中位数")
+    axes[1].set(xlabel="交易区间起点 / h", ylabel="电价 / 元/kWh", title="同一起点时段波动价格范围")
     axes[1].legend()
     _save_figure(fig, figures_dir / "variable_price_distribution.png")
 
@@ -273,18 +288,19 @@ def _make_figures(
     forecast_colors = {0: "#4c72b0", 6: "#dd8452", 12: "#55a868", 18: "#c44e52"}
     for row, date_text in enumerate(key_dates):
         group = dispatch[dispatch["plan_date"].eq(pd.Timestamp(date_text))]
-        hours = group["slot_index"] * 10 / 60
-        axes[row, 0].plot(hours, group["load_actual_kw"], label="负载", linewidth=1.3)
-        axes[row, 0].plot(hours, group["pv_actual_kw"], label="光伏", linewidth=1.3)
-        axes[row, 0].plot(hours, group["net_load_actual_kw"], label="净负荷", linewidth=1.3)
+        endpoint_hours = group["slot_index"] * 10 / 60
+        start_hours = (group["slot_index"] - 1) * 10 / 60
+        axes[row, 0].plot(endpoint_hours, group["load_actual_kw"], label="负载", linewidth=1.3)
+        axes[row, 0].plot(endpoint_hours, group["pv_actual_kw"], label="光伏", linewidth=1.3)
+        axes[row, 0].plot(endpoint_hours, group["net_load_actual_kw"], label="净负荷", linewidth=1.3)
         axes[row, 0].axhline(0, color="#555", linewidth=0.7)
         axes[row, 0].set_ylabel(f"{date_text}\n功率 / kW")
 
-        axes[row, 1].plot(hours, group["price_fixed_yuan_per_kwh"], label="固定电价", linewidth=1.2)
-        axes[row, 1].plot(hours, group["price_variable_yuan_per_kwh"], label="波动电价", linewidth=1.2)
+        axes[row, 1].plot(start_hours, group["price_fixed_yuan_per_kwh"], label="固定电价", linewidth=1.2)
+        axes[row, 1].plot(start_hours, group["price_variable_yuan_per_kwh"], label="波动电价", linewidth=1.2)
         axes[row, 1].set_ylabel("元/kWh")
 
-        axes[row, 2].plot(hours, group["pv_actual_kw"], color="#222", linewidth=1.8, label="实际光伏")
+        axes[row, 2].plot(endpoint_hours, group["pv_actual_kw"], color="#222", linewidth=1.8, label="实际光伏")
         start = pd.Timestamp(date_text)
         end = start + pd.Timedelta(days=1)
         issues = ten_minute[
@@ -305,8 +321,9 @@ def _make_figures(
     axes[0, 0].legend(ncol=3, fontsize=7)
     axes[0, 1].legend(ncol=2, fontsize=7)
     axes[0, 2].legend(ncol=3, fontsize=7)
-    for ax in axes[-1, :]:
-        ax.set_xlabel("计划日时刻 / h")
+    axes[-1, 0].set_xlabel("区间终点时刻 / h")
+    axes[-1, 1].set_xlabel("交易区间起点 / h")
+    axes[-1, 2].set_xlabel("预测目标时刻 / h")
     fig.suptitle("四个必交日期的数据与预报映射核查", y=1.005)
     _save_figure(fig, figures_dir / "key_dates_profiles.png")
 
@@ -355,7 +372,8 @@ def _write_html_report(
     )
     rep_load = pd.to_numeric(representative.iloc[:, 2]).to_numpy()
     rep_pv = pd.to_numeric(representative.iloc[:, 3]).to_numpy()
-    rep_price = pd.to_numeric(representative.iloc[:, 1]).to_numpy()
+    rep_price_source = pd.to_numeric(representative.iloc[:, 1]).to_numpy()
+    rep_price = np.r_[rep_price_source[-1], rep_price_source[:-1]]
     relation = pd.DataFrame(
         {
             "指标": ["负载", "光伏", "电价"],
@@ -422,11 +440,11 @@ code{{background:#eef1f5;padding:2px 5px}}@media(max-width:760px){{main{{padding
 <h1>数据预处理与前置分析报告</h1>
 <p class="meta">生成时间：{escaped_generation}。本报告仅使用题目附件，不引入日历、节假日、天气或其他外部特征；不包含优化策略与求解结果。</p>
 <h2>1. 数据契约与质量结论</h2>
-<p>实际运行主表共 <strong>{len(dispatch):,}</strong> 条记录，正式结果期共 <strong>{int(dispatch['is_result_period'].sum()):,}</strong> 个计划区间。质量检查共 {len(checks)} 项，失败项为 <span class="{'pass' if fail_count == 0 else 'fail'}">{fail_count}</span>。</p>
+<p>日历物理区间主表共 <strong>{len(dispatch):,}</strong> 条记录，正式结果期共 <strong>{int(dispatch['is_result_period'].sum()):,}</strong> 个10分钟物理区间。质量检查共 {len(checks)} 项，失败项为 <span class="{'pass' if fail_count == 0 else 'fail'}">{fail_count}</span>。</p>
 {_table_html(checks, rows=len(checks))}
 <h3>原始数据登记</h3>{_table_html(inventory, rows=len(inventory))}
 <h2>2. 代表性日与全年数据关系</h2>
-<p>附件1与全年相同时段均值按官方列序比较。负载及电价差异仅体现源表精度，光伏差异集中于黎明、傍晚的小功率区间，说明附件1适合作为问题1的确定性代表日，并为问题1—3提供固定价格；后续实际运行与预测评价仍以附件2—4为准。</p>
+<p>附件1与全年数据按统一物理时刻比较：负荷和光伏记录对应10分钟区间终点，购电价格对应区间起点。负载及电价差异仅体现源表精度，光伏差异集中于黎明、傍晚的小功率区间，说明附件1适合作为问题1的确定性代表日，并为问题1—3提供固定价格；后续实际运行与预测评价仍以附件2—4为准。</p>
 {_table_html(relation, rows=3)}
 <h2>3. 负载、光伏与净负荷</h2>
 <div class="grid"><div class="card">负载范围<br><strong>{metrics['load_min']:,.2f}—{metrics['load_max']:,.2f} kW</strong></div><div class="card">光伏范围<br><strong>{metrics['pv_min']:,.2f}—{metrics['pv_max']:,.2f} kW</strong></div><div class="card">净负荷范围<br><strong>{metrics['net_min']:,.2f}—{metrics['net_max']:,.2f} kW</strong></div></div>
@@ -435,11 +453,11 @@ code{{background:#eef1f5;padding:2px 5px}}@media(max-width:760px){{main{{padding
 <img src="figures/average_dispatch_profile.png" alt="平均功率曲线"><img src="figures/net_load_surplus.png" alt="净负荷与光伏剩余">
 <img src="figures/daily_energy_distribution.png" alt="每日能量总体分布">
 <h2>4. 电价特征</h2>
-<p>固定电价按附件1逐时段复制；波动电价保留逐日逐时段差异。前置分析仅讨论其分布、时段范围及与供需变量的统计关系，不据此预判优化策略。</p>
+<p>固定电价与波动电价均按交易区间起点对齐，波动电价保留逐日逐时段差异。前置分析仅讨论其分布、时段范围及与供需变量的统计关系，不据此预判优化策略。</p>
 {_table_html(price_stats, rows=6)}
 <img src="figures/fixed_price_profile.png" alt="固定电价"><img src="figures/variable_price_distribution.png" alt="波动电价分布">
 <h2>5. 光伏预报质量</h2>
-<p>误差定义为预测值减实际值。可评价样本的总体 MAE 为 <strong>{metrics['forecast_mae']:,.2f} kW</strong>，RMSE 为 <strong>{metrics['forecast_rmse']:,.2f} kW</strong>，偏差为 <strong>{metrics['forecast_bias']:,.2f} kW</strong>。年末超出实际数据范围的预测予以保留，但不进入误差统计。</p>
+<p>误差定义为预测值减实际值，并仅在预测目标时刻存在对应实际观测时计算。可评价样本的总体 MAE 为 <strong>{metrics['forecast_mae']:,.2f} kW</strong>，RMSE 为 <strong>{metrics['forecast_rmse']:,.2f} kW</strong>，偏差为 <strong>{metrics['forecast_bias']:,.2f} kW</strong>。</p>
 {_table_html(issue_stats, rows=4)}
 <img src="figures/forecast_error_by_horizon.png" alt="分步长预报误差">
 <p>新旧预报价值采用同一交付时刻配对比较，避免不同发布时间覆盖的昼夜结构差异造成混淆。绝对误差改善定义为旧预报绝对误差减去新预报绝对误差。</p>
@@ -447,7 +465,7 @@ code{{background:#eef1f5;padding:2px 5px}}@media(max-width:760px){{main{{padding
 <h2>6. 四个必交日期核查</h2>
 {_table_html(key_summary, rows=4)}<img src="figures/key_dates_profiles.png" alt="关键日期曲线">
 <h2>7. 数据使用边界</h2>
-<p>日初基线在 2025-01-01 使用附件1，随后仅使用此前已有计划日期的相同时段观测；第8日起固定使用最近7个计划日。问题3与问题4-3中，负载预测固定为0:00版本，光伏可在0:00、6:00、12:00、18:00按附件3更新。实际同日负载与光伏仅供执行仿真、结算和回测使用。</p>
+<p>日初基线在 2025-01-01 使用附件1，随后仅使用决策时刻之前已经完成的同终点时刻观测；第8日起固定使用最近7个完整日。问题3与问题4-3中，负载预测固定为0:00版本，光伏可在0:00、6:00、12:00、18:00按附件3更新。实际同日负载与光伏仅供执行仿真、结算和回测使用。</p>
 <h2>8. 异常标记</h2>
 <p>采用 Tukey 外围栏（低于 Q1−3IQR 或高于 Q3+3IQR）形成统计标记，共识别 <strong>{len(anomaly_flags)}</strong> 条记录。该标记仅用于提示复核，不等同于数据错误；所有原值均保留，未删除、平滑或缩尾。</p>
 {_table_html(anomaly_flags, rows=20) if len(anomaly_flags) else '<p>未发现外围栏标记。</p>'}

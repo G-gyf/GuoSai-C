@@ -11,11 +11,23 @@
     "interval_minutes": 10
   },
   "time_mapping": {
-    "first_slot_start": "plan_date 00:10",
-    "last_slot_start": "plan_date + 1 day 00:00",
-    "last_slot_end": "plan_date + 1 day 00:10",
+    "load_pv_timestamp_semantics": "interval_end",
+    "price_timestamp_semantics": "interval_start",
+    "calendar_first_interval_start": "source_date 00:00",
+    "calendar_first_interval_end": "source_date 00:10",
+    "calendar_last_interval_start": "source_date 23:50",
+    "calendar_last_interval_end": "source_date + 1 day 00:00",
+    "template_first_slot_start": "plan_date 00:10",
+    "template_last_slot_start": "plan_date + 1 day 00:00",
+    "template_last_slot_end": "plan_date + 1 day 00:10",
+    "template_mapping_rule": "load/PV join on interval_end; tariff joins on interval_start",
     "cross_day_label": "0:00+1",
-    "calendar_features_allowed": false
+    "calendar_features_allowed": {
+      "pv_annual_phase_sin_cos": true,
+      "weekday": false,
+      "holiday": false,
+      "external_calendar": false
+    }
   },
   "units": {
     "power": "kW",
@@ -31,27 +43,57 @@
     "interpolation": "linear",
     "lower_bound_kw": 0,
     "baseline_window_days": 7,
-    "cold_start_source": "附件1"
+    "cold_start_source": "附件1",
+    "pv_day_ahead": {
+      "hour_blocks": 24,
+      "slots_per_hour_block": 6,
+      "hard_daylight_start": "04:10",
+      "hard_daylight_end": "19:30",
+      "positive_threshold_kw": 1.0,
+      "boundary_window_days": 30,
+      "boundary_buffer_minutes": 60,
+      "solar_grid_points": 121,
+      "shape_quantile": 0.9,
+      "shape_savgol_window": 11,
+      "shape_savgol_order": 3,
+      "amplitude_window_days": 30,
+      "amplitude_quantile": 0.9,
+      "normalization_floor_ratio": 0.02,
+      "ar_window_days": 90,
+      "ar_min_samples": 14,
+      "ridge_alpha": 1.0,
+      "knn_window_days": 120,
+      "knn_lag_days": 7,
+      "knn_neighbors": [5, 10, 20],
+      "boundary_thresholds": [0.1, 0.15, 0.2],
+      "selection_window_days": 30,
+      "selection_min_days": 14,
+      "selection_improvement_ratio": 0.01,
+      "scenario_window_days": 60,
+      "scenario_count": 50,
+      "scenario_seed": 20250911
+    }
   },
   "storage_contract": {
     "capacity_kwh": 12000,
     "soc_min_kwh": 1200,
     "soc_max_kwh": 10800,
-    "initial_soc_kwh": 6000,
-    "terminal_soc_kwh": 6000,
+    "question1_initial_soc_kwh": 6000,
+    "question1_daily_closing_soc_kwh": 6000,
     "charge_efficiency": 0.9,
     "discharge_efficiency": 0.9,
     "max_charge_power_kw": 5000,
-    "max_discharge_power_kw": 5000,
-    "bridge_interval": "2025-01-01 00:00/00:10",
-    "terminal_timestamp": "2026-01-01 00:10"
+    "max_discharge_power_kw": 5000
   },
   "expected_rows": {
     "dispatch_10min": 52560,
     "pv_forecast_hourly": 35040,
     "pv_forecast_10min": 210240,
     "day_ahead_baseline_10min": 52560,
-    "result_period_intervals": 48096
+    "result_period_intervals": 48096,
+    "pv_day_ahead_hourly": 8760,
+    "pv_day_ahead_10min": 52560,
+    "pv_day_ahead_residuals": 52560
   },
   "required_inputs": {
     "attachment_1": "附件/附件1.xlsx",

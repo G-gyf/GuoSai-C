@@ -1,0 +1,15 @@
+﻿check_id,status,observed,expected
+hourly_row_count,PASS,8760,8760
+ten_minute_row_count,PASS,52560,52560
+residual_row_count,PASS,52560,52560
+result_period_row_count,PASS,48096,48096
+daily_structure,PASS,"hour=24-24, ten=144-144",24 and 144
+causality,PASS,True,True
+nonnegative,PASS,True,True
+forecast_numeric_finite,PASS,True,True
+quantile_order,PASS,True,True
+daylight_mask_zero,PASS,True,True
+hourly_restoration_conservation,PASS,2.7284841053187847e-12,<=1e-8 kW
+no_upper_envelope_clipping_observed,PASS,2356,>0 rows
+hourly_primary_key,PASS,True,True
+ten_minute_primary_key,PASS,True,True

@@ -1,0 +1,29 @@
+{
+  "calendar_start": "2025-01-01",
+  "calendar_end": "2025-12-31",
+  "result_start": "2025-02-01",
+  "result_end": "2025-12-31",
+  "hourly_rows": 8760,
+  "ten_minute_rows": 52560,
+  "residual_rows": 52560,
+  "hard_daylight_p10_p90_coverage": 0.7329856416199858,
+  "selection_counts": {
+    "a1_7": 159,
+    "a2": 9,
+    "a3": 9,
+    "ensemble": 157
+  },
+  "no_upper_clipping": true,
+  "uses_attachment_3": false,
+  "uses_external_weather": false,
+  "quality_status": "PASS",
+  "failed_checks": [],
+  "artifacts": {
+    "hourly": "data\\processed\\pv_day_ahead_hourly.parquet",
+    "ten_minute": "data\\processed\\pv_day_ahead_10min.parquet",
+    "residuals": "data\\processed\\pv_day_ahead_residuals.parquet",
+    "metrics": "outputs\\question2_forecast\\model_metrics.csv",
+    "key_dates": "outputs\\question2_forecast\\key_dates_metrics.csv",
+    "quality_checks": "outputs\\question2_forecast\\quality_checks.csv"
+  }
+}

@@ -34,14 +34,42 @@ class DataPipelineAcceptanceTests(unittest.TestCase):
         self.assertEqual(len(self.baseline), 52_560)
         self.assertEqual(int(self.dispatch["is_result_period"].sum()), 48_096)
 
-    def test_plan_time_axis(self) -> None:
+    def test_calendar_time_axis_and_template_mapping(self) -> None:
         counts = self.dispatch.groupby("plan_date").size()
         self.assertTrue(counts.eq(144).all())
         first = self.dispatch.groupby("plan_date").first()
         last = self.dispatch.groupby("plan_date").last()
-        self.assertTrue((first["interval_start"] - first.index == pd.Timedelta(minutes=10)).all())
-        self.assertTrue((last["interval_start"] - last.index == pd.Timedelta(days=1)).all())
+        self.assertTrue((first["interval_start"] - first.index == pd.Timedelta(0)).all())
+        self.assertTrue((first["interval_end"] - first.index == pd.Timedelta(minutes=10)).all())
+        self.assertTrue((last["interval_start"] - last.index == pd.Timedelta(hours=23, minutes=50)).all())
+        self.assertTrue((last["interval_end"] - last.index == pd.Timedelta(days=1)).all())
+        self.assertTrue((self.dispatch["observation_ts"] == self.dispatch["interval_end"]).all())
+        self.assertTrue((self.dispatch["load_pv_source_ts"] == self.dispatch["interval_end"]).all())
+        self.assertTrue((self.dispatch["price_source_ts"] == self.dispatch["interval_start"]).all())
+        slot1 = self.dispatch["slot_index"].eq(1)
+        self.assertTrue(self.dispatch.loc[slot1, "template_slot_index"].eq(144).all())
+        self.assertTrue(
+            self.dispatch.loc[slot1, "template_plan_date"].eq(
+                self.dispatch.loc[slot1, "plan_date"] - pd.Timedelta(days=1)
+            ).all()
+        )
+        self.assertTrue(
+            self.dispatch.loc[~slot1, "template_slot_index"].eq(
+                self.dispatch.loc[~slot1, "slot_index"] - 1
+            ).all()
+        )
         self.assertFalse(self.dispatch.duplicated(["plan_date", "slot_index"]).any())
+
+    def test_price_alignment_uses_interval_start(self) -> None:
+        variable_available = self.dispatch["price_variable_available"]
+        self.assertEqual(int((~variable_available).sum()), 1)
+        self.assertFalse(bool(variable_available.iloc[0]))
+        self.assertEqual(self.dispatch["interval_start"].iloc[0], pd.Timestamp("2025-01-01 00:00"))
+        self.assertTrue(
+            np.isfinite(
+                self.dispatch.loc[variable_available, "price_variable_yuan_per_kwh"].to_numpy(float)
+            ).all()
+        )
 
     def test_units_and_net_load(self) -> None:
         self.assertTrue(np.allclose(self.dispatch["load_actual_kw"] / 6, self.dispatch["load_actual_kwh"]))

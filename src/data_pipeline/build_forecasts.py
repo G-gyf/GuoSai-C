@@ -47,7 +47,9 @@ def build_pv_forecast_hourly(frame: pd.DataFrame) -> pd.DataFrame:
 def build_pv_forecast_10min(
     hourly: pd.DataFrame, dispatch: pd.DataFrame
 ) -> pd.DataFrame:
-    actual_lookup = dispatch.set_index("interval_start")["pv_actual_kw"]
+    # Forecast target timestamps denote power-observation times.  Under the
+    # endpoint convention, they must be matched to the delivery interval end.
+    actual_lookup = dispatch.set_index("observation_ts")["pv_actual_kw"]
     blocks: list[pd.DataFrame] = []
     anchor_minutes = np.arange(0, 1441, 60, dtype=float)
     target_minutes = np.arange(10, 1441, 10, dtype=float)
@@ -80,11 +82,11 @@ def build_pv_forecast_10min(
 def build_day_ahead_baseline(
     dispatch: pd.DataFrame, representative: pd.DataFrame
 ) -> pd.DataFrame:
-    """Build 00:00 forecasts from prior plan-date rows only.
+    """Build 00:00 forecasts of calendar-day endpoint observations.
 
-    ``training_start`` and ``training_end`` identify source plan dates.  This
-    convention makes the causality boundary explicit even though the official
-    final slot of a source row is labelled as next-day 00:00.
+    Each forecast row contains the endpoints 00:10, ..., 00:00+1.  These are
+    observation targets and are not yet the official result-template slots.
+    ``training_start`` and ``training_end`` identify source calendar dates.
     """
     ordered_dates = pd.DatetimeIndex(dispatch["plan_date"].drop_duplicates()).sort_values()
     load_matrix = (
