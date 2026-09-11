@@ -1,0 +1,26 @@
+﻿check_id,status,observed,expected,details
+source_table_dimensions,PASS,"{'attachment_1': (144, 4), 'attachment_2_load': (365, 145), 'attachment_2_pv': (365, 145), 'attachment_3': (1460, 26), 'attachment_4': (365, 145)}","{'attachment_1': (144, 4), 'attachment_2_load': (365, 145), 'attachment_2_pv': (365, 145), 'attachment_3': (1460, 26), 'attachment_4': (365, 145)}",五张源数据表的行列数符合数据契约
+dispatch_row_count,PASS,52560,52560,全年实际运行主表行数
+hourly_forecast_row_count,PASS,35040,35040,附件3小时长表行数
+ten_min_forecast_row_count,PASS,210240,210240,线性插值后的10分钟预报行数
+baseline_row_count,PASS,52560,52560,日初基线预报行数
+dispatch_primary_key,PASS,True,True,plan_date与slot_index组合键唯一
+forecast_primary_key,PASS,True,True,issue_ts与horizon_10min组合键唯一
+daily_slot_completeness,PASS,"min=144, max=144",all=144,每个计划日期均含144个时段
+ten_minute_continuity,PASS,[10.0],[10.0],同一计划日期相邻区间间隔恒为10分钟
+plan_day_boundaries,PASS,True,True,首段为00:10，末段为次日00:00
+actual_numeric_finite,PASS,True,True,实际运行主表数值字段无空值或无穷值
+forecast_numeric_finite,PASS,True,True,小时及10分钟光伏预报无空值或无穷值
+baseline_numeric_finite,PASS,True,True,日初负载与光伏基线无空值或无穷值
+source_values_nonnegative,PASS,True,True,负载、光伏和两类电价非负；净负荷允许为负
+power_energy_conversion,PASS,True,True,10分钟电量严格等于功率乘以1/6
+fixed_price_alignment,PASS,True,True,固定价格逐时段与附件1一致
+variable_price_alignment,PASS,True,True,波动价格逐日期逐时段与附件4一致
+hourly_issue_structure,PASS,"{0: 365, 6: 365, 12: 365, 18: 365}","{0,6,12,18}:365 each; 24 horizons",每个发布时间均含24个步长
+hourly_target_mapping,PASS,True,True,预测目标时刻等于发布时间加预测步长
+interpolation_anchor_fidelity,PASS,True,True,每个整点插值严格还原附件3小时预报
+interpolation_nonnegative,PASS,0.0,>=0,插值结果非负
+result_period_count,PASS,48096,48096,正式结果期计划区间数
+baseline_daily_completeness,PASS,"min=144, max=144",all=144,每日基线含144个时段
+baseline_causality,PASS,True,True,训练来源计划日期严格早于发布时间
+key_dates_extractable,PASS,576,576,四个必交日期均可无歧义提取

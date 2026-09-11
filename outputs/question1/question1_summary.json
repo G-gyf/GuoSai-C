@@ -1,0 +1,113 @@
+{
+  "summary": {
+    "solver": "scipy.optimize.linprog(method='highs')",
+    "model_class": "continuous_linear_programming",
+    "primary_status": 0,
+    "primary_message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+    "primary_optimal_cost_yuan": 35126.94858928963,
+    "secondary_status": 0,
+    "secondary_message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+    "cost_tolerance_yuan": 3.5126948589289627e-06,
+    "secondary_cost_yuan": 35126.94859280232,
+    "secondary_throughput_objective": 37540.60561919492,
+    "parameters": {
+      "interval_hours": 0.16666666666666666,
+      "initial_soc_kwh": 6000.0,
+      "terminal_soc_kwh": 6000.0,
+      "min_soc_kwh": 1200.0,
+      "max_soc_kwh": 10800.0,
+      "max_charge_power_kw": 5000.0,
+      "max_discharge_power_kw": 5000.0,
+      "charge_efficiency": 0.9,
+      "discharge_efficiency": 0.9,
+      "feasibility_tolerance": 1e-06,
+      "zero_tolerance": 1e-09
+    },
+    "total_purchase_kwh": 59482.6989900444,
+    "total_cost_yuan": 35126.94859280232,
+    "total_charge_kwh": 20740.666087952995,
+    "total_discharge_kwh": 16799.939531241922,
+    "total_curtailment_kwh": 0.0,
+    "min_soc_kwh": 1200.0,
+    "max_soc_kwh": 10800.0,
+    "baseline_purchase_kwh": 61789.9354,
+    "baseline_cost_yuan": 48052.046590846665,
+    "cost_saving_yuan": 12925.097998044344,
+    "cost_saving_rate": 0.2689812175555998
+  },
+  "validation": {
+    "status": "PASS",
+    "slot_count": 144,
+    "max_balance_residual_kwh": 2.2737367544323206e-13,
+    "max_soc_transition_residual_kwh": 8.313350008393172e-13,
+    "min_soc_kwh": 1200.0,
+    "max_soc_kwh": 10800.0,
+    "terminal_soc_kwh": 6000.0,
+    "max_charge_kwh": 833.3333333333333,
+    "max_discharge_kwh": 715.6530333333333,
+    "simultaneous_charge_discharge_slots": 0,
+    "minimum_grid_purchase_kwh": 0.0,
+    "minimum_curtailment_kwh": 0.0,
+    "cost_recalculation_error_yuan": 0.0,
+    "secondary_cost_gap_yuan": 3.5126940929330885e-06,
+    "failed_checks": []
+  },
+  "four_hour_blocks": [
+    {
+      "time_block": "0:00-4:00",
+      "charge_kwh": 4500.0,
+      "discharge_kwh": 0.0
+    },
+    {
+      "time_block": "4:00-8:00",
+      "charge_kwh": 833.3333333333333,
+      "discharge_kwh": 5947.419714575255
+    },
+    {
+      "time_block": "8:00-12:00",
+      "charge_kwh": 3954.6309109982626,
+      "discharge_kwh": 2121.4184333333333
+    },
+    {
+      "time_block": "12:00-16:00",
+      "charge_kwh": 6119.3685102880645,
+      "discharge_kwh": 91.1013833333335
+    },
+    {
+      "time_block": "16:00-20:00",
+      "charge_kwh": 0.0,
+      "discharge_kwh": 5068.68685
+    },
+    {
+      "time_block": "20:00-24:00",
+      "charge_kwh": 5333.333333333333,
+      "discharge_kwh": 3571.31315
+    }
+  ],
+  "paper_table_intervals": [
+    {
+      "time_label": "10:00",
+      "grid_purchase_kwh": 0.0
+    },
+    {
+      "time_label": "12:00",
+      "grid_purchase_kwh": 486.40289999999993
+    },
+    {
+      "time_label": "14:00",
+      "grid_purchase_kwh": 0.0
+    },
+    {
+      "time_label": "16:00",
+      "grid_purchase_kwh": 394.9314833333333
+    },
+    {
+      "time_label": "18:00",
+      "grid_purchase_kwh": 636.9826166666667
+    },
+    {
+      "time_label": "20:00",
+      "grid_purchase_kwh": 0.0
+    }
+  ]
+}

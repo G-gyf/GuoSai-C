@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>数据预处理与前置分析报告</title>
+<style>
+body{font-family:"Microsoft YaHei","Noto Sans CJK SC",sans-serif;line-height:1.7;color:#253047;max-width:1120px;margin:0 auto;padding:32px;background:#f4f6f9}
+main{background:#fff;padding:34px 44px;box-shadow:0 2px 16px #dfe4ec}h1,h2,h3{color:#16375b}h1{border-bottom:3px solid #2c6eaa;padding-bottom:12px}
+.meta,.note{color:#5c6678}.pass{color:#1d7a46;font-weight:700}.fail{color:#b52b2b;font-weight:700}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.card{background:#eef4fa;padding:12px 16px;border-left:4px solid #2c6eaa}img{display:block;width:100%;height:auto;margin:16px 0 30px}
+.data-table{border-collapse:collapse;width:100%;font-size:13px;display:block;overflow-x:auto}th,td{border:1px solid #d8dee8;padding:7px 9px;white-space:nowrap}th{background:#edf3f8}
+code{background:#eef1f5;padding:2px 5px}@media(max-width:760px){main{padding:20px}.grid{grid-template-columns:1fr}}
+</style></head><body><main>
+<h1>数据预处理与前置分析报告</h1>
+<p class="meta">生成时间：2026-09-11 13:09 CST。本报告仅使用题目附件，不引入日历、节假日、天气或其他外部特征；不包含优化策略与求解结果。</p>
+<h2>1. 数据契约与质量结论</h2>
+<p>实际运行主表共 <strong>52,560</strong> 条记录，正式结果期共 <strong>48,096</strong> 个计划区间。质量检查共 25 项，失败项为 <span class="pass">0</span>。</p>
+<table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>check_id</th>
+      <th>status</th>
+      <th>observed</th>
+      <th>expected</th>
+      <th>details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>source_table_dimensions</td>
+      <td>PASS</td>
+      <td>{'attachment_1': (144, 4), 'attachment_2_load': (365, 145), 'attachment_2_pv': (365, 145), 'attachment_3': (1460, 26), 'attachment_4': (365, 145)}</td>
+      <td>{'attachment_1': (144, 4), 'attachment_2_load': (365, 145), 'attachment_2_pv': (365, 145), 'attachment_3': (1460, 26), 'attachment_4': (365, 145)}</td>
+      <td>五张源数据表的行列数符合数据契约</td>
+    </tr>
+    <tr>
+      <td>dispatch_row_count</td>
+      <td>PASS</td>
+      <td>52560</td>
+      <td>52560</td>
+      <td>全年实际运行主表行数</td>
+    </tr>
+    <tr>
+      <td>hourly_forecast_row_count</td>
+      <td>PASS</td>
+      <td>35040</td>
+      <td>35040</td>
+      <td>附件3小时长表行数</td>
+    </tr>
+    <tr>
+      <td>ten_min_forecast_row_count</td>
+      <td>PASS</td>
+      <td>210240</td>
+      <td>210240</td>
+      <td>线性插值后的10分钟预报行数</td>
+    </tr>
+    <tr>
+      <td>baseline_row_count</td>
+      <td>PASS</td>
+      <td>52560</td>
+      <td>52560</td>
+      <td>日初基线预报行数</td>
+    </tr>
+    <tr>
+      <td>dispatch_primary_key</td>
+      <td>PASS</td>
+      <td>True</td>
+      <td>True</td>
+      <td>plan_date与slot_index组合键唯一</td>
+    </tr>
+    <tr>
+      <td>forecast_primary_key</td>
+      <td>PASS</td>
+      <td>True</td>
+      <td>True</td>
+      <td>issue_ts与horizon_10min组合键唯一</td>
+    </tr>
+    <tr>
+      <td>daily_slot_completeness</td>
+      <td>PASS</td>
+      <td>min=144, max=144</td>
+      <td>all=144</td>
+      <td>每个计划日期均含144个时段</td>
+    </tr>
+    <tr>
+      <td>ten_minute_continuity</td>
+      <td>PASS</td>
+      <td>[10.0]</td>
+      <td>[10.0]</td>
+      <td>同一计划日期相邻区间间隔恒为10分钟</td>
+    </tr>
+    <tr>
+      <td>plan_day_boundaries</td>
+      <td>PASS</td>
+      <td>True</td>
+      <td>True</td>
+      <td>首段为00:10，末段为次日00:00</td>
+    </tr>
+    <tr>
+      <td>actual_numeric_finite</td>
+      <td>PASS</td>
+      <td>True</td>
+      <td>True</td>
+      <td>实际运行主表数值字段无空值或无穷值</td>
+    </tr>
+    <tr>
+      <td>forecast_numeric_finite</td>
+      <td>PASS</td>
+      <td>True</td>
+      <td>True</td>
+      <td>小时及10分钟光伏预报无空值或无穷值</td>
+    </tr>
+    <tr>
+      <td>baseline_numeric_finite</td>
+      <td>PASS</td>
+      <td>True</td>
+      <td>True</td>
+      <td>日初负载与光伏基线无空值或无穷值</td>
+    </tr>
+    <tr>
+      <td>source_values_nonnegative</td>
+      <td>PASS</td>
+      <td>True</td>
+      <td>True</td>
+      <td>负载、光伏和两类电价非负；净负荷允许为负</td>
+    </tr>
+    <tr>
+      <td>power_energy_conversion</td>
+      <td>PASS</td>
+      <td>True</td>
+      <td>True</td>
+      <td>10分钟电量严格等于功率乘以1/6</td>
+    </tr>
+    <tr>
+      <td>fixed_price_alignment</td>
+      <td>PASS</td>
+      <td>True</td>
+      <td>True</td>
+      <td>固定价格逐时段与附件1一致</td>
+    </tr>
+    <tr>
+      <td>variable_price_alignment</td>
+      <td>PASS</td>
+      <td>True</td>
+      <td>True</td>
+      <td>波动价格逐日期逐时段与附件4一致</td>
+    </tr>
+    <tr>
+      <td>hourly_issue_structure</td>
+      <td>PASS</td>
+      <td>{0: 365, 6: 365, 12: 365, 18: 365}</td>
+      <td>{0,6,12,18}:365 each; 24 horizons</td>
+      <td>每个发布时间均含24个步长</td>
+    </tr>
+    <tr>
+      <td>hourly_target_mapping</td>
+      <td>PASS</td>
+      <td>True</td>
+      <td>True</td>
+      <td>预测目标时刻等于发布时间加预测步长</td>
+    </tr>
+    <tr>
+      <td>interpolation_anchor_fidelity</td>
+      <td>PASS</td>
+      <td>True</td>
+      <td>True</td>
+      <td>每个整点插值严格还原附件3小时预报</td>
+    </tr>
+    <tr>
+      <td>interpolation_nonnegative</td>
+      <td>PASS</td>
+      <td>0.0</td>
+      <td>&gt;=0</td>
+      <td>插值结果非负</td>
+    </tr>
+    <tr>
+      <td>result_period_count</td>
+      <td>PASS</td>
+      <td>48096</td>
+      <td>48096</td>
+      <td>正式结果期计划区间数</td>
+    </tr>
+    <tr>
+      <td>baseline_daily_completeness</td>
+      <td>PASS</td>
+      <td>min=144, max=144</td>
+      <td>all=144</td>
+      <td>每日基线含144个时段</td>
+    </tr>
+    <tr>
+      <td>baseline_causality</td>
+      <td>PASS</td>
+      <td>True</td>
+      <td>True</td>
+      <td>训练来源计划日期严格早于发布时间</td>
+    </tr>
+    <tr>
+      <td>key_dates_extractable</td>
+      <td>PASS</td>
+      <td>576</td>
+      <td>576</td>
+      <td>四个必交日期均可无歧义提取</td>
+    </tr>
+  </tbody>
+</table>
+<h3>原始数据登记</h3><table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>attachment</th>
+      <th>file</th>
+      <th>size_bytes</th>
+      <th>sha256</th>
+      <th>sheet</th>
+      <th>data_rows</th>
+      <th>data_columns</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>attachment_1</td>
+      <td>附件/附件1.xlsx</td>
+      <td>16003</td>
+      <td>66b87134f5ecccd68184d3539bb1293ef039f9e0fdd955a589b9bfa7f227c377</td>
+      <td>Sheet1</td>
+      <td>144</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <td>attachment_2</td>
+      <td>附件/附件2.xlsx</td>
+      <td>907128</td>
+      <td>2e95fd446bfafa0d8c59577b5c2e2ea8b3f1def20dde54a3062556f4da9b4c72</td>
+      <td>小区负载</td>
+      <td>365</td>
+      <td>145</td>
+    </tr>
+    <tr>
+      <td>attachment_2</td>
+      <td>附件/附件2.xlsx</td>
+      <td>907128</td>
+      <td>2e95fd446bfafa0d8c59577b5c2e2ea8b3f1def20dde54a3062556f4da9b4c72</td>
+      <td>光伏发电实际功率</td>
+      <td>365</td>
+      <td>145</td>
+    </tr>
+    <tr>
+      <td>attachment_3</td>
+      <td>附件/附件3.xlsx</td>
+      <td>293526</td>
+      <td>8a61b06c52bd0d639a1cc37c61a7d9f5b75edcbca718f64c1bd3498ec9f9d843</td>
+      <td>Sheet1</td>
+      <td>1460</td>
+      <td>26</td>
+    </tr>
+    <tr>
+      <td>attachment_4</td>
+      <td>附件/附件4.xlsx</td>
+      <td>409790</td>
+      <td>20e9c93aeab5e8e21ae4dd15587f9e190f7408692504c1319598461cd654fe71</td>
+      <td>Sheet1</td>
+      <td>365</td>
+      <td>145</td>
+    </tr>
+  </tbody>
+</table>
+<h2>2. 代表性日与全年数据关系</h2>
+<p>附件1与全年相同时段均值按官方列序比较。负载及电价差异仅体现源表精度，光伏差异集中于黎明、傍晚的小功率区间，说明附件1适合作为问题1的确定性代表日，并为问题1—3提供固定价格；后续实际运行与预测评价仍以附件2—4为准。</p>
+<table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>指标</th>
+      <th>平均绝对差</th>
+      <th>最大绝对差</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>负载</td>
+      <td>0.0000</td>
+      <td>0.0001</td>
+    </tr>
+    <tr>
+      <td>光伏</td>
+      <td>0.0009</td>
+      <td>0.0431</td>
+    </tr>
+    <tr>
+      <td>电价</td>
+      <td>0.0000</td>
+      <td>0.0001</td>
+    </tr>
+  </tbody>
+</table>
+<h2>3. 负载、光伏与净负荷</h2>
+<div class="grid"><div class="card">负载范围<br><strong>1,995.72—7,978.88 kW</strong></div><div class="card">光伏范围<br><strong>0.00—10,216.20 kW</strong></div><div class="card">净负荷范围<br><strong>-6,601.99—6,687.75 kW</strong></div></div>
+<p>光伏高于负载的时段占比为 <strong>19.27%</strong>，对应全年光伏剩余电量为 <strong>3,120,221.00 kWh</strong>。负净荷作为有效运行状态保留，未进行截断。</p>
+<table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>序列</th>
+      <th>峰值时段</th>
+      <th>峰值_kW</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>平均负载</td>
+      <td>09:10</td>
+      <td>5,958.9696</td>
+    </tr>
+    <tr>
+      <td>平均光伏</td>
+      <td>12:10</td>
+      <td>7,612.3160</td>
+    </tr>
+    <tr>
+      <td>平均净负荷</td>
+      <td>17:40</td>
+      <td>4,956.4995</td>
+    </tr>
+  </tbody>
+</table>
+<img src="figures/average_dispatch_profile.png" alt="平均功率曲线"><img src="figures/net_load_surplus.png" alt="净负荷与光伏剩余">
+<img src="figures/daily_energy_distribution.png" alt="每日能量总体分布">
+<h2>4. 电价特征</h2>
+<p>固定电价按附件1逐时段复制；波动电价保留逐日逐时段差异。前置分析仅讨论其分布、时段范围及与供需变量的统计关系，不据此预判优化策略。</p>
+<table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>指标</th>
+      <th>数值</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>波动电价—负载相关系数</td>
+      <td>0.5077</td>
+    </tr>
+    <tr>
+      <td>波动电价—光伏相关系数</td>
+      <td>0.0284</td>
+    </tr>
+    <tr>
+      <td>波动电价—净负荷相关系数</td>
+      <td>0.2602</td>
+    </tr>
+    <tr>
+      <td>高价与高净负荷同时出现比例</td>
+      <td>0.0327</td>
+    </tr>
+    <tr>
+      <td>固定电价变异系数</td>
+      <td>0.4089</td>
+    </tr>
+    <tr>
+      <td>波动电价变异系数</td>
+      <td>0.4446</td>
+    </tr>
+  </tbody>
+</table>
+<img src="figures/fixed_price_profile.png" alt="固定电价"><img src="figures/variable_price_distribution.png" alt="波动电价分布">
+<h2>5. 光伏预报质量</h2>
+<p>误差定义为预测值减实际值。可评价样本的总体 MAE 为 <strong>186.61 kW</strong>，RMSE 为 <strong>438.56 kW</strong>，偏差为 <strong>-30.76 kW</strong>。年末超出实际数据范围的预测予以保留，但不进入误差统计。</p>
+<table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>发布时间</th>
+      <th>样本数</th>
+      <th>MAE_kW</th>
+      <th>偏差_kW</th>
+      <th>非零光伏MAE_kW</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>00:00</td>
+      <td>8760</td>
+      <td>181.3133</td>
+      <td>-25.5900</td>
+      <td>362.7094</td>
+    </tr>
+    <tr>
+      <td>06:00</td>
+      <td>8754</td>
+      <td>97.4838</td>
+      <td>-7.4705</td>
+      <td>194.8786</td>
+    </tr>
+    <tr>
+      <td>12:00</td>
+      <td>8748</td>
+      <td>207.8655</td>
+      <td>-36.4472</td>
+      <td>415.8261</td>
+    </tr>
+    <tr>
+      <td>18:00</td>
+      <td>8742</td>
+      <td>259.8928</td>
+      <td>-53.5797</td>
+      <td>520.1427</td>
+    </tr>
+  </tbody>
+</table>
+<img src="figures/forecast_error_by_horizon.png" alt="分步长预报误差">
+<p>新旧预报价值采用同一交付时刻配对比较，避免不同发布时间覆盖的昼夜结构差异造成混淆。绝对误差改善定义为旧预报绝对误差减去新预报绝对误差。</p>
+<table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>new_issue_time</th>
+      <th>comparison_count</th>
+      <th>prior_mae_kw</th>
+      <th>new_mae_kw</th>
+      <th>mean_abs_error_gain_kw</th>
+      <th>improvement_ratio</th>
+      <th>mean_lead_reduction_hours</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>00:00</td>
+      <td>6552</td>
+      <td>346.7617</td>
+      <td>242.0674</td>
+      <td>104.6942</td>
+      <td>0.4098</td>
+      <td>6.0000</td>
+    </tr>
+    <tr>
+      <td>06:00</td>
+      <td>6570</td>
+      <td>240.8254</td>
+      <td>125.9687</td>
+      <td>114.8568</td>
+      <td>0.4527</td>
+      <td>6.0000</td>
+    </tr>
+    <tr>
+      <td>12:00</td>
+      <td>6564</td>
+      <td>78.8037</td>
+      <td>25.1678</td>
+      <td>53.6359</td>
+      <td>0.2581</td>
+      <td>6.0000</td>
+    </tr>
+    <tr>
+      <td>18:00</td>
+      <td>6558</td>
+      <td>254.4548</td>
+      <td>176.5483</td>
+      <td>77.9065</td>
+      <td>0.2153</td>
+      <td>6.0000</td>
+    </tr>
+  </tbody>
+</table><img src="figures/forecast_update_gain.png" alt="预报更新改善">
+<h2>6. 四个必交日期核查</h2>
+<table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>plan_date</th>
+      <th>interval_count</th>
+      <th>load_energy_kwh</th>
+      <th>pv_energy_kwh</th>
+      <th>net_load_energy_kwh</th>
+      <th>pv_surplus_energy_kwh</th>
+      <th>load_peak_kw</th>
+      <th>pv_peak_kw</th>
+      <th>net_load_peak_kw</th>
+      <th>fixed_price_min</th>
+      <th>fixed_price_max</th>
+      <th>variable_price_min</th>
+      <th>variable_price_max</th>
+      <th>midnight_pv_forecast_mae_kw</th>
+      <th>forecast_issue_count</th>
+      <th>evaluated_forecast_points</th>
+      <th>first_interval_start</th>
+      <th>last_interval_start</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>2025-03-20</td>
+      <td>144</td>
+      <td>117,648.3817</td>
+      <td>55,439.4199</td>
+      <td>62,208.9618</td>
+      <td>3,910.8767</td>
+      <td>6,757.8100</td>
+      <td>8,090.5707</td>
+      <td>5,838.5445</td>
+      <td>0.3713</td>
+      <td>1.3952</td>
+      <td>0.2794</td>
+      <td>1.3228</td>
+      <td>283.6109</td>
+      <td>4</td>
+      <td>360</td>
+      <td>2025-03-20 00:10:00</td>
+      <td>2025-03-21</td>
+    </tr>
+    <tr>
+      <td>2025-06-21</td>
+      <td>144</td>
+      <td>81,408.0648</td>
+      <td>62,073.3244</td>
+      <td>19,334.7404</td>
+      <td>20,959.2861</td>
+      <td>4,317.2602</td>
+      <td>8,605.7877</td>
+      <td>4,004.9442</td>
+      <td>0.3713</td>
+      <td>1.3952</td>
+      <td>0.1828</td>
+      <td>1.2633</td>
+      <td>99.6935</td>
+      <td>4</td>
+      <td>360</td>
+      <td>2025-06-21 00:10:00</td>
+      <td>2025-06-22</td>
+    </tr>
+    <tr>
+      <td>2025-09-23</td>
+      <td>144</td>
+      <td>121,182.2813</td>
+      <td>59,065.6658</td>
+      <td>62,116.6156</td>
+      <td>6,478.2955</td>
+      <td>6,704.9712</td>
+      <td>8,690.3915</td>
+      <td>6,311.1760</td>
+      <td>0.3713</td>
+      <td>1.3952</td>
+      <td>0.3271</td>
+      <td>1.3866</td>
+      <td>116.8265</td>
+      <td>4</td>
+      <td>360</td>
+      <td>2025-09-23 00:10:00</td>
+      <td>2025-09-24</td>
+    </tr>
+    <tr>
+      <td>2025-12-21</td>
+      <td>144</td>
+      <td>124,376.4410</td>
+      <td>35,338.6591</td>
+      <td>89,037.7819</td>
+      <td>0.0000</td>
+      <td>7,367.0100</td>
+      <td>5,904.8948</td>
+      <td>6,338.7700</td>
+      <td>0.3713</td>
+      <td>1.3952</td>
+      <td>0.3905</td>
+      <td>1.5659</td>
+      <td>60.8440</td>
+      <td>4</td>
+      <td>360</td>
+      <td>2025-12-21 00:10:00</td>
+      <td>2025-12-22</td>
+    </tr>
+  </tbody>
+</table><img src="figures/key_dates_profiles.png" alt="关键日期曲线">
+<h2>7. 数据使用边界</h2>
+<p>日初基线在 2025-01-01 使用附件1，随后仅使用此前已有计划日期的相同时段观测；第8日起固定使用最近7个计划日。问题3与问题4-3中，负载预测固定为0:00版本，光伏可在0:00、6:00、12:00、18:00按附件3更新。实际同日负载与光伏仅供执行仿真、结算和回测使用。</p>
+<h2>8. 异常标记</h2>
+<p>采用 Tukey 外围栏（低于 Q1−3IQR 或高于 Q3+3IQR）形成统计标记，共识别 <strong>0</strong> 条记录。该标记仅用于提示复核，不等同于数据错误；所有原值均保留，未删除、平滑或缩尾。</p>
+<p>未发现外围栏标记。</p>
+<p class="note">完整标记见 <code>tables/anomaly_flags.csv</code>；其他机器可读结果见 <code>quality_report.json</code>、<code>quality_checks.csv</code> 与 <code>tables/</code>。</p>
+</main></body></html>

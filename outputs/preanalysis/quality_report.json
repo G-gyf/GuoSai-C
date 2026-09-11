@@ -1,0 +1,9 @@
+{
+  "overall_status": "PASS",
+  "check_count": 25,
+  "status_counts": {
+    "PASS": 25
+  },
+  "failed_checks": [],
+  "note": "异常值仅标记，不删除、不平滑、不缩尾。"
+}

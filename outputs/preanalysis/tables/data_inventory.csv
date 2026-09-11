@@ -1,0 +1,6 @@
+﻿attachment,file,size_bytes,sha256,sheet,data_rows,data_columns
+attachment_1,附件/附件1.xlsx,16003,66b87134f5ecccd68184d3539bb1293ef039f9e0fdd955a589b9bfa7f227c377,Sheet1,144,4
+attachment_2,附件/附件2.xlsx,907128,2e95fd446bfafa0d8c59577b5c2e2ea8b3f1def20dde54a3062556f4da9b4c72,小区负载,365,145
+attachment_2,附件/附件2.xlsx,907128,2e95fd446bfafa0d8c59577b5c2e2ea8b3f1def20dde54a3062556f4da9b4c72,光伏发电实际功率,365,145
+attachment_3,附件/附件3.xlsx,293526,8a61b06c52bd0d639a1cc37c61a7d9f5b75edcbca718f64c1bd3498ec9f9d843,Sheet1,1460,26
+attachment_4,附件/附件4.xlsx,409790,20e9c93aeab5e8e21ae4dd15587f9e190f7408692504c1319598461cd654fe71,Sheet1,365,145
