@@ -364,6 +364,9 @@ def calibrate_staged(scenarios, q, ref, prices, initial, terminal_value,
             "seconds": time.perf_counter() - started,
             "method": "zero_parameter_warmup",
             "accepted_search": False,
+            "nit": None,
+            "success": False,
+            "termination": "warmup_zero_parameter",
             "solver_message": "complete 21-day residual window not yet available",
         }
 
@@ -408,6 +411,12 @@ def calibrate_staged(scenarios, q, ref, prices, initial, terminal_value,
         "seconds": time.perf_counter() - started,
         "method": "differential_evolution_staged_direct_search",
         "accepted_search": bool(accepted),
+        "nit": int(result.nit),
+        "success": bool(result.success),
+        "termination": (
+            "maxiter_budget" if int(result.nit) >= settings.search_maxiter
+            else "population_collapse_convergence"
+        ),
         "solver_message": str(result.message),
     }
 
@@ -916,7 +925,7 @@ def run_strategy(dates, load, pv, prices, fl, fc, settings, limit=None):
             "calibration_count": len(diag["calibrations"]),
             "calibration_seconds": float(sum(c.get("seconds", 0.0) for c in diag["calibrations"])),
             "day_seconds": time.perf_counter() - day_started,
-            **{f"cal_{i}_{key}": (c.get(key) if not isinstance(c.get(key), (list, np.ndarray)) else json.dumps(c.get(key))) for i, c in enumerate(diag["calibrations"]) for key in ["update_slot", "method", "accepted_search", "evaluations", "selected_score"]},
+            **{f"cal_{i}_{key}": (c.get(key) if not isinstance(c.get(key), (list, np.ndarray)) else json.dumps(c.get(key))) for i, c in enumerate(diag["calibrations"]) for key in ["update_slot", "method", "accepted_search", "evaluations", "selected_score", "nit", "success", "termination"]},
         })
         if (d + 1) % 30 == 0 or d + 1 == limit:
             print(f"{strategy} {d + 1}/{limit} days; date={date.date()} "
