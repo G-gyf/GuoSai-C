@@ -1,0 +1,19 @@
+{
+  "passed": true,
+  "headers_preserved": true,
+  "plan_days": 334,
+  "plan_intervals": 48096,
+  "battery_blocks": 2004,
+  "emergency_rows": 557,
+  "max_workbook_schedule_error_kwh": 2.2737367544323206e-13,
+  "independent_face_bill": 13578703.004027002,
+  "independent_settlement_bill": 13323697.210830513,
+  "independent_emergency_bill": 561388.9424101859,
+  "independent_total_bill": 13885086.1532407,
+  "four_component_recheck": {
+    "retained": 12846076.042560812,
+    "down": 366313.48073309154,
+    "up": 111307.68753660514,
+    "emergency": 561388.9424101859
+  }
+}

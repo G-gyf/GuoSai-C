@@ -13,6 +13,7 @@ import pandas as pd
 from src.optimization.question2 import T, ETA, EMIN, EMAX, S, load_inputs, load_forecast_weekly_persist
 from src.optimization.question3 import (
     Q3Settings,
+    adjustment_curve,
     calibrate_staged,
     execute_segment,
     run_rule_horizon,
@@ -128,6 +129,40 @@ class TestForecastInterface(unittest.TestCase):
             self.assertFalse(finite[:, k, : 6 * hour].any(), f"issuance {hour}:00 leaks before issue")
             self.assertTrue(finite[:, k, 6 * hour:].all())
         self.assertTrue((np.nan_to_num(self.curves, nan=0.0) >= 0).all())
+
+
+class TestAdjustmentCurve(unittest.TestCase):
+    @staticmethod
+    def _scen(lo, hi):
+        scen = np.empty((10, 36))
+        scen[::2] = lo
+        scen[1::2] = hi
+        return scen
+
+    def setUp(self):
+        self.fl = np.zeros(36)
+        self.fc = np.zeros(36)
+        self.q0 = np.full(36, 100.0)
+
+    def test_down_region_targets_q90(self):
+        scen = self._scen(50.0, 80.0)  # Q90=80 < q0
+        target = adjustment_curve(self.fl, self.fc, scen, self.q0, 0)
+        np.testing.assert_allclose(target, 80.0)
+
+    def test_up_region_targets_q50(self):
+        scen = self._scen(150.0, 200.0)  # Q50 (linear interp) = 175 > q0
+        target = adjustment_curve(self.fl, self.fc, scen, self.q0, 0)
+        np.testing.assert_allclose(target, 175.0)
+
+    def test_kink_region_keeps_plan(self):
+        scen = self._scen(50.0, 150.0)  # Q50<q0<Q90
+        target = adjustment_curve(self.fl, self.fc, scen, self.q0, 0)
+        np.testing.assert_allclose(target, 100.0)
+
+    def test_point_forecast_floor(self):
+        scen = self._scen(50.0, 150.0)
+        target = adjustment_curve(np.full(36, 120.0), self.fc, scen, self.q0, 0)
+        np.testing.assert_allclose(target, 120.0)
 
 
 class TestRuleConsistency(unittest.TestCase):

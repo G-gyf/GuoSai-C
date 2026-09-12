@@ -3,7 +3,6 @@
     "name": "question3",
     "strategy": "M0",
     "alpha": 0.8,
-    "adjustment_alpha": 0.9,
     "residual_days": 21,
     "search_seed": 20250912,
     "search_maxiter": 8,
@@ -19,10 +18,11 @@
       "0": 0
     },
     "settlement": "segment_net_settlement_s316",
+    "adjustment_curve": "median(Q50, Q90, q0) with point-forecast floor",
     "calibration_acceptance": "candidate must not exceed min(beta1, beta0) floor"
   },
   "terminal_value": 0.41255555555555556,
-  "seconds": 103.7186956000005,
+  "seconds": 102.33780829999887,
   "result_days": 334,
   "result_intervals": 48096,
   "q0_kwh": 21948166.97827801,

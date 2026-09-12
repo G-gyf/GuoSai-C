@@ -15,12 +15,14 @@ three staged LDR calibrations, 18:00 signal-only update):
        the observed a18 (errors of 12:00-18:00 vs the 12:00 forecast)
        updates the locked reserve rule.
 
-Risk quantiles are fixed a priori from the settlement structure, not from
+Risk levels are fixed a priori from the settlement structure, not from
 backtests.  At 0:00 each planned unit costs c and an emergency unit costs
-5c, giving the coverage level 5/(5+1)=0.8.  At an adjustment stage a unit
-cut from the locked plan saves only the 0.5c down fee while an uncovered
-unit still costs 5c, giving 5/(5+0.5)=0.9; hence the 6:00/12:00/18:00
-re-solves use the 90% quantile curve while the 0:00 plan keeps 80%.
+5c, giving the coverage level 5/(5+1)=0.8.  At an adjustment stage the
+piecewise newsvendor optimum against the locked plan is the median of
+Q50 (up region: a unit added costs c+1.5c, 5c*P = 2.5c -> P = 0.5),
+Q90 (down region: a unit cut saves only 0.5c, 5c*P = 0.5c -> P = 0.1)
+and the locked plan q0 itself (the kink); the point forecast stays the
+floor as in the 0:00 curve.
 
 Ablations: M0 (0:00 only, PV forecast = 0:00 issuance, Q2-style 7-parameter
 daily calibration), M6 (0:00 + 6:00), M61218-S (18:00 purchase
@@ -87,7 +89,6 @@ class Q3Settings:
     name: str = "question3"
     strategy: str = MAIN_STRATEGY
     alpha: float = 0.8
-    adjustment_alpha: float = 0.9
     residual_days: int = RESIDUAL_DAYS
     search_seed: int = 20250912
     search_maxiter: int = 8
@@ -129,11 +130,32 @@ def scenario_matrix(d, fl, fc, load, pv, k, h0, residual_days=RESIDUAL_DAYS):
 
 
 def risk_curve(fl_d, fc_dk, scen, h0, alpha=0.8):
+    """max(point net forecast, empirical alpha quantile of net scenarios)."""
     net = fl_d[h0:] - fc_dk[h0:]
     if scen is None:
         return net
     q = np.quantile(scen, alpha, axis=0)
     return np.maximum(net, q)
+
+
+def adjustment_curve(fl_d, fc_dk, scen, q0, h0):
+    """Two-sided newsvendor curve for an adjustment stage.
+
+    The piecewise-optimal adjusted purchase against the locked plan q0 is
+    the median of the down-region optimum Q90 (cutting a unit saves only
+    the 0.5c fee: 5c*P = 0.5c -> P = 0.1), the up-region optimum Q50
+    (adding a unit costs 2.5c: 5c*P = 2.5c -> P = 0.5) and q0 itself
+    (the kink).  The point forecast acts as a floor exactly as in the
+    0:00 curve.  Without scenarios the locked plan is kept and the point
+    forecast may only raise it.
+    """
+    net = fl_d[h0:] - fc_dk[h0:]
+    if scen is None:
+        return np.maximum(net, q0)
+    q50 = np.quantile(scen, 0.5, axis=0)
+    q90 = np.quantile(scen, 0.9, axis=0)
+    target = np.median(np.stack([q50, q90, np.asarray(q0, float)]), axis=0)
+    return np.maximum(net, target)
 
 
 # --------------------------------------------------------------------------
@@ -624,7 +646,7 @@ def _run_day_staged(d, date, load_d, pv_d, prices, fl, fc, energy, settings, loa
         a6 = float((actual_net[:36] - n_hat[:36]).mean())
         signals[1] = a6
         scen6, _ = scenario_matrix(d, fl, fc, load, pv, 1, 36, settings.residual_days)
-        risk6 = risk_curve(fl[d], fc[d, 1], scen6, 36, settings.adjustment_alpha)
+        risk6 = adjustment_curve(fl[d], fc[d, 1], scen6, q0[36:], 36)
         a6plan, ep6, _ = solve_adjustment(q0[36:], risk6, prices[36:], energy, nu)
         qA[36:] = a6plan
         ref[36:] = ep6
@@ -672,7 +694,7 @@ def _run_day_staged(d, date, load_d, pv_d, prices, fl, fc, energy, settings, loa
         a12 = float((actual_net[36:72] - n_hat[36:72]).mean())
         signals[2] = a12
         scen12, _ = scenario_matrix(d, fl, fc, load, pv, 2, 72, settings.residual_days)
-        risk12 = risk_curve(fl[d], fc[d, 2], scen12, 72, settings.adjustment_alpha)
+        risk12 = adjustment_curve(fl[d], fc[d, 2], scen12, q0[72:], 72)
         a12plan, ep12, _ = solve_adjustment(q0[72:], risk12, prices[72:], energy, nu)
         qA[72:] = a12plan
         ref[72:] = ep12
@@ -715,7 +737,7 @@ def _run_day_staged(d, date, load_d, pv_d, prices, fl, fc, energy, settings, loa
         k18 = spec["issuance"][108]
         scen18, _ = scenario_matrix(d, fl, fc, load, pv, k18, 108,
                                     settings.residual_days)
-        risk18 = risk_curve(fl[d], fc[d, k18], scen18, 108, settings.adjustment_alpha)
+        risk18 = adjustment_curve(fl[d], fc[d, k18], scen18, q0[108:], 108)
         a18plan, ep18, _ = solve_adjustment(q0[108:], risk18, prices[108:],
                                             energy, nu)
         qA[108:] = a18plan
@@ -926,6 +948,7 @@ def run_strategy(dates, load, pv, prices, fl, fc, settings, limit=None):
             "updates": STRATEGIES[strategy]["updates"],
             "issuance_by_update": STRATEGIES[strategy]["issuance"],
             "settlement": "segment_net_settlement_s316",
+            "adjustment_curve": "median(Q50, Q90, q0) with point-forecast floor",
             "calibration_acceptance": "candidate must not exceed min(beta1, beta0) floor",
         },
         "terminal_value": float(prices.min() / ETA),
@@ -1147,10 +1170,10 @@ def write_report(out: Path, summaries: list, frame, diag_frame, pair_frame):
         "## 主策略 M612 结构",
         "",
         "- 0:00：周持久化负载 + 附件3 0:00 预报（PCHIP 10 分钟化）→ 80% 分位数 LP 得到 q0 与 E^p,0；校准 δ0（1 维，0—6 时）。",
-        "- 6:00：按分段净结算对 q0 重解 6:00—24:00（90% 分位数风险曲线），锁定 6:00—12:00；校准 (δ6, λ6)（2 维），信号 a6 为 0—6 时已实现误差均值。",
-        "- 12:00：重解并锁定 12:00—24:00（90% 分位数）；联合校准 (δ12, λ12, δ18, λ18)（4 维），a18 在情景内逐路径计算、参数在 12:00 锁定。",
+        "- 6:00：按分段净结算对 q0 重解 6:00—24:00（双面报童曲线 median(Q50,Q90,q0)），锁定 6:00—12:00；校准 (δ6, λ6)（2 维），信号 a6 为 0—6 时已实现误差均值。",
+        "- 12:00：重解并锁定 12:00—24:00（同双面曲线）；联合校准 (δ12, λ12, δ18, λ18)（4 维），a18 在情景内逐路径计算、参数在 12:00 锁定。",
         "- 18:00：不调整购电、不使用 18:00 预报、不重新校准；仅代入实测 a18 更新保留阈值。",
-        "- 分位水平按结算结构先验固定：0:00 计划为 80%（c 对 5c，5/(5+1)）；调整阶段为 90%（下调仅省 0.5c，5/(5+0.5)），不按回测结果事后选参。",
+        "- 风险水平按结算结构先验固定：0:00 计划 80%（c 对 5c）；调整阶段为分段报童最优 median(Q50,Q90,q0)——上调边际 2.5c 对应 50%、下调仅省 0.5c 对应 90%，q0 为折点；点预测始终作下限。不按回测结果事后选参。",
         "- 校准均以最近 21 个完整历史日为情景、β=1 与 β=0 为显式保底候选；不劣于两者较优者才接受搜索结果。",
         "",
         "## 校验",
