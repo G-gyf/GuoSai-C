@@ -1,7 +1,9 @@
-﻿"""Question 2 clipped-affine reserve controller (LDR upgrade).
+"""Question 2 clipped-affine reserve controller (LDR upgrade).
 
 The day-ahead purchase plan is *not* re-optimised in this layer. It is the
 fixed alpha=0.8 quantile-LP plan from :mod:`src.optimization.question2`.
+The day-ahead LOAD forecast is weekly persistence L_{d-7} (attachment 1 for
+d < 7, warm-up only); the PV forecast stays the seven-day same-slot mean.
 For each day with a complete 21-day residual window, seven controller
 parameters are calibrated on the same historical scenarios:
 
@@ -37,6 +39,7 @@ from src.optimization.question2 import (
     S,
     Settings,
     forecasts,
+    load_forecast_weekly_persist,
     load_inputs,
     planning_net,
     run_case,
@@ -74,6 +77,7 @@ class LDRSettings:
     search_popsize: int = 5
     delta_bound_kwh: float = DELTA_BOUND
     lambda_bound: float = LAMBDA_BOUND
+    load_forecast: str = "weekly_persist"  # "weekly_persist" | "mean7d"
 
 
 @dataclass(frozen=True)
@@ -335,8 +339,12 @@ def _period_metrics(frame: pd.DataFrame) -> dict:
     }
 
 
-def run_ldr(dates, load, pv, prices, settings: LDRSettings, limit: int | None = None):
-    """Run the LDR strategy continuously from 1 January at 6000 kWh."""
+def run_ldr(dates, load, pv, prices, settings: LDRSettings, limit: int | None = None, fl=None):
+    """Run the LDR strategy continuously from 1 January at 6000 kWh.
+
+    ``fl`` optionally overrides the day-ahead load forecast matrix; when None
+    the default seven-day mean is used.  The PV forecast is unchanged.
+    """
     started = time.perf_counter()
     if limit is None:
         limit = len(dates)
@@ -345,7 +353,9 @@ def run_ldr(dates, load, pv, prices, settings: LDRSettings, limit: int | None = 
     dates = dates[:limit]
     load = load[:limit]
     pv = pv[:limit]
-    fl, fv = forecasts(load, pv)
+    base_fl, fv = forecasts(load, pv)
+    if fl is None:
+        fl = base_fl
     nu = float(prices.min() / ETA)
     energy = 6000.0
     records: list[tuple] = []
@@ -603,6 +613,11 @@ def write_ldr_report(out: Path, summary: dict, baselines: list[dict], paired: pd
     paired_totals = formal_pair[["ldr_total_cost", "beta1_total_cost", "beta0_total_cost"]].sum()
     delta_beta1 = formal["total_cost"] - beta1["total_cost"]
     delta_beta0 = formal["total_cost"] - beta0["total_cost"]
+    load_forecast = summary["settings"].get("load_forecast", "mean7d")
+    forecast_description = {
+        "mean7d": "负载与光伏均为七天均值预测",
+        "weekly_persist": "负载为周持久化预测 L_{d-7}（d<7 使用附件1，仅预热期），光伏仍为七天均值",
+    }[load_forecast]
     scenario_reference = None
     scenario_path = ROOT / "outputs/question2/archive/scenarios/question2_summary.json"
     if scenario_path.exists():
@@ -651,7 +666,7 @@ def write_ldr_report(out: Path, summary: dict, baselines: list[dict], paired: pd
 
 ## 方法与信息边界
 
-- 每日购电计划由七天均值预测、最近21天成对残差的80%分位数风险曲线和原线性规划产生，LDR层不重新优化购电量。
+- 每日购电计划由{forecast_description}、最近21天成对残差的80%分位数风险曲线和原线性规划产生，LDR层不重新优化购电量。
 - 阶段为0—6、6—12、12—18、18—24时。阶段开始时仅使用此前已完成区间的净负荷预测误差均值；第一阶段固定为0。
 - 参数范围预先固定为δ∈[-9600,9600] kWh、λ∈[-2,2]，每天使用固定种子和固定搜索预算。零参数始终在候选集中，经验目标变差时回退。
 - 实际账单只计计划购电费与五倍紧急购电费，不扣除日前校准使用的期末库存价值。
@@ -689,10 +704,11 @@ def write_ldr_outputs(
     pd.DataFrame(rows).to_csv(out / "ldr_period_summary.csv", index=False, encoding="utf-8-sig")
     metadata_path = out / "question2_metadata.json"
     metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
-    plan_path = ROOT / "问题二完整方案与审查修订.md"
+    plan_path = ROOT / "docs" / "问题二" / "问题二完整方案与审查修订.md"
     metadata.update(
         {
             "implementation": "fixed alpha=0.8 quantile-LP plan plus four-stage clipped-affine reserve calibration",
+            "load_forecast_method": summary["settings"].get("load_forecast", "mean7d"),
             "stage_starts": STAGE_STARTS.tolist(),
             "parameter_names": PARAMETER_NAMES,
             "parameter_bounds": {
@@ -715,15 +731,34 @@ def main():
     parser.add_argument("--search-maxiter", type=int, default=LDRSettings.search_maxiter)
     parser.add_argument("--search-popsize", type=int, default=LDRSettings.search_popsize)
     parser.add_argument("--skip-baselines", action="store_true")
+    parser.add_argument(
+        "--load-forecast",
+        choices=["weekly_persist", "mean7d"],
+        default="weekly_persist",
+        help="day-ahead LOAD forecast method (PV forecast stays the 7-day mean)",
+    )
     args = parser.parse_args()
     settings = LDRSettings(
         search_seed=args.search_seed,
         search_maxiter=args.search_maxiter,
         search_popsize=args.search_popsize,
+        load_forecast=args.load_forecast,
     )
     dates, load, pv, prices = load_inputs()
+    fl = None
+    if args.load_forecast == "weekly_persist":
+        # Attachment 1 is a single sheet [时间, 电价, 负载, 光伏]; its load
+        # column uses the same row order as attachment 2's columns.
+        representative = (
+            pd.read_excel(ROOT / "附件/附件1.xlsx", sheet_name=0)
+            .iloc[:, 2]
+            .to_numpy(float)
+            / 6.0
+        )
+        assert representative.shape == (T,)
+        fl = load_forecast_weekly_persist(load, representative)
     frame, daily, daily_all, summary, diagnostics, paired = run_ldr(
-        dates, load, pv, prices, settings, limit=args.days
+        dates, load, pv, prices, settings, limit=args.days, fl=fl
     )
     if args.days != 365:
         args.output.mkdir(parents=True, exist_ok=True)
@@ -738,7 +773,8 @@ def main():
     baselines: list[dict] = []
     if not args.skip_baselines:
         for setting in [Settings(), Settings(name="risk_greedy", beta=0.0)]:
-            _, _, baseline_summary = run_case(dates, load, pv, prices, setting)
+            _, _, baseline_summary = run_case(dates, load, pv, prices, setting, fl_override=fl)
+            baseline_summary["settings"]["load_forecast"] = args.load_forecast
             baselines.append(baseline_summary)
     else:
         baseline_path = ROOT / "outputs/question2/archive/baseline/question2_summary.json"

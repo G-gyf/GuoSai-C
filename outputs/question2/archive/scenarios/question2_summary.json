@@ -5,13 +5,14 @@
       "forecast_days": 7,
       "residual_days": 21,
       "soc_grid_step": 25,
+      "load_forecast": "weekly_persist",
       "planner": "relaxed_LP_then_fixed_direction_LP_with_bound",
       "nonanticipativity": false,
       "direction_enforced": true
     },
     "terminal_value": 0.41255555555555556,
-    "planner_seconds": 165.95820559994172,
-    "current_run_segment_seconds": 1.4773989000004804,
+    "planner_seconds": 398.65001719999054,
+    "current_run_segment_seconds": 1045.4375523000017,
     "result_days": 334,
     "result_intervals": 48096,
     "validation": {
@@ -26,17 +27,17 @@
       "emergency_while_charging": 0,
       "passed": true
     },
-    "grid_kwh": 23360436.432902787,
-    "charge_kwh": 5565414.497206072,
-    "discharge_kwh": 4515728.3074601805,
-    "emergency_kwh": 173027.42405510021,
-    "unused_kwh": 4544588.17224533,
-    "planned_cost": 14874382.029797753,
-    "emergency_cost": 993997.5805822206,
-    "total_cost": 15868379.610379972,
-    "initial_result_soc_kwh": 9840.698694973547,
-    "final_soc_kwh": 1237.8490024603184,
-    "emergency_intervals": 1329
+    "grid_kwh": 20918294.797195893,
+    "charge_kwh": 6155867.431613373,
+    "discharge_kwh": 4986633.068750337,
+    "emergency_kwh": 192142.95973205398,
+    "unused_kwh": 2002013.8990982473,
+    "planned_cost": 12984091.148376003,
+    "emergency_cost": 999128.1463204359,
+    "total_cost": 13983219.294696439,
+    "initial_result_soc_kwh": 1738.0002563023834,
+    "final_soc_kwh": 1315.2789857407415,
+    "emergency_intervals": 1947
   },
   {
     "settings": {

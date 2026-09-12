@@ -1,0 +1,60 @@
+{
+  "calendar_start": "2025-01-01",
+  "calendar_end": "2025-12-31",
+  "result_start": "2025-02-01",
+  "result_end": "2025-12-31",
+  "day_type_counts": {
+    "workday": 200,
+    "sat_class": 102,
+    "sunday": 49,
+    "holiday": 14
+  },
+  "kernel_params": {
+    "k": 10,
+    "h": 2.0,
+    "tau": 14.0
+  },
+  "kernel_sigma_floor_kw": 1.0,
+  "ten_minute_rows": 52560,
+  "quality_status": "PASS",
+  "failed_checks": [],
+  "uses_attachment_3": false,
+  "grid_verification": {
+    "combinations": 72,
+    "k_set": [
+      5,
+      10,
+      20
+    ],
+    "h_set": [
+      0.5,
+      1.0,
+      2.0,
+      4.0
+    ],
+    "tau_set": [
+      7,
+      10,
+      14,
+      21,
+      28,
+      45
+    ],
+    "best": {
+      "k": 20,
+      "h": 2.0,
+      "tau": 21.0,
+      "mape_pct": 2.429462961752559
+    },
+    "docx_optimum_k10_h2_tau14_mape_pct": 2.4343896961566247,
+    "docx_reference_mape_pct": 2.43
+  },
+  "artifacts": {
+    "ten_minute": "data\\processed\\load_day_ahead_10min.parquet",
+    "metrics": "outputs\\question2\\analysis\\load_forecast\\model_metrics.csv",
+    "key_dates": "outputs\\question2\\analysis\\load_forecast\\key_dates_metrics.csv",
+    "bound_stats": "outputs\\question2\\analysis\\load_forecast\\bound_coverage.csv",
+    "quality_checks": "outputs\\question2\\analysis\\load_forecast\\quality_checks.csv",
+    "grid": "outputs\\question2\\analysis\\load_forecast\\kernel_grid_verification.csv"
+  }
+}

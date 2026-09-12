@@ -3,11 +3,18 @@ import unittest
 
 import numpy as np
 
-from src.optimization.question2 import EMIN, T
+from src.optimization.question2 import (
+    EMIN,
+    T,
+    load_forecast_weekly_persist,
+    load_inputs,
+)
 from src.optimization.question2_ldr import (
+    LDRSettings,
     ScenarioObjective,
     execute_actual_day,
     rule_transition,
+    run_ldr,
     stage_error_means,
 )
 
@@ -77,6 +84,40 @@ class Question2LDRTests(unittest.TestCase):
         )
         expected = actual["emergency_cost"].sum() - nu * actual["soc_end_kwh"][-1]
         self.assertAlmostEqual(score, expected, places=8)
+
+    def test_weekly_persist_load_forecast(self):
+        rng = np.random.default_rng(5)
+        load = rng.uniform(300, 900, (21, T))
+        representative = rng.uniform(300, 900, T)
+        fl = load_forecast_weekly_persist(load, representative)
+        self.assertTrue(np.isnan(fl[0]).all())
+        for d in range(1, 7):
+            np.testing.assert_allclose(fl[d], representative)
+        for d in range(7, 21):
+            np.testing.assert_allclose(fl[d], load[d - 7])
+
+    def test_weekly_persist_pilot_run_is_valid(self):
+        dates, load, pv, prices = load_inputs()
+        representative = np.full(T, 700.0 / 6.0)
+        settings = LDRSettings(load_forecast="weekly_persist")
+        frame, _, _, summary, _, _ = run_ldr(
+            dates,
+            load,
+            pv,
+            prices,
+            settings,
+            limit=60,
+            fl=load_forecast_weekly_persist(load, representative),
+        )
+        self.assertTrue(summary["validation"]["passed"])
+        self.assertTrue(
+            frame[
+                ["grid_kwh", "charge_kwh", "discharge_kwh", "emergency_kwh", "soc_end_kwh"]
+            ]
+            .notna()
+            .all()
+            .all()
+        )
 
 
 if __name__ == "__main__":

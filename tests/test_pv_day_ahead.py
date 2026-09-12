@@ -1,4 +1,4 @@
-﻿"""Acceptance tests for the causal question 2 PV forecast pipeline."""
+"""Acceptance tests for the causal question 2 PV forecast pipeline."""
 
 from __future__ import annotations
 
@@ -8,11 +8,11 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from src.data_pipeline.ingest import read_attachments
 from src.forecasting.pv_day_ahead import (
     CANDIDATE_NAMES,
     PVDayAheadConfig,
     PVForecastResult,
+    _select_policy,
     build_pv_day_ahead_forecasts,
     build_pv_scenarios,
     restore_hourly_to_10min,
@@ -72,14 +72,82 @@ class PVDayAheadAcceptanceTests(unittest.TestCase):
         restored = restore_hourly_to_10min(hourly, template)
         self.assertTrue(np.allclose(restored[:6], 200.0))
 
-    def test_dynamic_selection_only_uses_positive_skill_challengers(self) -> None:
+    def test_strict_selection_only_switches_to_better_complex_candidates(self) -> None:
         daily = self.hourly.drop_duplicates("plan_date")
+        self.assertFalse(daily["selected_model"].eq("ensemble").any())
         for name in CANDIDATE_NAMES[2:]:
             selected = daily[daily["selected_model"].eq(name)]
-            self.assertTrue((selected[f"skill_{name}"] > 0).all())
-        ensemble = daily[daily["selected_model"].eq("ensemble")]
-        baseline = ensemble[["loss_a1_7", "loss_a1_30"]].min(axis=1)
-        self.assertTrue((ensemble["ensemble_loss"] < baseline).all())
+            self.assertTrue((selected[f"loss_{name}"] < selected["loss_a1_7"]).all())
+        self.assertTrue(
+            set(daily["selected_model"].unique()).issubset(set(CANDIDATE_NAMES))
+        )
+
+    def test_cold_start_shadow_day_is_zero_and_flagged(self) -> None:
+        first = self.ten[self.ten["plan_date"].eq(self.ten["plan_date"].min())]
+        self.assertTrue(first["cold_start_shadow"].all())
+        self.assertTrue(
+            first[["pv_point_kw", "pv_p10_kw", "pv_p50_kw", "pv_p90_kw", "pcs_raw_kw", "pcs_norm_kw"]]
+            .eq(0)
+            .all()
+            .all()
+        )
+
+    def test_fallback_chain_counters_are_recorded(self) -> None:
+        daily = self.hourly.drop_duplicates("plan_date")
+        columns = ["a3_a2_fallback_hours"] + [
+            column for column in daily.columns if "a4_a2_fallback_hours" in column
+        ]
+        for column in columns:
+            self.assertTrue(daily[column].ge(0).all())
+            self.assertFalse(daily[column].isna().any())
+        self.assertTrue((daily["a3_a2_fallback_hours"] > 0).any())
+        self.assertTrue(
+            (daily[[column for column in columns if "a4_a2_fallback_hours" in column]] > 0)
+            .any()
+            .any()
+        )
+
+    def test_select_policy_unit_rules(self) -> None:
+        config = PVDayAheadConfig()
+        names = list(CANDIDATE_NAMES)
+        fake_candidates = {name: np.zeros((40, 144)) for name in names}
+        amplitude = np.ones(40)
+        actual = np.zeros((40, 144))
+        hard_mask = np.ones(144, dtype=bool)
+
+        def make_losses(history_rows):
+            losses = np.full((40, len(names)), 0.5)
+            losses[5:25] = np.tile(history_rows, (20, 1))
+            return losses
+
+        # All challengers worse than a1_7 -> default a1_7.
+        rows = np.array([0.3, 0.6, 0.8, 0.9, 0.7, 0.8, 0.9])
+        winner, _, weights, _, _ = _select_policy(
+            30, fake_candidates, make_losses(rows), actual, hard_mask, amplitude, config
+        )
+        self.assertEqual(winner, "a1_7")
+
+        # a3 strictly better -> a3.
+        rows = np.array([0.3, 0.6, 0.4, 0.25, 0.7, 0.8, 0.9])
+        winner, _, weights, _, _ = _select_policy(
+            30, fake_candidates, make_losses(rows), actual, hard_mask, amplitude, config
+        )
+        self.assertEqual(winner, "a3")
+        self.assertEqual(weights["a3"], 1.0)
+        self.assertEqual(weights["a1_7"], 0.0)
+
+        # a1_30 better than a1_7 but no complex challenger -> still a1_7.
+        rows = np.array([0.5, 0.2, 0.8, 0.9, 0.7, 0.8, 0.9])
+        winner, _, _, _, _ = _select_policy(
+            30, fake_candidates, make_losses(rows), actual, hard_mask, amplitude, config
+        )
+        self.assertEqual(winner, "a1_7")
+
+        # Fewer than 14 valid history days -> default a1_7.
+        winner, _, _, _, _ = _select_policy(
+            10, fake_candidates, make_losses(rows), actual, hard_mask, amplitude, config
+        )
+        self.assertEqual(winner, "a1_7")
 
     def test_scenarios_are_reproducible_and_causal(self) -> None:
         first = build_pv_scenarios("2025-06-21", self.ten, self.residuals, scenario_count=5, seed=71)
@@ -97,10 +165,9 @@ class PVDayAheadAcceptanceTests(unittest.TestCase):
         changed = subset.copy()
         cutoff = pd.Timestamp("2025-02-15")
         changed.loc[changed["plan_date"].ge(cutoff), "pv_actual_kw"] *= 0.05
-        raw = read_attachments(ROOT)
         config = PVDayAheadConfig(scenario_count=5)
-        original_result = build_pv_day_ahead_forecasts(subset, raw["attachment_1"], config=config)
-        changed_result = build_pv_day_ahead_forecasts(changed, raw["attachment_1"], config=config)
+        original_result = build_pv_day_ahead_forecasts(subset, config=config)
+        changed_result = build_pv_day_ahead_forecasts(changed, config=config)
         original_before = original_result.ten_minute[
             original_result.ten_minute["plan_date"].lt(cutoff)
         ][["pv_point_kw", "pv_p10_kw", "pv_p50_kw", "pv_p90_kw", "pcs_raw_kw", "pcs_norm_kw"]]

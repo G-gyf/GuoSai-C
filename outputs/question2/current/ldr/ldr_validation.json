@@ -5,7 +5,7 @@
   "dates_full_year": 365,
   "dates_formal_period": 334,
   "physical_validation": {
-    "max_balance_error_kwh": 7.105427357601002e-13,
+    "max_balance_error_kwh": 6.821210263296962e-13,
     "max_state_error_kwh": 5.4569682106375694e-12,
     "max_continuity_error_kwh": 0.0,
     "min_soc_kwh": 1200.0,
@@ -21,8 +21,8 @@
   "stage_one_lambda_is_zero": true,
   "selected_scenario_score_never_worse_than_zero": true,
   "parameter_bounds_passed": true,
-  "independent_planned_bill": 15066446.997383405,
-  "independent_emergency_bill": 752621.6197704104,
-  "independent_total_bill": 15819068.617153814,
+  "independent_planned_bill": 13332849.502002994,
+  "independent_emergency_bill": 645227.7311187076,
+  "independent_total_bill": 13978077.2331217,
   "workbook_validation_passed": true
 }

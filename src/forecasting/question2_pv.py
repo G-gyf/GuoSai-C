@@ -1,4 +1,4 @@
-﻿"""Run the question 2 causal PV day-ahead forecasting pipeline."""
+"""Run the question 2 causal PV day-ahead forecasting pipeline."""
 
 from __future__ import annotations
 
@@ -31,7 +31,6 @@ def run_pv_forecast_pipeline(project_root: Path = PROJECT_ROOT) -> dict[str, Pat
     config = PVDayAheadConfig.from_contract(contract)
     result = build_pv_day_ahead_forecasts(
         dispatch,
-        raw["attachment_1"],
         config=config,
         key_dates=contract["key_dates"],
     )

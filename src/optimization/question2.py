@@ -1,8 +1,13 @@
-﻿"""Causal Q2: seven-day mean, 21 residual days, risk LP and real-time storage.
+"""Causal Q2: weekly-persistence load forecast, seven-day mean PV forecast,
+21 residual days, risk LP and real-time storage.
 
-Only attachments 1 (tariffs), 2 (actuals), and the official output template
-are inputs. Actual observations are revealed to the controller one slot at a
-time. The planning objective is a proxy, never reported as the realized bill.
+Only attachments 1 (tariffs and the warm-up load curve), 2 (actuals), and
+the official output template are inputs. Actual observations are revealed to
+the controller one slot at a time. The planning objective is a proxy, never
+reported as the realized bill. The adopted Q2 convention is
+``load_forecast_weekly_persist`` for load (L_{d-7}, attachment 1 for d < 7)
+and the seven-day same-slot mean for PV; the mean-based load forecast
+remains available via ``forecasts`` for comparison studies only.
 """
 from __future__ import annotations
 
@@ -59,6 +64,19 @@ def forecasts(load, pv):
         fl[d] = load[max(0, d-7):d].mean(axis=0)
         fv[d] = pv[max(0, d-7):d].mean(axis=0)
     return fl, fv
+
+
+def load_forecast_weekly_persist(load, representative):
+    """Weekly persistence load forecast L_{d-7}; attachment 1 for d < 7.
+
+    Mirrors the b1 scheme of the load forecast comparison (问题二预测.docx):
+    the day-0 row stays NaN and is never used (cold-start zero plan).  All
+    values are in kWh per 10-minute interval.
+    """
+    fl = np.full_like(load, np.nan)
+    for d in range(1, len(load)):
+        fl[d] = load[d - 7] if d >= 7 else representative
+    return fl
 
 
 def planning_net(d, load, pv, fl, fv, setting):
@@ -119,9 +137,11 @@ def execute_slot(load, pv, grid, energy, reserve):
     return charge, discharge, emergency, unused, end
 
 
-def run_case(dates, load, pv, prices, setting):
+def run_case(dates, load, pv, prices, setting, fl_override=None):
     start = time.perf_counter()
     fl, fv = forecasts(load, pv)
+    if fl_override is not None:
+        fl = fl_override
     # Lowest tariff is the fixed valley replacement-cost approximation.
     nu = float(prices.min()/ETA)
     energy, records = 6000., []

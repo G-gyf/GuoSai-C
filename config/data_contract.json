@@ -72,6 +72,21 @@
       "scenario_window_days": 60,
       "scenario_count": 50,
       "scenario_seed": 20250911
+    },
+    "load_day_ahead": {
+      "note": "问题二预测.docx §负载预测口径；使用2025官方日历日类型，覆盖此前'负载模型禁用日历特征'约定",
+      "day_types": ["workday", "sat_class", "sunday", "holiday"],
+      "makeup_workdays": ["2025-01-26", "2025-02-08", "2025-04-27", "2025-09-28", "2025-10-11"],
+      "mon_thu_holidays": ["2025-01-01", "2025-01-28", "2025-01-29", "2025-01-30", "2025-02-03", "2025-02-04", "2025-05-01", "2025-05-05", "2025-06-02", "2025-10-01", "2025-10-02", "2025-10-06", "2025-10-07", "2025-10-08"],
+      "qingming_0404_rule": "sat_class (rule 2: Friday/Saturday incl. holidays)",
+      "kernel_params": {"k": 10, "h": 2.0, "tau_days": 14},
+      "kernel_sigma_floor_kw": 1.0,
+      "grid_verification": {"tuning_start": "2025-01-20", "tuning_end": "2025-01-27", "k_set": [5, 10, 20], "h_set": [0.5, 1.0, 2.0, 4.0], "tau_set": [7, 10, 14, 21, 28, 45]},
+      "bound_quantiles": [0.90, 0.95],
+      "bound_min_residual_days": 3,
+      "formal_evaluation": "2025-02-01..2025-12-31",
+      "warmup": "2025-01-02..2025-01-31",
+      "q2_load_forecast_method": "weekly_persist"
     }
   },
   "storage_contract": {

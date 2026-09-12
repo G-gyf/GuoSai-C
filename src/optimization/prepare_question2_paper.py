@@ -1,4 +1,4 @@
-﻿"""Read existing LDR results, audit them, and produce paper tables and figures."""
+"""Read existing LDR results, audit them, and produce paper tables and figures."""
 from pathlib import Path
 import json
 import hashlib
@@ -7,7 +7,7 @@ import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from src.optimization.question2 import ROOT, ETA, EMIN, EMAX, S, load_inputs, forecasts, planning_net, Settings, solve_plan, validate_schedule
+from src.optimization.question2 import ROOT, ETA, EMIN, EMAX, S, load_inputs, forecasts, load_forecast_weekly_persist, planning_net, Settings, solve_plan, validate_schedule
 from src.optimization.question2_ldr import PARAMETER_NAMES, ScenarioObjective
 from src.optimization.question2_g_search import scenario_net_matrix
 
@@ -27,7 +27,12 @@ def main():
     np.testing.assert_allclose(f.load_kwh,l.ravel(),atol=1e-8,rtol=0)
     np.testing.assert_allclose(f.pv_kwh,v.ravel(),atol=1e-8,rtol=0)
     np.testing.assert_allclose(f.price,np.tile(p,365),atol=1e-12,rtol=0)
+    summaries=json.loads((SRC/'question2_summary.json').read_text(encoding='utf-8'))
+    main_settings=next(s for s in summaries if s['settings']['name']=='ldr_quantile_a08')['settings']
     fl,fv=forecasts(l,v)
+    if main_settings.get('load_forecast','mean7d')=='weekly_persist':
+        representative=pd.read_excel(ROOT/'附件/附件1.xlsx',sheet_name=0).iloc[:,2].to_numpy(float)/6.0
+        fl=load_forecast_weekly_persist(l,representative)
     max_rule_error=max_score_error=max_grid_error=0.
     score_checked=0
     for d, date in enumerate(dates):

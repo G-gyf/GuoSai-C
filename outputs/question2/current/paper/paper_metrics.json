@@ -1,16 +1,16 @@
 {
-  "no_emergency_days": 163,
-  "emergency_days": 171,
+  "no_emergency_days": 198,
+  "emergency_days": 136,
   "max_daily_emergency_date": "2025-06-01",
-  "max_daily_emergency_cost": 77611.90131150761,
-  "paired_savings_vs_beta1": 208068.9074072725,
-  "paired_savings_vs_beta0": 96546.58342674602,
-  "paired_wins_beta0": 59,
-  "paired_losses_beta0": 36,
-  "soc_min_share": 0.012641383898868928,
-  "soc_max_share": 0.2578176979374584,
+  "max_daily_emergency_cost": 65899.14191326984,
+  "paired_savings_vs_beta1": 193363.1352298013,
+  "paired_savings_vs_beta0": 64236.94371852056,
+  "paired_wins_beta0": 35,
+  "paired_losses_beta0": 25,
+  "soc_min_share": 0.011289920159680639,
+  "soc_max_share": 0.19681470392548236,
   "de_messages": {
-    "Maximum number of iterations has been exceeded.": 335,
-    "Optimization terminated successfully.": 2
+    "Maximum number of iterations has been exceeded.": 324,
+    "Optimization terminated successfully.": 13
   }
 }

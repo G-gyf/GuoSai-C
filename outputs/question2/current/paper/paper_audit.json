@@ -1,6 +1,6 @@
 {
   "actual_physical": {
-    "max_balance_error_kwh": 7.105427357601002e-13,
+    "max_balance_error_kwh": 6.821210263296962e-13,
     "max_state_error_kwh": 5.4569682106375694e-12,
     "max_continuity_error_kwh": 0.0,
     "min_soc_kwh": 1200.0,
@@ -15,14 +15,14 @@
   "recomputed_plan_days": 364,
   "recomputed_rule_intervals": 52560,
   "recomputed_score_days": 337,
-  "max_grid_error_kwh": 3.016793925780803e-09,
-  "max_rule_error_kwh": 5.4569682106375694e-12,
+  "max_grid_error_kwh": 1.508510649728123e-09,
+  "max_rule_error_kwh": 7.275957614183426e-12,
   "max_score_error_yuan": 3.865352482534945e-12,
-  "independent_total_bill": 15819068.617153818,
+  "independent_total_bill": 13978077.233121704,
   "source_hashes": {
-    "outputs\\question2_ldr\\question2_schedule_with_warmup.csv": "d3d83bf683cd250e10313754a840868435bc418e5fc8935b0265140390ac3cea",
-    "outputs\\question2_ldr\\ldr_daily_parameters.csv": "e814f07b23f46349083047b63539ee199ebb80a1e13a2f7a23b35ac018e82adb",
-    "src\\optimization\\question2_ldr.py": "e59bc42725172256a1f0a4588a06cf6502746daf3a8eff501032523e2d4d3968"
+    "outputs\\question2\\current\\ldr\\question2_schedule_with_warmup.csv": "27414d46842ca1c3556fd35c56e7a671d139aeb33bad43cde8cc62ed14af73da",
+    "outputs\\question2\\current\\ldr\\ldr_daily_parameters.csv": "29af3a38cf32b8877764e6509f42d744216aea8bae53d99acc39156744c36185",
+    "src\\optimization\\question2_ldr.py": "b28da59f762c5ef786a63fbbe86004b2ead2518cca43dd7c7a21a86d28d8362f"
   },
   "passed": true
 }

@@ -11,6 +11,7 @@
   "template_last_purchase_column": "Header 0:00-0:10+1 is the NEXT day 00:00-00:10 (next-day 00:10 observation); this row own 00:00-00:10 is in the previous row; 12-31 last column is 0.",
   "reported_bill": "planned purchase bill plus 5x emergency bill; no terminal credit deducted",
   "implementation": "fixed alpha=0.8 quantile-LP plan plus four-stage clipped-affine reserve calibration",
+  "load_forecast_method": "weekly_persist",
   "stage_starts": [
     0,
     36,
@@ -36,6 +37,6 @@
       2.0
     ]
   },
-  "revision_plan_sha256": "12faeae180c62f7c1f98e4fcc2cd5d572063ffd20d1aec8c382abd99427714d6",
+  "revision_plan_sha256": "ad136a81c4252dfc08c5deab79cfbbac5a80106e84395a4d5e429a73f5215afa",
   "actual_execution_information": "At each stage start, the signal uses only errors from completed intervals; parameters and grid plan are locked at 00:00."
 }

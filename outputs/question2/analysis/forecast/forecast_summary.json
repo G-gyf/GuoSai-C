@@ -6,14 +6,24 @@
   "hourly_rows": 8760,
   "ten_minute_rows": 52560,
   "residual_rows": 52560,
-  "hard_daylight_p10_p90_coverage": 0.7329856416199858,
+  "hard_daylight_p10_p90_coverage": 0.7340158392891636,
+  "selection_policy": "strict_winner_take_all_default_a1_7",
   "selection_counts": {
-    "a1_7": 159,
-    "a2": 9,
-    "a3": 9,
-    "ensemble": 157
+    "a1_7": 152,
+    "a2": 54,
+    "a3": 49,
+    "a4_k10": 2,
+    "a4_k20": 77
+  },
+  "cold_start_shadow_days": 1,
+  "a3_a2_fallback_hours": 3448,
+  "a4_a2_fallback_hours": {
+    "k5": 3640,
+    "k10": 3640,
+    "k20": 3640
   },
   "no_upper_clipping": true,
+  "uses_attachment_1": false,
   "uses_attachment_3": false,
   "uses_external_weather": false,
   "quality_status": "PASS",

@@ -1,4 +1,4 @@
-﻿"""No-NAC scenario planning and causal approximate-value execution.
+"""No-NAC scenario planning and causal approximate-value execution.
 
 Annual default: relaxed LP, then fixed-direction feasible LP; report their
 lower/upper bound gap. An optional MILP implementation supports pilot audits.
@@ -16,7 +16,7 @@ import pandas as pd
 from scipy.optimize import linprog, milp, Bounds, LinearConstraint
 from scipy.sparse import lil_matrix, csr_matrix, hstack, vstack
 from src.optimization.question2 import (
-    ROOT,T,ETA,EMIN,EMAX,S,Settings,forecasts,load_inputs,execute_slot,
+    ROOT,T,ETA,EMIN,EMAX,S,Settings,forecasts,load_forecast_weekly_persist,load_inputs,execute_slot,
     validate_schedule,summarize_emergency,write_outputs,
 )
 
@@ -183,8 +183,10 @@ def value_reserves(net,grid,prices,nu,step=25.):
     return reserves
 
 
-def run(dates,load,pv,prices,limit,step=25.,time_limit=30.,checkpoint=None):
-    fl,fv=forecasts(load,pv); energy=6000.; nu=float(prices.min()/ETA)
+def run(dates,load,pv,prices,limit,step=25.,time_limit=30.,checkpoint=None,fl=None,load_forecast="mean7d"):
+    base_fl,fv=forecasts(load,pv); energy=6000.; nu=float(prices.min()/ETA)
+    if fl is None:
+        fl=base_fl
     records=[]; diagnostics=[]; paired=[]
     begin=time.perf_counter()
     first_day=0
@@ -241,6 +243,7 @@ def run(dates,load,pv,prices,limit,step=25.,time_limit=30.,checkpoint=None):
          'emergency_kwh','unused_kwh','planned_cost','emergency_cost','total_cost']},
          soc_start_kwh=('soc_start_kwh','first'),soc_end_kwh=('soc_end_kwh','last'))
     summary={'settings':{'name':'scenario_value_no_NAC','forecast_days':7,'residual_days':21,'soc_grid_step':step,
+                        'load_forecast':load_forecast,
                         'planner':'relaxed_LP_then_fixed_direction_LP_with_bound',
                         'nonanticipativity':False,'direction_enforced':True},'terminal_value':nu,
              'planner_seconds':float(sum(z['seconds'] for z in diagnostics)),
@@ -258,9 +261,17 @@ def main():
     ap=argparse.ArgumentParser(); ap.add_argument('--days',type=int,default=365)
     ap.add_argument('--step',type=float,default=25); ap.add_argument('--time-limit',type=float,default=5)
     ap.add_argument('--output',type=Path,default=ROOT/'outputs/question2/archive/scenarios')
+    ap.add_argument('--load-forecast',choices=['weekly_persist','mean7d'],default='weekly_persist',
+                    help='day-ahead LOAD forecast method (PV forecast stays the 7-day mean)')
     args=ap.parse_args(); dates,load,pv,prices=load_inputs()
     args.output.mkdir(parents=True,exist_ok=True)
-    f,daily,s,diag,pair=run(dates,load,pv,prices,args.days,args.step,args.time_limit,args.output/'checkpoint.pkl')
+    fl=None
+    if args.load_forecast=='weekly_persist':
+        representative=pd.read_excel(ROOT/'附件/附件1.xlsx',sheet_name=0).iloc[:,2].to_numpy(float)/6.0
+        assert representative.shape==(T,)
+        fl=load_forecast_weekly_persist(load,representative)
+    f,daily,s,diag,pair=run(dates,load,pv,prices,args.days,args.step,args.time_limit,
+                            args.output/'checkpoint.pkl',fl=fl,load_forecast=args.load_forecast)
     diag.to_csv(args.output/'scenario_solver_diagnostics.csv',index=False)
     pair.to_csv(args.output/'same_day_controller_comparison.csv',index=False)
     if args.days==365:

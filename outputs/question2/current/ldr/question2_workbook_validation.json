@@ -4,9 +4,9 @@
   "plan_days": 334,
   "plan_intervals": 48096,
   "battery_blocks": 2004,
-  "emergency_rows": 728,
+  "emergency_rows": 604,
   "max_workbook_schedule_error_kwh": 2.2737367544323206e-13,
-  "independent_planned_bill": 15066446.997383405,
-  "independent_emergency_bill": 752621.6197704104,
-  "independent_total_bill": 15819068.617153814
+  "independent_planned_bill": 13332849.502003,
+  "independent_emergency_bill": 645227.7311187076,
+  "independent_total_bill": 13978077.233121706
 }

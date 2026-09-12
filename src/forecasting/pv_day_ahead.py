@@ -225,9 +225,17 @@ def _select_policy(
     actual_10min: np.ndarray,
     hard_mask: np.ndarray,
     amplitude: np.ndarray,
-    previous_policy: str,
     config: PVDayAheadConfig,
 ) -> tuple[str, dict[str, float], dict[str, float], float, float]:
+    """Strict winner-take-all selection on the rolling loss history.
+
+    Default policy is ``a1_7``.  A complex candidate (a2/a3/a4_k*) replaces it
+    only when its rolling mean loss is strictly lower than that of ``a1_7``
+    (numerical tolerance 1e-12); the winner is then the complex candidate with
+    the lowest rolling loss.  ``a1_30`` is reported for comparison only and
+    never participates in switching.  No ensemble, no improvement gate and no
+    hysteresis.
+    """
     candidate_index = {name: idx for idx, name in enumerate(CANDIDATE_NAMES)}
     start = max(0, day - config.selection_window_days)
     history = daily_losses[start:day]
@@ -239,58 +247,22 @@ def _select_policy(
 
     averages = np.mean(history[valid_rows], axis=0)
     losses = {name: float(averages[idx]) for name, idx in candidate_index.items()}
-    baseline = min(("a1_7", "a1_30"), key=lambda name: losses[name])
-    baseline_loss = losses[baseline]
-    eligible = [name for name in COMPLEX_CANDIDATES if losses[name] < baseline_loss]
-    members = [baseline, *eligible]
-    inverse = np.array([1.0 / max(losses[name], 1e-12) for name in members])
-    inverse /= inverse.sum()
-    ensemble_weights = {name: 0.0 for name in CANDIDATE_NAMES}
-    ensemble_weights.update({name: float(weight) for name, weight in zip(members, inverse)})
-
-    days = np.arange(start, day)[valid_rows]
-    ensemble_day_losses: list[float] = []
-    for historical_day in days:
-        combined = sum(
-            ensemble_weights[name] * candidate_10min[name][historical_day]
-            for name in members
-        )
-        ensemble_day_losses.append(
-            _normalized_day_loss(
-                combined,
-                actual_10min[historical_day],
-                hard_mask,
-                amplitude[historical_day],
-            )
-        )
-    ensemble_loss = float(np.mean(ensemble_day_losses))
-    best_single = min(members, key=lambda name: losses[name])
-    best_single_loss = losses[best_single]
-    proposed = "ensemble" if ensemble_loss < best_single_loss else best_single
-    proposed_loss = min(ensemble_loss, best_single_loss)
-    if proposed_loss > baseline_loss * (1.0 - config.selection_improvement_ratio):
-        proposed = baseline
-        proposed_loss = baseline_loss
-
-    if previous_policy in CANDIDATE_NAMES:
-        previous_loss = losses.get(previous_policy, np.nan)
-        if (
-            np.isfinite(previous_loss)
-            and previous_loss < baseline_loss
-            and previous_loss <= proposed_loss * (1.0 + config.selection_improvement_ratio)
-        ):
-            proposed = previous_policy
-    elif previous_policy == "ensemble" and ensemble_loss < baseline_loss:
-        if ensemble_loss <= proposed_loss * (1.0 + config.selection_improvement_ratio):
-            proposed = "ensemble"
-
-    if proposed == "ensemble":
-        selected_weights = ensemble_weights
-        selected_loss = ensemble_loss
+    default_loss = losses["a1_7"]
+    tolerance = 1e-12
+    challengers = [
+        name
+        for name in COMPLEX_CANDIDATES
+        if losses[name] < default_loss - tolerance
+    ]
+    if not challengers:
+        winner = "a1_7"
     else:
-        selected_weights = {name: float(name == proposed) for name in CANDIDATE_NAMES}
-        selected_loss = losses[proposed]
-    return proposed, losses, selected_weights, ensemble_loss, selected_loss
+        winner = min(challengers, key=lambda name: losses[name])
+        if losses[winner] >= default_loss - tolerance:
+            winner = "a1_7"
+    weights = {name: float(name == winner) for name in CANDIDATE_NAMES}
+    selected_loss = losses[winner] if np.isfinite(losses[winner]) else np.nan
+    return winner, losses, weights, np.nan, selected_loss
 
 
 def _scenario_sample(
@@ -355,11 +327,16 @@ def _forecast_metrics(
 
 def build_pv_day_ahead_forecasts(
     dispatch: pd.DataFrame,
-    representative: pd.DataFrame,
     config: PVDayAheadConfig | None = None,
     key_dates: list[str] | None = None,
 ) -> PVForecastResult:
-    """Build causal hourly, 10-minute, residual, and probabilistic forecasts."""
+    """Build causal hourly, 10-minute, residual, and probabilistic forecasts.
+
+    The envelope uses only completed plan dates strictly before each 00:00
+    issue timestamp.  Attachment 1 is not used anywhere in this pipeline; on
+    days without any completed history (only the very first day) a zero shadow
+    forecast is emitted and flagged via ``cold_start_shadow``.
+    """
     config = config or PVDayAheadConfig()
     ordered = dispatch.sort_values(["plan_date", "slot_index"]).copy()
     dates = pd.DatetimeIndex(ordered["plan_date"].drop_duplicates()).sort_values()
@@ -372,20 +349,11 @@ def build_pv_day_ahead_forecasts(
         .to_numpy(float)
     )
     actual_hourly = actual_10min.reshape(len(dates), 24, 6).mean(axis=2)
-    representative_10min = pd.to_numeric(representative.iloc[:, 3], errors="raise").to_numpy(float)
-    if representative_10min.shape != (144,):
-        raise ValueError("Attachment 1 must contain 144 PV values")
-    representative_hourly = representative_10min.reshape(24, 6).mean(axis=1)
 
     grid = np.linspace(0.0, 1.0, config.solar_grid_points)
     first, last, peaks, valid_geometry, daily_shapes = _daily_geometry(
         actual_10min, config.positive_threshold_kw, grid
     )
-    rep_first, rep_last, rep_peaks, rep_valid, rep_shapes = _daily_geometry(
-        representative_10min[None, :], config.positive_threshold_kw, grid
-    )
-    if not rep_valid[0]:
-        raise ValueError("Attachment 1 PV curve cannot initialize the daylight envelope")
 
     days = len(dates)
     slot_minutes = np.arange(1, 145, dtype=float) * 10.0
@@ -412,6 +380,9 @@ def build_pv_day_ahead_forecasts(
     a2_base = np.zeros((days, 24))
     a2_residual = np.full((days, 24), np.nan)
     boundary_mixed = np.zeros((days, 24), dtype=bool)
+    cold_start_shadow = np.zeros(days, dtype=bool)
+    a3_fallback_hours = np.zeros(days, dtype=int)
+    a4_fallback_hours = {neighbors: np.zeros(days, dtype=int) for neighbors in config.knn_neighbors}
 
     candidate_hour = {name: np.zeros((days, 24)) for name in CANDIDATE_NAMES}
     candidate_10 = {name: np.zeros((days, 144)) for name in CANDIDATE_NAMES}
@@ -437,28 +408,24 @@ def build_pv_day_ahead_forecasts(
     residual_available = np.zeros((days, 144), dtype=bool)
 
     for day, plan_date in enumerate(dates):
-        boundary_start = max(0, day - config.boundary_window_days)
-        boundary_valid = valid_geometry[boundary_start:day]
-        historical_first = first[boundary_start:day][boundary_valid]
-        historical_last = last[boundary_start:day][boundary_valid]
-        if len(historical_first) == 0:
-            historical_first = np.array([rep_first[0]])
-            historical_last = np.array([rep_last[0]])
-        sunrise_hat[day] = float(np.median(historical_first))
-        sunset_hat[day] = float(np.median(historical_last))
-
-        amplitude_start = max(0, day - config.amplitude_window_days)
-        historical_peaks = peaks[amplitude_start:day]
-        if day < config.amplitude_window_days:
-            historical_peaks = np.r_[rep_peaks[0], historical_peaks]
-        if len(historical_peaks) == 0:
-            historical_peaks = np.array([rep_peaks[0]])
-        amplitude[day] = float(np.quantile(historical_peaks, config.amplitude_quantile))
-
+        boundary_valid = valid_geometry[max(0, day - config.boundary_window_days) : day]
+        historical_first = first[max(0, day - config.boundary_window_days) : day][boundary_valid]
+        historical_last = last[max(0, day - config.boundary_window_days) : day][boundary_valid]
+        historical_peaks = peaks[max(0, day - config.amplitude_window_days) : day]
         prior_shapes = daily_shapes[:day][valid_geometry[:day]]
-        shape_sources = np.vstack([rep_shapes[0], prior_shapes]) if len(prior_shapes) else rep_shapes.copy()
-        empirical = np.quantile(shape_sources, config.shape_quantile, axis=0)
-        shape_values[day] = _smooth_shape(empirical, config)
+        if len(historical_first) == 0:
+            # No completed history at all: zero shadow forecast, flagged.
+            cold_start_shadow[day] = True
+            sunrise_hat[day] = 0.0
+            sunset_hat[day] = 0.0
+            amplitude[day] = 0.0
+            shape_values[day] = 0.0
+        else:
+            sunrise_hat[day] = float(np.median(historical_first))
+            sunset_hat[day] = float(np.median(historical_last))
+            amplitude[day] = float(np.quantile(historical_peaks, config.amplitude_quantile))
+            empirical = np.quantile(prior_shapes, config.shape_quantile, axis=0)
+            shape_values[day] = _smooth_shape(empirical, config)
 
         duration = max(sunset_hat[day] - sunrise_hat[day], 1.0)
         solar_position = (slot_minutes - sunrise_hat[day]) / duration
@@ -489,8 +456,8 @@ def build_pv_day_ahead_forecasts(
 
         history_7 = actual_hourly[max(0, day - 7) : day]
         history_30 = actual_hourly[max(0, day - 30) : day]
-        a1_7 = representative_hourly.copy() if day == 0 else history_7.mean(axis=0)
-        a1_30 = representative_hourly.copy() if day == 0 else history_30.mean(axis=0)
+        a1_7 = np.zeros(24) if day == 0 else history_7.mean(axis=0)
+        a1_30 = np.zeros(24) if day == 0 else history_30.mean(axis=0)
 
         k_start = max(0, day - 30)
         k_history = kpv_actual[k_start:day]
@@ -505,6 +472,7 @@ def build_pv_day_ahead_forecasts(
         a4_predictions = {neighbors: a2_base[day].copy() for neighbors in config.knn_neighbors}
 
         for hour in range(24):
+            # A2: AR(1) correction on the rolling-origin power residuals.
             transition_start = max(1, day - config.ar_window_days)
             transitions = np.arange(transition_start, day)
             ar_valid = np.isfinite(a2_residual[transitions, hour]) & np.isfinite(
@@ -518,6 +486,8 @@ def build_pv_day_ahead_forecasts(
                     a2_residual[day - 1, hour],
                 )
 
+            # A3: ridge KPV regression; on insufficient samples fall back to
+            # the FULL A2 (including its AR(1) correction).
             k_valid = np.isfinite(kpv_actual[transitions, hour]) & np.isfinite(
                 kpv_actual[transitions - 1, hour]
             )
@@ -535,7 +505,14 @@ def build_pv_day_ahead_forecasts(
                     x, kpv_actual[k_days, hour], target, config.ridge_alpha
                 )
                 raw_a3[hour] = pcs_norm_hour[day, hour] * k_prediction
+            else:
+                raw_a3[hour] = raw_a2[hour]
+                a3_fallback_hours[day] += 1
 
+            # A4: distance-weighted kNN on KPV features; on insufficient
+            # samples fall back to the FULL A2 (which itself degrades to
+            # a2_base when the AR(1) term lacks samples, and to zero outside
+            # active hours).
             training_start = max(config.knn_lag_days, day - config.knn_window_days)
             features: list[np.ndarray] = []
             targets: list[float] = []
@@ -571,6 +548,10 @@ def build_pv_day_ahead_forecasts(
                         feature_matrix, target_vector, target_feature, neighbors
                     )
                     a4_predictions[neighbors][hour] = pcs_norm_hour[day, hour] * k_prediction
+            else:
+                for neighbors in config.knn_neighbors:
+                    a4_predictions[neighbors][hour] = raw_a2[hour]
+                    a4_fallback_hours[neighbors][day] += 1
 
         if day:
             recent = actual_hourly[max(0, day - config.boundary_window_days) : day]
@@ -627,7 +608,6 @@ def build_pv_day_ahead_forecasts(
                     current_hour[name], templates[day]
                 )
 
-        previous = str(selected_policy[day - 1]) if day else "a1_7"
         policy, losses, weights, current_ensemble_loss, current_selected_loss = _select_policy(
             day,
             candidate_10,
@@ -635,7 +615,6 @@ def build_pv_day_ahead_forecasts(
             actual_10min,
             hard_mask,
             amplitude,
-            previous,
             config,
         )
         selected_policy[day] = policy
@@ -682,7 +661,16 @@ def build_pv_day_ahead_forecasts(
             out=np.full(24, np.nan),
             where=pcs_norm_hour[day] > 0,
         )
-        a2_residual[day] = actual_hourly[day] - a2_base[day]
+        if day == 0:
+            # Cold-start shadow day: no usable history, so leave the A2 AR(1)
+            # residual series and daily losses undefined instead of feeding
+            # a degenerate zero-envelope residual into later training windows.
+            a2_residual[day] = np.nan
+            daily_losses[day, :] = np.nan
+            tau_a2_losses[day, :] = np.nan
+            tau_a3_losses[day, :] = np.nan
+        else:
+            a2_residual[day] = actual_hourly[day] - a2_base[day]
         residual_available[day] = pcs_norm_10[day] > 0
         residual_kpv[day] = np.divide(
             actual_10min[day] - selected_10[day],
@@ -690,6 +678,8 @@ def build_pv_day_ahead_forecasts(
             out=np.zeros(144),
             where=residual_available[day],
         )
+        if day == 0:
+            continue
         for model_index, name in enumerate(CANDIDATE_NAMES):
             daily_losses[day, model_index] = _normalized_day_loss(
                 candidate_10[name][day], actual_10min[day], hard_mask, amplitude[day]
@@ -758,6 +748,7 @@ def build_pv_day_ahead_forecasts(
             "training_end": np.repeat(
                 np.r_[np.datetime64("NaT"), dates[:-1].to_numpy()], 144
             ),
+            "cold_start_shadow": np.repeat(cold_start_shadow, 144),
             "is_result_period": np.repeat(result_days, 144),
         }
     )
@@ -789,7 +780,13 @@ def build_pv_day_ahead_forecasts(
         "boundary_mixed": boundary_mixed.reshape(-1),
         "tau_a2": np.repeat(tau_a2, 24),
         "tau_a3": np.repeat(tau_a3, 24),
+        "cold_start_shadow": np.repeat(cold_start_shadow, 24),
+        "a3_a2_fallback_hours": np.repeat(a3_fallback_hours, 24),
     }
+    for neighbors in config.knn_neighbors:
+        hourly_data[f"a4_a2_fallback_hours_k{neighbors}"] = np.repeat(
+            a4_fallback_hours[neighbors], 24
+        )
     for name in CANDIDATE_NAMES:
         hourly_data[f"pv_{name}_kw"] = candidate_hour[name].reshape(-1)
         hourly_data[f"loss_{name}"] = np.repeat(model_losses[name], 24)
@@ -856,8 +853,16 @@ def build_pv_day_ahead_forecasts(
         "ten_minute_rows": int(len(ten_minute)),
         "residual_rows": int(len(residual_frame)),
         "hard_daylight_p10_p90_coverage": float(coverage[formal_hard].mean()),
+        "selection_policy": "strict_winner_take_all_default_a1_7",
         "selection_counts": {str(key): int(value) for key, value in selection_counts.items()},
+        "cold_start_shadow_days": int(cold_start_shadow.sum()),
+        "a3_a2_fallback_hours": int(a3_fallback_hours.sum()),
+        "a4_a2_fallback_hours": {
+            f"k{neighbors}": int(a4_fallback_hours[neighbors].sum())
+            for neighbors in config.knn_neighbors
+        },
         "no_upper_clipping": True,
+        "uses_attachment_1": False,
         "uses_attachment_3": False,
         "uses_external_weather": False,
     }
@@ -973,4 +978,12 @@ def validate_pv_day_ahead(
     add("no_upper_envelope_clipping_observed", above_raw_count > 0, above_raw_count, ">0 rows")
     add("hourly_primary_key", not hourly.duplicated(["plan_date", "hour_block"]).any(), not hourly.duplicated(["plan_date", "hour_block"]).any(), True)
     add("ten_minute_primary_key", not ten.duplicated(["plan_date", "slot_index"]).any(), not ten.duplicated(["plan_date", "slot_index"]).any(), True)
+    add("strict_selection_no_ensemble", not hourly["selected_model"].eq("ensemble").any(), int(hourly["selected_model"].eq("ensemble").sum()), 0)
+    add("cold_start_shadow_present", "cold_start_shadow" in ten.columns, "cold_start_shadow" in ten.columns, True)
+    add("cold_start_shadow_only_first_day", int(ten["cold_start_shadow"].sum()) == 144, int(ten["cold_start_shadow"].sum()), 144)
+    fallback_columns = [column for column in hourly.columns if "fallback_hours" in column]
+    fallback_finite = bool(fallback_columns) and all(
+        np.isfinite(hourly[column].to_numpy(dtype=float)).all() for column in fallback_columns
+    )
+    add("fallback_counters_finite", fallback_finite, fallback_finite, True)
     return pd.DataFrame(checks)
