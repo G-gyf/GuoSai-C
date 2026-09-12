@@ -134,35 +134,40 @@ class TestForecastInterface(unittest.TestCase):
 class TestAdjustmentCurve(unittest.TestCase):
     @staticmethod
     def _scen(lo, hi):
-        scen = np.empty((10, 36))
-        scen[::2] = lo
-        scen[1::2] = hi
-        return scen
+        """Ten scenarios with values linearly spread over [lo, hi]."""
+        return np.tile(np.linspace(lo, hi, 10)[:, None], (1, 36))
 
     def setUp(self):
         self.fl = np.zeros(36)
         self.fc = np.zeros(36)
-        self.q0 = np.full(36, 100.0)
+        self.q0 = np.full(36, 150.0)
 
     def test_down_region_targets_q90(self):
-        scen = self._scen(50.0, 80.0)  # Q90=80 < q0
+        scen = self._scen(0.0, 80.0)  # Q90 = 72 < q0
         target = adjustment_curve(self.fl, self.fc, scen, self.q0, 0)
-        np.testing.assert_allclose(target, 80.0)
+        np.testing.assert_allclose(target, 72.0)
 
-    def test_up_region_targets_q50(self):
-        scen = self._scen(150.0, 200.0)  # Q50 (linear interp) = 175 > q0
+    def test_up_region_targets_q70(self):
+        scen = self._scen(100.0, 300.0)  # Q70 = 240 > q0
         target = adjustment_curve(self.fl, self.fc, scen, self.q0, 0)
-        np.testing.assert_allclose(target, 175.0)
+        np.testing.assert_allclose(target, 240.0)
+
+    def test_up_region_q_up_parameter(self):
+        scen = self._scen(100.0, 300.0)
+        target = adjustment_curve(self.fl, self.fc, scen, self.q0, 0, q_up=0.5)
+        np.testing.assert_allclose(target, 200.0)  # linear-interp Q50
+        target = adjustment_curve(self.fl, self.fc, scen, self.q0, 0, q_up=0.9)
+        np.testing.assert_allclose(target, 280.0)  # Q90 both sides
 
     def test_kink_region_keeps_plan(self):
-        scen = self._scen(50.0, 150.0)  # Q50<q0<Q90
+        scen = self._scen(0.0, 200.0)  # Q70 = 126 < q0 < Q90 = 162
         target = adjustment_curve(self.fl, self.fc, scen, self.q0, 0)
-        np.testing.assert_allclose(target, 100.0)
+        np.testing.assert_allclose(target, 150.0)
 
     def test_point_forecast_floor(self):
-        scen = self._scen(50.0, 150.0)
-        target = adjustment_curve(np.full(36, 120.0), self.fc, scen, self.q0, 0)
-        np.testing.assert_allclose(target, 120.0)
+        scen = self._scen(0.0, 200.0)
+        target = adjustment_curve(np.full(36, 170.0), self.fc, scen, self.q0, 0)
+        np.testing.assert_allclose(target, 170.0)
 
 
 class TestRuleConsistency(unittest.TestCase):
@@ -240,6 +245,19 @@ class TestStrategyProperties(unittest.TestCase):
         # before the 21-day residual window every calibration is zero-parameter
         self.assertTrue((np.abs(frame.ldr_delta_kwh) < 1e-9).all())
         self.assertTrue((np.abs(frame.ldr_lambda) < 1e-9).all())
+
+    def test_common_start_forks_all_strategies(self):
+        settings = Q3Settings(strategy="M612", search_maxiter=2, search_popsize=3)
+        frame, _, _, _ = run_strategy(
+            self.dates, self.load, self.pv, self.prices, self.fl, self.fc, settings,
+            limit=35, start_idx=31, initial_energy=2148.598325,
+        )
+        day1 = frame[frame.date == self.dates[31]]
+        self.assertEqual(len(day1), 144)
+        self.assertLess(abs(float(day1.soc_start_kwh.iloc[0]) - 2148.598325), 1e-9)
+        self.assertEqual(int(day1.residual_count.iloc[0]), 21)
+        checks = validate_question3(frame)
+        self.assertTrue(checks["passed"])
 
 
 if __name__ == "__main__":

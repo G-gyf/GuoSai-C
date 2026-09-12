@@ -4,16 +4,16 @@
   "plan_days": 334,
   "plan_intervals": 48096,
   "battery_blocks": 2004,
-  "emergency_rows": 557,
+  "emergency_rows": 482,
   "max_workbook_schedule_error_kwh": 2.2737367544323206e-13,
-  "independent_face_bill": 13578703.004027002,
-  "independent_settlement_bill": 13323697.210830513,
-  "independent_emergency_bill": 561388.9424101859,
-  "independent_total_bill": 13885086.1532407,
+  "independent_face_bill": 13556100.72987226,
+  "independent_settlement_bill": 13418772.912455764,
+  "independent_emergency_bill": 429263.2864691218,
+  "independent_total_bill": 13848036.198924886,
   "four_component_recheck": {
-    "retained": 12846076.042560812,
-    "down": 366313.48073309154,
-    "up": 111307.68753660514,
-    "emergency": 561388.9424101859
+    "retained": 12908994.188032744,
+    "down": 323553.27091975964,
+    "up": 186225.45350326545,
+    "emergency": 429263.2864691218
   }
 }

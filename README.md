@@ -83,7 +83,7 @@ paper/      # 论文正文及附录
 
 前置分析：[数据预处理与前置分析报告](outputs/preanalysis/preanalysis.html)。
 
-当前状态：数据预处理与前置分析、问题1求解已实现；问题2已按负载周持久化＋光伏七天均值、21天历史残差、风险修正日前线性规划与四阶段截断仿射LDR实施，正式结果位于 `outputs/question2/current/ldr/`。光伏预测模块保留为研究备选，不进入当前正式问题2结果。
+当前状态：数据预处理与前置分析、问题1求解已实现；问题2已按负载周持久化＋光伏七天均值、21天历史残差、风险修正日前线性规划与四阶段截断仿射LDR实施，正式结果位于 `outputs/question2/current/ldr/`。问题3已按"0:00 计划＋6:00/12:00 滚动调整＋分段净结算＋三次分段 LDR 校准"的 M612 主策略实施，五套消融与 result3.xlsx 见 `outputs/question3/current/`。光伏预测模块保留为研究备选，不进入当前正式问题2结果。
 
 问题2旧版基线运行：`python -m src.optimization.question2`。该命令生成全年逐时仿真、正式期明细、三个预设方案对照与表格载荷。使用桌面应用提供的 Node 运行 `outputs/question2/archive/baseline/build_workbook.mjs` 回填官方模板，然后执行 `python -m src.optimization.validate_question2_workbook` 独立核验导出结果。
 
@@ -124,3 +124,29 @@ python -m src.forecasting.question2_load
 正式风险分位数固定0.8，不以全年扫描选参；负载预测口径统一为周持久化 L_{d−7}。当前主线与LDR口径见[完整方案与审查修订](docs/问题二/问题二完整方案与审查修订.md)。已收回关于信息前沿、不可约误差和控制器免费的结论。历史口径的固定g下界复核见[差额复核](outputs/question2/analysis/gap_audit/差额复核说明.md)；现行主方案相对匹配完美信息下界的差额见 `outputs/question2/benchmark/perfect_foresight/matched_ldr_summary.json`。
 
 LDR正式运行：`python -m src.optimization.question2_ldr`（默认 `--load-forecast weekly_persist`）。实现负载周持久化＋光伏七天均值、固定α=0.8分位数日前计划、四个六小时阶段的截断仿射保留阈值，以及每天基于最近21条完整历史情景的7参数直接搜索。2—12月实际总购电费为13978077.23元，独立结果、参数诊断、专项校验与官方模板位于`outputs/question2/current/ldr/`。
+
+## 问题三实施（2026-09-13 修订：Q70 曲线＋共同起点）
+
+主策略 **M612**：0:00 制定原计划 q0（80% 分位数 LP，附件3 0:00 发布 PCHIP 预报）；6:00 与 12:00 按分段净结算对 q0 滚动重解并锁定对应区间（双面报童曲线 **median(Q70, Q90, q0)**，由结算边际先验推导：F=1−R'/(5c)，下调区 R'=0.5c→90%、上调区 R'=1.5c→70%；Q50/Q80/Q90 仅作敏感性对照）；18:00 不调整购电、不使用 18:00 预报、不重新校准，仅代入实测 a18 更新 LDR 保留阈值。LDR 每天 0:00/6:00/12:00 三次分段校准（维度 1/2/4，β=1 与 β=0 双保底）。1月由 M0（仅0:00）共同预热一次，五种策略在 2月1日以同一库存 **2148.598325 kWh** 分叉。
+
+正式期（2—12月，334 天）实际总费 **13,848,036.20 元**。五套消融的预报时刻价值分解：V6（6:00 更新）=4,641.41 元、V12（12:00 更新）=262,702.49 元、V18_state（18:00 状态重优化）=37,080.24 元、V18_forecast（18:00 新预报纯增量）=388.21 元（约 0.003%）——结论：6:00 与 12:00 预报值得使用，18:00 新光伏预报无经济价值。匹配完美信息下界 12,252,452.93 元，差额 1,595,583.27 元。
+
+| 方案 | 更新时间 | 实际总费（元） |
+|---|---:|---:|
+| M0 | 仅 0:00 | 14,115,380.10 |
+| M6 | 0:00＋6:00 | 14,110,738.69 |
+| M612（主策略） | 0:00＋6:00＋12:00 | **13,848,036.20** |
+| M61218-S | ＋18:00 状态重优化（沿用12:00预报） | 13,810,955.96 |
+| M61218-F | ＋18:00 新预报 | 13,810,567.76 |
+
+实现口径（结算、预测、风险分位数、阶段信号、校准时域、共同起点）见 [问题三实施方案与口径](docs/问题三/问题三实施方案与口径.md)；全年结果与校验见 [问题三实施与结果说明](outputs/question3/current/问题三实施与结果说明.md)；DE 终止证据见 [DE终止证据说明](outputs/question3/current/DE终止证据说明.md)；官方模板 `outputs/question3/current/result3.xlsx` 已回填并通过独立回读。
+
+```text
+python -m src.data_pipeline.question3_forecasts        # PCHIP 预报接口 + 锚点检查
+python -m src.optimization.question3                    # 全年五套策略回测与全部产物
+python -m src.optimization.question3_sensitivity        # Q50/Q70/Q80/Q90 敏感性（仅报告）
+node outputs/question3/build_workbook_q3.mjs --output-dir outputs/question3/current   # result3.xlsx 回填
+python -m src.optimization.validate_question3_workbook --output-dir outputs/question3/current   # 回读核验
+python -m src.optimization.question3_perfect_foresight  # 匹配完美预见下界
+python -m unittest tests.test_question3 -v              # 19 项验收测试
+```

@@ -16,13 +16,18 @@ three staged LDR calibrations, 18:00 signal-only update):
        updates the locked reserve rule.
 
 Risk levels are fixed a priori from the settlement structure, not from
-backtests.  At 0:00 each planned unit costs c and an emergency unit costs
-5c, giving the coverage level 5/(5+1)=0.8.  At an adjustment stage the
-piecewise newsvendor optimum against the locked plan is the median of
-Q50 (up region: a unit added costs c+1.5c, 5c*P = 2.5c -> P = 0.5),
-Q90 (down region: a unit cut saves only 0.5c, 5c*P = 0.5c -> P = 0.1)
-and the locked plan q0 itself (the kink); the point forecast stays the
-floor as in the 0:00 curve.
+backtests.  The single-slot no-storage newsvendor condition
+R'(a) = 5c*P(D > a) with the segment net settlement R(a) =
+c*min(q0,a) + 0.5c(q0-a)+ + 1.5c(a-q0)+ gives the coverage levels
+F = 1 - R'/(5c):
+
+* 0:00 plan:       R' = c    -> F = 1 - 1/5     = 0.8  (Q80 curve);
+* down region:     R' = 0.5c -> F = 1 - 0.5/5   = 0.9  (Q90);
+* up region:       R' = 1.5c -> F = 1 - 1.5/5   = 0.7  (Q70);
+
+hence the adjustment curve is median(Q70, Q90, q0) with the point
+forecast as floor.  Q50/Q80/Q90 up-quantile variants are sensitivity
+controls only and are never selected from backtest costs.
 
 Ablations: M0 (0:00 only, PV forecast = 0:00 issuance, Q2-style 7-parameter
 daily calibration), M6 (0:00 + 6:00), M61218-S (18:00 purchase
@@ -89,6 +94,7 @@ class Q3Settings:
     name: str = "question3"
     strategy: str = MAIN_STRATEGY
     alpha: float = 0.8
+    adjustment_up_quantile: float = 0.7
     residual_days: int = RESIDUAL_DAYS
     search_seed: int = 20250912
     search_maxiter: int = 8
@@ -138,23 +144,32 @@ def risk_curve(fl_d, fc_dk, scen, h0, alpha=0.8):
     return np.maximum(net, q)
 
 
-def adjustment_curve(fl_d, fc_dk, scen, q0, h0):
+def adjustment_curve(fl_d, fc_dk, scen, q0, h0, q_up=0.7, q_down=0.9):
     """Two-sided newsvendor curve for an adjustment stage.
 
-    The piecewise-optimal adjusted purchase against the locked plan q0 is
-    the median of the down-region optimum Q90 (cutting a unit saves only
-    the 0.5c fee: 5c*P = 0.5c -> P = 0.1), the up-region optimum Q50
-    (adding a unit costs 2.5c: 5c*P = 2.5c -> P = 0.5) and q0 itself
-    (the kink).  The point forecast acts as a floor exactly as in the
-    0:00 curve.  Without scenarios the locked plan is kept and the point
-    forecast may only raise it.
+    Under the segment net settlement R(a) = c*min(q0,a) + 0.5c(q0-a)+
+    + 1.5c(a-q0)+, the marginal cost of the adjusted purchase is 0.5c in
+    the down region (a < q0) and 1.5c in the up region (a > q0); the
+    single-slot no-storage newsvendor condition R'(a) = 5c*P(D > a) then
+    gives the coverage levels
+
+        F_down = 1 - 0.5c/(5c) = 0.9   ->  Q90
+        F_up   = 1 - 1.5c/(5c) = 0.7   ->  Q70
+
+    and the piecewise optimum against the locked plan is the median of
+    Q_up, Q_down and q0 itself (the kink).  The point forecast acts as a
+    floor exactly as in the 0:00 curve.  ``q_up`` is a parameter: 0.7 is
+    the derived value; other levels (0.5/0.8/0.9) are sensitivity
+    variants only and must never be selected from backtest costs.
+    Without scenarios the locked plan is kept and the point forecast may
+    only raise it.
     """
     net = fl_d[h0:] - fc_dk[h0:]
     if scen is None:
         return np.maximum(net, q0)
-    q50 = np.quantile(scen, 0.5, axis=0)
-    q90 = np.quantile(scen, 0.9, axis=0)
-    target = np.median(np.stack([q50, q90, np.asarray(q0, float)]), axis=0)
+    q_hi = np.quantile(scen, q_down, axis=0)
+    q_lo = np.quantile(scen, q_up, axis=0)
+    target = np.median(np.stack([q_lo, q_hi, np.asarray(q0, float)]), axis=0)
     return np.maximum(net, target)
 
 
@@ -655,7 +670,8 @@ def _run_day_staged(d, date, load_d, pv_d, prices, fl, fc, energy, settings, loa
         a6 = float((actual_net[:36] - n_hat[:36]).mean())
         signals[1] = a6
         scen6, _ = scenario_matrix(d, fl, fc, load, pv, 1, 36, settings.residual_days)
-        risk6 = adjustment_curve(fl[d], fc[d, 1], scen6, q0[36:], 36)
+        risk6 = adjustment_curve(fl[d], fc[d, 1], scen6, q0[36:], 36,
+                                 q_up=settings.adjustment_up_quantile)
         a6plan, ep6, _ = solve_adjustment(q0[36:], risk6, prices[36:], energy, nu)
         qA[36:] = a6plan
         ref[36:] = ep6
@@ -686,6 +702,7 @@ def _run_day_staged(d, date, load_d, pv_d, prices, fl, fc, energy, settings, loa
             deltas[1] = float(cal6["theta"][0])
             lambdas[1] = float(cal6["theta"][1])
         diagnostics["calibrations"].append(cal6)
+        cal6["update_slot"] = 36
 
     # ---- execute stage 1 (6:00-12:00) ----
     seg1 = execute_segment(actual_net[36:72], qA[36:72], ref[36:72], prices[36:72],
@@ -703,7 +720,8 @@ def _run_day_staged(d, date, load_d, pv_d, prices, fl, fc, energy, settings, loa
         a12 = float((actual_net[36:72] - n_hat[36:72]).mean())
         signals[2] = a12
         scen12, _ = scenario_matrix(d, fl, fc, load, pv, 2, 72, settings.residual_days)
-        risk12 = adjustment_curve(fl[d], fc[d, 2], scen12, q0[72:], 72)
+        risk12 = adjustment_curve(fl[d], fc[d, 2], scen12, q0[72:], 72,
+                                  q_up=settings.adjustment_up_quantile)
         a12plan, ep12, _ = solve_adjustment(q0[72:], risk12, prices[72:], energy, nu)
         qA[72:] = a12plan
         ref[72:] = ep12
@@ -721,6 +739,7 @@ def _run_day_staged(d, date, load_d, pv_d, prices, fl, fc, energy, settings, loa
         deltas[3] = float(cal12["theta"][2])
         lambdas[3] = float(cal12["theta"][3])
         diagnostics["calibrations"].append(cal12)
+        cal12["update_slot"] = 72
 
     # M6: no 12:00 purchase update; the stage-2 signal is the observed
     # 6:00-12:00 error against the 6:00 forecast (needed before seg2 runs)
@@ -746,7 +765,8 @@ def _run_day_staged(d, date, load_d, pv_d, prices, fl, fc, energy, settings, loa
         k18 = spec["issuance"][108]
         scen18, _ = scenario_matrix(d, fl, fc, load, pv, k18, 108,
                                     settings.residual_days)
-        risk18 = adjustment_curve(fl[d], fc[d, k18], scen18, q0[108:], 108)
+        risk18 = adjustment_curve(fl[d], fc[d, k18], scen18, q0[108:], 108,
+                                  q_up=settings.adjustment_up_quantile)
         a18plan, ep18, _ = solve_adjustment(q0[108:], risk18, prices[108:],
                                             energy, nu)
         qA[108:] = a18plan
@@ -868,16 +888,25 @@ def _period_metrics(frame):
     return out
 
 
-def run_strategy(dates, load, pv, prices, fl, fc, settings, limit=None):
+def run_strategy(dates, load, pv, prices, fl, fc, settings, limit=None,
+                 start_idx=0, initial_energy=6000.0):
+    """Continuous causal run from ``start_idx`` at ``initial_energy``.
+
+    When ``start_idx > 0`` the strategy never touches its own January
+    execution: all five strategies then fork from one common February
+    opening inventory produced by the shared warm-up (the 0:00-only M0
+    policy).  History before ``start_idx`` is still available for
+    residuals, so 1 February keeps a complete 21-day residual window.
+    """
     started = time.perf_counter()
     if limit is None:
         limit = len(dates)
     strategy = settings.strategy
-    energy = 6000.0
+    energy = float(initial_energy)
     records = []
     day_diags = []
     paired = []
-    for d in range(limit):
+    for d in range(start_idx, limit):
         date = dates[d]
         day_started = time.perf_counter()
         rows, segments, diag, energy, q0, qA = run_day(
@@ -927,8 +956,8 @@ def run_strategy(dates, load, pv, prices, fl, fc, settings, limit=None):
             "day_seconds": time.perf_counter() - day_started,
             **{f"cal_{i}_{key}": (c.get(key) if not isinstance(c.get(key), (list, np.ndarray)) else json.dumps(c.get(key))) for i, c in enumerate(diag["calibrations"]) for key in ["update_slot", "method", "accepted_search", "evaluations", "selected_score", "nit", "success", "termination"]},
         })
-        if (d + 1) % 30 == 0 or d + 1 == limit:
-            print(f"{strategy} {d + 1}/{limit} days; date={date.date()} "
+        if (d - start_idx + 1) % 30 == 0 or d + 1 == limit:
+            print(f"{strategy} {d - start_idx + 1}/{limit - start_idx} days; date={date.date()} "
                   f"calib={day_diags[-1]['calibration_seconds']:.2f}s", flush=True)
 
     frame = pd.DataFrame.from_records(records, columns=COLUMNS)
@@ -957,8 +986,14 @@ def run_strategy(dates, load, pv, prices, fl, fc, settings, limit=None):
             "updates": STRATEGIES[strategy]["updates"],
             "issuance_by_update": STRATEGIES[strategy]["issuance"],
             "settlement": "segment_net_settlement_s316",
-            "adjustment_curve": "median(Q50, Q90, q0) with point-forecast floor",
+            "adjustment_curve": "median(Q_up, Q90, q0) with point-forecast floor; "
+            "Q_up=0.7 derived from R'=1.5c vs 5c emergency",
             "calibration_acceptance": "candidate must not exceed min(beta1, beta0) floor",
+            "start_idx": start_idx,
+            "run_start_date": str(dates[start_idx].date()),
+            "common_initial_soc_kwh": float(initial_energy),
+            "warmup": "January executed once by the shared 0:00-only policy; "
+            "all strategies fork from its 1 February inventory",
         },
         "terminal_value": float(prices.min() / ETA),
         "seconds": time.perf_counter() - started,
@@ -1179,11 +1214,12 @@ def write_report(out: Path, summaries: list, frame, diag_frame, pair_frame):
         "## 主策略 M612 结构",
         "",
         "- 0:00：周持久化负载 + 附件3 0:00 预报（PCHIP 10 分钟化）→ 80% 分位数 LP 得到 q0 与 E^p,0；校准 δ0（1 维，0—6 时）。",
-        "- 6:00：按分段净结算对 q0 重解 6:00—24:00（双面报童曲线 median(Q50,Q90,q0)），锁定 6:00—12:00；校准 (δ6, λ6)（2 维），信号 a6 为 0—6 时已实现误差均值。",
+        "- 6:00：按分段净结算对 q0 重解 6:00—24:00（双面报童曲线 median(Q70,Q90,q0)），锁定 6:00—12:00；校准 (δ6, λ6)（2 维），信号 a6 为 0—6 时已实现误差均值。",
         "- 12:00：重解并锁定 12:00—24:00（同双面曲线）；联合校准 (δ12, λ12, δ18, λ18)（4 维），a18 在情景内逐路径计算、参数在 12:00 锁定。",
         "- 18:00：不调整购电、不使用 18:00 预报、不重新校准；仅代入实测 a18 更新保留阈值。",
-        "- 风险水平按结算结构先验固定：0:00 计划 80%（c 对 5c）；调整阶段为分段报童最优 median(Q50,Q90,q0)——上调边际 2.5c 对应 50%、下调仅省 0.5c 对应 90%，q0 为折点；点预测始终作下限。不按回测结果事后选参。",
+        "- 风险水平按结算结构先验固定（单时段无储能报童条件 R'(a)=5c·P(D>a)）：0:00 计划 R'=c → F=1−1/5=0.8；调整下调区 R'=0.5c → F=1−0.5/5=0.9；调整上调区 R'=1.5c → F=1−1.5/5=0.7；曲线为 median(Q70,Q90,q0)，点预测作下限。Q50/Q80/Q90 仅作敏感性对照，不按回测费用选参。",
         "- 校准均以最近 21 个完整历史日为情景、β=1 与 β=0 为显式保底候选；不劣于两者较优者才接受搜索结果。",
+        "- 共同起点：1月仅由 M0（仅0:00）从6000 kWh 预热一次，五种策略在2月1日以同一库存分叉，此后状态差异为策略真实结果。",
         "",
         "## 校验",
         "",
@@ -1242,11 +1278,28 @@ def main():
 
     summaries = []
     frames = {}
+
+    # ---- shared January warm-up (0:00-only M0 policy) ----
+    args.output.mkdir(parents=True, exist_ok=True)
+    warmup_settings = Q3Settings(strategy="M0", search_seed=args.search_seed,
+                                 search_maxiter=args.search_maxiter,
+                                 search_popsize=args.search_popsize)
+    warmup_frame, _, _, warmup_summary = run_strategy(
+        dates, load, pv, prices, fl, fc, warmup_settings, limit=31
+    )
+    common_feb1_soc = float(warmup_frame.soc_end_kwh.iloc[-1])
+    warmup_frame.to_csv(args.output / "warmup_january_schedule.csv",
+                        index=False, encoding="utf-8-sig")
+    print(f"common warm-up done: 1 February opening SOC = {common_feb1_soc:.6f} kWh", flush=True)
+
     for name in strategies:
         settings = Q3Settings(strategy=name, search_seed=args.search_seed,
                               search_maxiter=args.search_maxiter,
                               search_popsize=args.search_popsize)
-        frame, diag, pair, summary = run_strategy(dates, load, pv, prices, fl, fc, settings)
+        frame, diag, pair, summary = run_strategy(
+            dates, load, pv, prices, fl, fc, settings,
+            start_idx=31, initial_energy=common_feb1_soc,
+        )
         write_strategy_outputs(args.output / name, name, frame, diag, pair, summary, prices)
         summaries.append(summary)
         frames[name] = frame
