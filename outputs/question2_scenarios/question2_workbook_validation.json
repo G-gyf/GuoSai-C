@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "headers_preserved": true,
+  "plan_days": 334,
+  "plan_intervals": 48096,
+  "battery_blocks": 2004,
+  "emergency_rows": 565,
+  "max_workbook_schedule_error_kwh": 2.2737367544323206e-13,
+  "independent_planned_bill": 14874382.029797753,
+  "independent_emergency_bill": 993997.5805822205,
+  "independent_total_bill": 15868379.610379973
+}

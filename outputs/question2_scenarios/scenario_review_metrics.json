@@ -1,0 +1,10 @@
+{
+  "max_direction_approximation_bound": 0.0178194912057359,
+  "days_bound_above_0_1_percent": 323,
+  "days_with_integer_direction_repair": 0,
+  "mean_day_solve_seconds": 0.4780972113771051,
+  "max_day_solve_seconds": 0.6144428000043263,
+  "sum_direction_penalty_vs_lp": 72671.97299767606,
+  "paired_greedy_emergency_cost": 1065793.9556813503,
+  "max_grid25_vs5_emergency_cost_difference_yuan": 0.0
+}

@@ -1,0 +1,13 @@
+{
+  "source_sha256": {
+    "附件/附件1.xlsx": "66b87134f5ecccd68184d3539bb1293ef039f9e0fdd955a589b9bfa7f227c377",
+    "附件/附件2.xlsx": "2e95fd446bfafa0d8c59577b5c2e2ea8b3f1def20dde54a3062556f4da9b4c72",
+    "附件/附件5/result2.xlsx": "1c26494cfc6d754e0bd9bff7e13e1126a73d2d2da6c5336eb251d89b9a1a1a47"
+  },
+  "forecast_window": 7,
+  "residual_window": 21,
+  "quantile_method": "linear",
+  "information_cutoff": "Forecast and residuals strictly before the issue date; actuals revealed slot by slot.",
+  "template_last_purchase_column": "Header 0:00-0:10+1 is the NEXT day 00:00-00:10 (next-day 00:10 observation); this row own 00:00-00:10 is in the previous row; 12-31 last column is 0.",
+  "reported_bill": "planned purchase bill plus 5x emergency bill; no terminal credit deducted"
+}

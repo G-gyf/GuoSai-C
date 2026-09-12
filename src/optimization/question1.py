@@ -110,6 +110,9 @@ def load_question1_inputs(path: Path | str) -> pd.DataFrame:
     )
     # Raw rows are 00:10, ..., 23:50, 00:00+1.  For physical interval k:
     # price row = k-1 (cyclic), demand row = k, result-template row = k-1.
+    # The final template slot "0:00+1-0:10+1" is the NEXT day 00:00-00:10; for
+    # Question 1 every day repeats identically, so its value equals this day's
+    # own 00:00-00:10 and the single-day result is identical to the next-day rule.
     price_source = np.r_[SLOTS_PER_DAY - 1, np.arange(SLOTS_PER_DAY - 1)]
     demand_source = np.arange(SLOTS_PER_DAY)
     result_row_index = np.r_[SLOTS_PER_DAY, np.arange(1, SLOTS_PER_DAY)]

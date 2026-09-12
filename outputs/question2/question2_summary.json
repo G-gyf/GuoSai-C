@@ -1,0 +1,113 @@
+[
+  {
+    "settings": {
+      "name": "risk_reserve",
+      "risk": true,
+      "alpha": 0.8,
+      "beta": 1.0,
+      "forecast_days": 7,
+      "residual_days": 21
+    },
+    "terminal_value": 0.41255555555555556,
+    "seconds": 12.955881099999715,
+    "result_days": 334,
+    "result_intervals": 48096,
+    "grid_kwh": 23963280.995951846,
+    "charge_kwh": 5721974.941071201,
+    "discharge_kwh": 4641312.280794983,
+    "emergency_kwh": 204701.74647008206,
+    "unused_kwh": 5148130.587179042,
+    "planned_cost": 15061914.898558464,
+    "emergency_cost": 960635.7925163691,
+    "total_cost": 16022550.691074831,
+    "initial_result_soc_kwh": 8481.289084047618,
+    "final_soc_kwh": 1245.0907203703705,
+    "emergency_intervals": 4572,
+    "validation": {
+      "max_balance_error_kwh": 4.547473508864641e-13,
+      "max_state_error_kwh": 0.0,
+      "max_continuity_error_kwh": 0.0,
+      "min_soc_kwh": 1200.0,
+      "max_soc_kwh": 10800.0,
+      "max_charge_kwh": 833.3333333333334,
+      "max_discharge_kwh": 833.3333333333334,
+      "simultaneous_charge_discharge": 0,
+      "emergency_while_charging": 0,
+      "passed": true
+    }
+  },
+  {
+    "settings": {
+      "name": "mean_greedy",
+      "risk": false,
+      "alpha": 0.8,
+      "beta": 0,
+      "forecast_days": 7,
+      "residual_days": 21
+    },
+    "terminal_value": 0.41255555555555556,
+    "seconds": 13.042328300000008,
+    "result_days": 334,
+    "result_intervals": 48096,
+    "grid_kwh": 18790400.644705825,
+    "charge_kwh": 4824193.549056101,
+    "discharge_kwh": 3912939.5233239895,
+    "emergency_kwh": 2856494.9216391314,
+    "unused_kwh": 2796452.0456461767,
+    "planned_cost": 11503942.130007789,
+    "emergency_cost": 16759158.755115112,
+    "total_cost": 28263100.885122903,
+    "initial_result_soc_kwh": 7136.387320608465,
+    "final_soc_kwh": 1200.0,
+    "emergency_intervals": 10543,
+    "validation": {
+      "max_balance_error_kwh": 4.547473508864641e-13,
+      "max_state_error_kwh": 0.0,
+      "max_continuity_error_kwh": 0.0,
+      "min_soc_kwh": 1200.0,
+      "max_soc_kwh": 10800.0,
+      "max_charge_kwh": 833.3333333333334,
+      "max_discharge_kwh": 833.3333333333334,
+      "simultaneous_charge_discharge": 0,
+      "emergency_while_charging": 0,
+      "passed": true
+    }
+  },
+  {
+    "settings": {
+      "name": "risk_greedy",
+      "risk": true,
+      "alpha": 0.8,
+      "beta": 0,
+      "forecast_days": 7,
+      "residual_days": 21
+    },
+    "terminal_value": 0.41255555555555556,
+    "seconds": 12.58194500000036,
+    "result_days": 334,
+    "result_intervals": 48096,
+    "grid_kwh": 23974537.67427052,
+    "charge_kwh": 5801320.004459193,
+    "discharge_kwh": 4705581.782139257,
+    "emergency_kwh": 140430.5200587633,
+    "unused_kwh": 5080040.4770426825,
+    "planned_cost": 15066766.129276738,
+    "emergency_cost": 849168.2031971625,
+    "total_cost": 15915934.3324739,
+    "initial_result_soc_kwh": 8481.289084047618,
+    "final_soc_kwh": 1245.0907203703705,
+    "emergency_intervals": 954,
+    "validation": {
+      "max_balance_error_kwh": 4.547473508864641e-13,
+      "max_state_error_kwh": 0.0,
+      "max_continuity_error_kwh": 0.0,
+      "min_soc_kwh": 1200.0,
+      "max_soc_kwh": 10800.0,
+      "max_charge_kwh": 833.3333333333334,
+      "max_discharge_kwh": 833.3333333333334,
+      "simultaneous_charge_discharge": 0,
+      "emergency_while_charging": 0,
+      "passed": true
+    }
+  }
+]
