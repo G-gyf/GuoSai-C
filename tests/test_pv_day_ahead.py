@@ -1,4 +1,4 @@
-"""Acceptance tests for the causal question 2 PV forecast pipeline."""
+﻿"""Acceptance tests for the causal question 2 PV forecast pipeline."""
 
 from __future__ import annotations
 
@@ -110,8 +110,8 @@ class PVDayAheadAcceptanceTests(unittest.TestCase):
         self.assertTrue(np.allclose(original_before, changed_before, equal_nan=True))
 
     def test_saved_artifacts_pass_quality_checks(self) -> None:
-        metrics = pd.read_csv(ROOT / "outputs/question2_forecast/model_metrics.csv")
-        key_dates = pd.read_csv(ROOT / "outputs/question2_forecast/key_dates_metrics.csv")
+        metrics = pd.read_csv(ROOT / "outputs/question2/analysis/forecast/model_metrics.csv")
+        key_dates = pd.read_csv(ROOT / "outputs/question2/analysis/forecast/key_dates_metrics.csv")
         result = PVForecastResult(
             hourly=self.hourly,
             ten_minute=self.ten,

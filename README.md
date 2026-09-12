@@ -1,4 +1,6 @@
-# 微网与外部电网电力调控策略
+﻿# 微网与外部电网电力调控策略
+
+> **问题二当前主方案：LDR（2026-09-12）**。完整论文正文见[问题二完整解答](outputs/question2/current/paper/问题二完整解答_LDR主方案.md)，正式结果见[outputs/question2/current/ldr/result2.xlsx](outputs/question2/current/ldr/result2.xlsx)。固定80%分位数＋四阶段截断仿射储能规则；正式期总费15,819,068.62元。以下旧版结果保留作对照，不再标为当前主结果。
 
 2026 年高教社杯全国大学生数学建模竞赛 C 题。项目目标是在负载、光伏、储能和电价约束下，制定计划购电、滚动调整与紧急购电策略，使供电满足负载并尽量降低总费用。
 
@@ -81,15 +83,15 @@ paper/      # 论文正文及附录
 
 前置分析：[数据预处理与前置分析报告](outputs/preanalysis/preanalysis.html)。
 
-当前状态：数据预处理与前置分析、问题1求解已实现；问题2已按滚动七天均值、21天历史残差、风险修正日前线性规划与实时储能控制实施，输出位于 `outputs/question2/`。原问题2光伏预测模块保留为研究备选，不进入当前正式问题2结果。
+当前状态：数据预处理与前置分析、问题1求解已实现；问题2已按滚动七天均值、21天历史残差、风险修正日前线性规划与实时储能控制实施，输出位于 `outputs/question2/archive/baseline/`。原问题2光伏预测模块保留为研究备选，不进入当前正式问题2结果。
 
-问题2正式运行：`python -m src.optimization.question2`。该命令生成全年逐时仿真、正式期明细、三个预设方案对照与表格载荷。使用桌面应用提供的 Node 运行 `outputs/question2/build_workbook.mjs` 回填官方模板，然后执行 `python -m src.optimization.validate_question2_workbook` 独立核验导出结果。
+问题2旧版基线运行：`python -m src.optimization.question2`。该命令生成全年逐时仿真、正式期明细、三个预设方案对照与表格载荷。使用桌面应用提供的 Node 运行 `outputs/question2/archive/baseline/build_workbook.mjs` 回填官方模板，然后执行 `python -m src.optimization.validate_question2_workbook` 独立核验导出结果。
 
-正式参数为 α=0.8、β=1，未根据全年结果反向选参。2—12月实际总购电费约1602.26万元；风险修正但β=0的对照费用更低，已在结果说明中如实列出。完整方法、初始化、模板末列“0:00-0:10+1”的次日口径（该列为次日00:00—00:10）及指定日期结果见 [问题二实施与结果说明](outputs/question2/问题二实施与结果说明.md)。
+旧版基线参数为 α=0.8、β=1，未根据全年结果反向选参。2—12月实际总购电费约1602.26万元；风险修正但β=0的对照费用更低，已在结果说明中如实列出。完整方法、初始化、模板末列“0:00-0:10+1”的次日口径（该列为次日00:00—00:10）及指定日期结果见 [问题二实施与结果说明](outputs/question2/archive/baseline/问题二实施与结果说明.md)。
 
-追加检验：`python -m src.optimization.question2_scenarios` 恢复无非预见性约束的原情景思路，通过连续松弛与固定方向LP构造物理可行近似解，采用原近似价值控制器。2—12月实际总费15868379.61元，较此前主方案减少154171.08元。新增结果在 `outputs/question2_scenarios/`，不覆盖既有正式结果；方法、上下界差距和数值检验见 [原情景法检验与对比](outputs/question2_scenarios/原情景法检验与对比.md)。
+追加检验：`python -m src.optimization.question2_scenarios` 恢复无非预见性约束的原情景思路，通过连续松弛与固定方向LP构造物理可行近似解，采用原近似价值控制器。2—12月实际总费15868379.61元，较此前主方案减少154171.08元。新增结果在 `outputs/question2/archive/scenarios/`，不覆盖既有正式结果；方法、上下界差距和数值检验见 [原情景法检验与对比](outputs/question2/archive/scenarios/原情景法检验与对比.md)。
 
-完美信息基准：`python -m src.optimization.question2_perfect_foresight` 对全时域实际数据做统一LP。全年1—12月费用下限13768559.69元；匹配情景方案2月1日期初库存的2—12月费用下限12248925.22元。完整口径、对偶证据和可比差额见 [完美预见下限测算说明](outputs/question2_perfect_foresight/完美预见下限测算说明.md)。
+完美信息基准：`python -m src.optimization.question2_perfect_foresight` 对全时域实际数据做统一LP。全年1—12月费用下限13768559.69元；匹配情景方案2月1日期初库存的2—12月费用下限12248925.22元。完整口径、对偶证据和可比差额见 [完美预见下限测算说明](outputs/question2/benchmark/perfect_foresight/完美预见下限测算说明.md)。
 
 问题1输出中文论文级图表（400 dpi PNG）：图1按“价格机会—净需求—购电响应”展示价格信号与需求侧响应；图2按“储能动作—库存状态—经济结果”展示储能策略与经济后果；图3利用第一阶段LP的功率平衡影子价格、储能水价值和SOC触界时段解释调度机制。
 
@@ -107,4 +109,10 @@ python -m src.optimization.question1
 python -m src.forecasting.question2_pv
 ```
 
-预测采用经验晴空包络与 KPV 分解，在 A1～A4 和因果集成之间按截至昨日的滚动误差选择。全年小时预测、10分钟点预测与 P10/P50/P90、滚动残差分别写入 `data/processed/pv_day_ahead_*.parquet`；模型指标、重点日期指标和质量检查写入 `outputs/question2_forecast/`。该模块不读取附件3，也不修改 `result2.xlsx`。
+预测采用经验晴空包络与 KPV 分解，在 A1～A4 和因果集成之间按截至昨日的滚动误差选择。全年小时预测、10分钟点预测与 P10/P50/P90、滚动残差分别写入 `data/processed/pv_day_ahead_*.parquet`；模型指标、重点日期指标和质量检查写入 `outputs/question2/analysis/forecast/`。该模块不读取附件3，也不修改 `result2.xlsx`。
+
+## 问题二最新审查修订（2026-09-12）
+
+正式风险分位数固定0.8，不以全年扫描选参。当前主线与LDR口径见[完整方案与审查修订](docs/问题二/问题二完整方案与审查修订.md)。已收回关于预测最优、信息前沿、不可约误差和控制器免费的结论。原固定g下界允许紧急购电充电，新增方向约束与匹配正式期复核见[差额复核](outputs/question2/analysis/gap_audit/差额复核说明.md)。
+
+LDR正式运行：`python -m src.optimization.question2_ldr`。实现固定α=0.8分位数日前计划、四个六小时阶段的截断仿射保留阈值，以及每天基于最近21条完整历史情景的7参数直接搜索。2—12月实际总购电费为15819068.62元，独立结果、参数诊断、专项校验与官方模板位于`outputs/question2/current/ldr/`，未覆盖旧结果。

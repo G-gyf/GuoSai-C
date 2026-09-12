@@ -1,4 +1,4 @@
-"""Joint-horizon perfect-information cost lower bounds for Question 2."""
+﻿"""Joint-horizon perfect-information cost lower bounds for Question 2."""
 from __future__ import annotations
 import json
 import time
@@ -65,9 +65,9 @@ def solve_horizon(dates,load,pv,daily_prices,initial,label,out):
 
 
 def main():
-    out=ROOT/'outputs/question2_perfect_foresight'; out.mkdir(parents=True,exist_ok=True)
+    out=ROOT/'outputs/question2/benchmark/perfect_foresight'; out.mkdir(parents=True,exist_ok=True)
     dates,l,v,p=load_inputs()
-    scenarios=json.loads((ROOT/'outputs/question2_scenarios/question2_summary.json').read_text(encoding='utf-8'))
+    scenarios=json.loads((ROOT/'outputs/question2/archive/scenarios/question2_summary.json').read_text(encoding='utf-8'))
     annual=solve_horizon(dates,l,v,p,6000.,'full_year',out)
     results=[annual]
     # Match each causal policy's ACTUAL February opening inventory. A suffix

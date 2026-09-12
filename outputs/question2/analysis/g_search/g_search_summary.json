@@ -1,0 +1,58 @@
+[
+  {
+    "label": "LB1_perfect",
+    "planned": 13768559.688285146,
+    "emergency": 0.0,
+    "lb2": 13768559.688285146,
+    "gen_sec": null,
+    "lb2_sec": null
+  },
+  {
+    "label": "LB2_mean_7day(det)",
+    "planned": null,
+    "emergency": null,
+    "lb2": 24862755.137311317,
+    "gen_sec": null,
+    "lb2_sec": null
+  },
+  {
+    "label": "deterministic_7day_mean",
+    "planned": 12968045.811467102,
+    "emergency": 11894709.325844213,
+    "lb2": 24862755.137311317,
+    "gen_sec": 10.266909800000576,
+    "lb2_sec": 12.24951129999954
+  },
+  {
+    "label": "quantile_7day_mean",
+    "planned": 16778129.759796932,
+    "emergency": 1124869.17113979,
+    "lb2": 17902998.930936724,
+    "gen_sec": 9.09678029999941,
+    "lb2_sec": 10.344423800000186
+  },
+  {
+    "label": "cvar_a08_r1_7day_mean",
+    "planned": 17369257.263928745,
+    "emergency": 802588.9235101813,
+    "lb2": 18171846.187438928,
+    "gen_sec": 286.08407369999986,
+    "lb2_sec": 10.379075300000295
+  },
+  {
+    "label": "quantile_pv_clear_sky",
+    "planned": 16767977.461523306,
+    "emergency": 1146144.1163478887,
+    "lb2": 17914121.577871196,
+    "gen_sec": 9.136356199999682,
+    "lb2_sec": 10.207247900000766
+  },
+  {
+    "label": "cvar_a08_r1_pv_clear_sky",
+    "planned": 17363521.910604596,
+    "emergency": 819931.1134279321,
+    "lb2": 18183453.02403253,
+    "gen_sec": 267.05676349999976,
+    "lb2_sec": 11.327381300001434
+  }
+]

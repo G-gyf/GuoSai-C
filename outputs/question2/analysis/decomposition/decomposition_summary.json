@@ -1,0 +1,71 @@
+{
+  "horizon": "2025-01-01..2025-12-31",
+  "intervals": 52560,
+  "initial_soc_kwh": 6000.0,
+  "lb1_perfect": 13768559.688285146,
+  "lb2_mean_forecast": 24862755.137311317,
+  "lb2_main_forecast": 17900292.831138607,
+  "lb3_perfect_g_greedy": 13768559.688285146,
+  "forecast_gap_mean_yuan": 11094195.449026171,
+  "forecast_gap_main_yuan": 4131733.142853461,
+  "controller_gap_greedy_yuan": 0.0,
+  "forecast_vs_controller_ratio_mean": Infinity,
+  "rows": [
+    {
+      "case": "LB1_perfect_g_perfect_dispatch",
+      "g_info": "perfect",
+      "controller": "perfect",
+      "cost": 13768559.688285146,
+      "emergency": 0.0,
+      "seconds": 11.66662500000075
+    },
+    {
+      "case": "LB2_mean_forecast_g_perfect_dispatch",
+      "g_info": "7-day mean (deterministic LP)",
+      "controller": "perfect",
+      "cost": 24862755.137311317,
+      "emergency": 11894709.325844213,
+      "seconds": 14.112085199999456
+    },
+    {
+      "case": "LB2_main_forecast_g_perfect_dispatch",
+      "g_info": "risk quantile (main plan)",
+      "controller": "perfect",
+      "cost": 17900292.831138607,
+      "emergency": 1127368.3467309861,
+      "seconds": 11.32251290000022
+    },
+    {
+      "case": "LB3_perfect_g_greedy_dispatch",
+      "g_info": "perfect",
+      "controller": "greedy causal (beta=0)",
+      "cost": 13768559.688285146,
+      "emergency": 3.673809166049317e-10,
+      "seconds": 0.2646487000001798
+    },
+    {
+      "case": "mean_greedy_actual",
+      "g_info": "7-day mean (deterministic LP)",
+      "controller": "greedy causal (beta=0)",
+      "cost": 31539738.332477458,
+      "emergency": 18571692.521010354,
+      "seconds": null
+    },
+    {
+      "case": "risk_reserve_actual",
+      "g_info": "risk quantile (main plan)",
+      "controller": "greedy causal (beta=1)",
+      "cost": 18455364.67279426,
+      "emergency": 1682440.1883866396,
+      "seconds": null
+    },
+    {
+      "case": "scenario_value_function_actual",
+      "g_info": "scenario 2-stage LP",
+      "controller": "approx value function",
+      "cost": 18280253.342547763,
+      "emergency": null,
+      "seconds": null
+    }
+  ]
+}

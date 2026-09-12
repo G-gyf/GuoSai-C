@@ -1,4 +1,4 @@
-"""No-NAC scenario planning and causal approximate-value execution.
+﻿"""No-NAC scenario planning and causal approximate-value execution.
 
 Annual default: relaxed LP, then fixed-direction feasible LP; report their
 lower/upper bound gap. An optional MILP implementation supports pilot audits.
@@ -257,14 +257,14 @@ def run(dates,load,pv,prices,limit,step=25.,time_limit=30.,checkpoint=None):
 def main():
     ap=argparse.ArgumentParser(); ap.add_argument('--days',type=int,default=365)
     ap.add_argument('--step',type=float,default=25); ap.add_argument('--time-limit',type=float,default=5)
-    ap.add_argument('--output',type=Path,default=ROOT/'outputs/question2_scenarios')
+    ap.add_argument('--output',type=Path,default=ROOT/'outputs/question2/archive/scenarios')
     args=ap.parse_args(); dates,load,pv,prices=load_inputs()
     args.output.mkdir(parents=True,exist_ok=True)
     f,daily,s,diag,pair=run(dates,load,pv,prices,args.days,args.step,args.time_limit,args.output/'checkpoint.pkl')
     diag.to_csv(args.output/'scenario_solver_diagnostics.csv',index=False)
     pair.to_csv(args.output/'same_day_controller_comparison.csv',index=False)
     if args.days==365:
-        old=json.loads((ROOT/'outputs/question2/question2_summary.json').read_text(encoding='utf-8'))
+        old=json.loads((ROOT/'outputs/question2/archive/baseline/question2_summary.json').read_text(encoding='utf-8'))
         write_outputs(args.output,f,daily,[s,*old],prices)
     else:
         f.to_csv(args.output/'pilot_schedule.csv',index=False)

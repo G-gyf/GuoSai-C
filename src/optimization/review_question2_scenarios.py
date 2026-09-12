@@ -1,4 +1,4 @@
-"""Post-run comparison and fixed-plan numerical convergence audit."""
+﻿"""Post-run comparison and fixed-plan numerical convergence audit."""
 import json
 from pathlib import Path
 import numpy as np
@@ -8,7 +8,7 @@ from src.optimization.question2_scenarios import scenarios,value_reserves
 
 
 def main():
-    out=ROOT/'outputs/question2_scenarios'
+    out=ROOT/'outputs/question2/archive/scenarios'
     summaries=json.loads((out/'question2_summary.json').read_text(encoding='utf-8'))
     main=summaries[0]
     f=pd.read_csv(out/'question2_schedule.csv',parse_dates=['date'])
@@ -58,7 +58,7 @@ def main():
     keyrows='\n'.join(f'| {r.date} | {r.grid_kwh:,.6f} | {r.planned_cost:,.2f} | {r.emergency_kwh:,.6f} | {r.emergency_cost:,.2f} | {r.total_cost:,.2f} |' for r in key.itertuples())
     text=f'''# 问题二原情景法近似解检验
 
-本次恢复“日前两阶段情景规划与日内近似价值函数控制”，不施加储能追索的非预见性约束。其余口径保留：七天同一时段均值、最近21个有效残差日、同日负载与光伏误差配对、首日专门初始化、跨日实际库存继承、常规计划全额计费与五倍紧急电价。未修改此前正式输出，新增文件位于outputs/question2_scenarios。
+本次恢复“日前两阶段情景规划与日内近似价值函数控制”，不施加储能追索的非预见性约束。其余口径保留：七天同一时段均值、最近21个有效残差日、同日负载与光伏误差配对、首日专门初始化、跨日实际库存继承、常规计划全额计费与五倍紧急电价。未修改此前正式输出，新增文件位于outputs/question2/archive/scenarios。
 
 ## 实际回测结果
 

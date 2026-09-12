@@ -22,8 +22,8 @@
     "hourly": "data\\processed\\pv_day_ahead_hourly.parquet",
     "ten_minute": "data\\processed\\pv_day_ahead_10min.parquet",
     "residuals": "data\\processed\\pv_day_ahead_residuals.parquet",
-    "metrics": "outputs\\question2_forecast\\model_metrics.csv",
-    "key_dates": "outputs\\question2_forecast\\key_dates_metrics.csv",
-    "quality_checks": "outputs\\question2_forecast\\quality_checks.csv"
+    "metrics": "outputs\\question2\\analysis\\forecast\\model_metrics.csv",
+    "key_dates": "outputs\\question2\\analysis\\forecast\\key_dates_metrics.csv",
+    "quality_checks": "outputs\\question2\\analysis\\forecast\\quality_checks.csv"
   }
 }

@@ -1,0 +1,119 @@
+[
+  {
+    "strategy": "question2",
+    "period": "Jan-Dec",
+    "source_sha256": "531c040d8614ea00cdd1e8a08151937a4f81998a52c0bbcbdf25ad48ab2fabf0",
+    "initial_soc": 6000.0,
+    "actual": 18455364.67279426,
+    "perfect_information_lower_bound": 13768559.688285146,
+    "fixed_g_relaxed": {
+      "total_cost": 17900292.831138607,
+      "emergency_cost": 1127368.3467309864,
+      "end_soc": 1200.0,
+      "equality_error": 1.8189894035458565e-12,
+      "duality_gap": 2.0954757928848267e-09,
+      "emergency_charging_slots": 513
+    },
+    "fixed_g_direction": {
+      "total_cost": 18025567.585528333,
+      "emergency_cost": 1252643.101120712,
+      "end_soc": 1200.0,
+      "equality_error": 1.8189894035458565e-12,
+      "duality_gap": 9.080395102500916e-09,
+      "emergency_charging_slots": 0
+    },
+    "actual_minus_fixed_g_direction": 429797.08726592734,
+    "fixed_g_direction_minus_information_bound": 4257007.897243187,
+    "identity_error": 0.0,
+    "actual_validation": {
+      "max_balance_error_kwh": 7.105427357601002e-13,
+      "max_state_error_kwh": 5.4569682106375694e-12,
+      "max_continuity_error_kwh": 0.0,
+      "min_soc_kwh": 1200.0,
+      "max_soc_kwh": 10800.0,
+      "max_charge_kwh": 833.3333333333334,
+      "max_discharge_kwh": 833.3333333333334,
+      "simultaneous_charge_discharge": 0,
+      "emergency_while_charging": 0,
+      "passed": true
+    }
+  },
+  {
+    "strategy": "question2",
+    "period": "Feb-Dec",
+    "source_sha256": "185299d815f9ae3e962ab54e096a1f79ef1e97ac1c57bcaccdf697ea277504da",
+    "initial_soc": 8481.289084047618,
+    "actual": 16022550.691074831,
+    "perfect_information_lower_bound": 12249473.295426037,
+    "fixed_g_relaxed": {
+      "total_cost": 15586863.145959295,
+      "emergency_cost": 524948.2474008349,
+      "end_soc": 1200.0,
+      "equality_error": 1.8189894035458565e-12,
+      "duality_gap": 6.984919309616089e-10,
+      "emergency_charging_slots": 343
+    },
+    "fixed_g_direction": {
+      "total_cost": 15647163.5795519,
+      "emergency_cost": 585248.6809934399,
+      "end_soc": 1200.0,
+      "equality_error": 1.8189894035458565e-12,
+      "duality_gap": 5.3551048040390015e-09,
+      "emergency_charging_slots": 0
+    },
+    "actual_minus_fixed_g_direction": 375387.1115229316,
+    "fixed_g_direction_minus_information_bound": 3397690.2841258626,
+    "identity_error": 0.0,
+    "actual_validation": {
+      "max_balance_error_kwh": 7.105427357601002e-13,
+      "max_state_error_kwh": 5.4569682106375694e-12,
+      "max_continuity_error_kwh": 0.0,
+      "min_soc_kwh": 1200.0,
+      "max_soc_kwh": 10800.0,
+      "max_charge_kwh": 833.3333333333334,
+      "max_discharge_kwh": 833.3333333333334,
+      "simultaneous_charge_discharge": 0,
+      "emergency_while_charging": 0,
+      "passed": true
+    }
+  },
+  {
+    "strategy": "question2_scenarios",
+    "period": "Feb-Dec",
+    "source_sha256": "0299423d22cb34edabdebcc0a8006575f3ce1752c98cf2d6dca767f0dbed60b3",
+    "initial_soc": 9840.698694973547,
+    "actual": 15868379.610379972,
+    "perfect_information_lower_bound": 12248925.223856425,
+    "fixed_g_relaxed": {
+      "total_cost": 15449305.263193322,
+      "emergency_cost": 574923.2333955677,
+      "end_soc": 1200.0,
+      "equality_error": 1.8189894035458565e-12,
+      "duality_gap": 1.7462298274040222e-09,
+      "emergency_charging_slots": 451
+    },
+    "fixed_g_direction": {
+      "total_cost": 15549862.239070322,
+      "emergency_cost": 675480.2092725678,
+      "end_soc": 1200.0,
+      "equality_error": 1.8189894035458565e-12,
+      "duality_gap": 3.14321368932724e-09,
+      "emergency_charging_slots": 0
+    },
+    "actual_minus_fixed_g_direction": 318517.3713096492,
+    "fixed_g_direction_minus_information_bound": 3300937.0152138975,
+    "identity_error": 0.0,
+    "actual_validation": {
+      "max_balance_error_kwh": 6.821210263296962e-13,
+      "max_state_error_kwh": 5.4569682106375694e-12,
+      "max_continuity_error_kwh": 0.0,
+      "min_soc_kwh": 1200.0,
+      "max_soc_kwh": 10800.0,
+      "max_charge_kwh": 833.3333333333334,
+      "max_discharge_kwh": 833.3333333333334,
+      "simultaneous_charge_discharge": 0,
+      "emergency_while_charging": 0,
+      "passed": true
+    }
+  }
+]

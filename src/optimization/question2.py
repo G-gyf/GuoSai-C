@@ -1,4 +1,4 @@
-"""Causal Q2: seven-day mean, 21 residual days, risk LP and real-time storage.
+﻿"""Causal Q2: seven-day mean, 21 residual days, risk LP and real-time storage.
 
 Only attachments 1 (tariffs), 2 (actuals), and the official output template
 are inputs. Actual observations are revealed to the controller one slot at a
@@ -261,7 +261,7 @@ def write_outputs(out, frame, daily, summaries, prices):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--output',type=Path,default=ROOT/'outputs/question2')
+    parser.add_argument('--output',type=Path,default=ROOT/'outputs/question2/archive/baseline')
     args = parser.parse_args()
     dates, load, pv, prices = load_inputs()
     main_frame, main_daily, main_summary = run_case(dates,load,pv,prices,Settings())

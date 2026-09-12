@@ -1,4 +1,4 @@
-"""Read-only, independent reconciliation of exported workbook to actual dispatch."""
+﻿"""Read-only, independent reconciliation of exported workbook to actual dispatch."""
 import json
 import argparse
 from pathlib import Path
@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def main():
     parser=argparse.ArgumentParser()
-    parser.add_argument('--output-dir',type=Path,default=ROOT/'outputs/question2')
+    parser.add_argument('--output-dir',type=Path,default=ROOT/'outputs/question2/archive/baseline')
     out = parser.parse_args().output_dir
     f = pd.read_csv(out/'question2_schedule.csv',parse_dates=['date'])
     w = openpyxl.load_workbook(out/'result2.xlsx',data_only=True)

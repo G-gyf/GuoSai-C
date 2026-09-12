@@ -1,4 +1,4 @@
-"""Run the question 2 causal PV day-ahead forecasting pipeline."""
+﻿"""Run the question 2 causal PV day-ahead forecasting pipeline."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ from src.forecasting.pv_day_ahead import (
 def run_pv_forecast_pipeline(project_root: Path = PROJECT_ROOT) -> dict[str, Path]:
     project_root = Path(project_root).resolve()
     processed_dir = project_root / "data" / "processed"
-    output_dir = project_root / "outputs" / "question2_forecast"
+    output_dir = project_root / "outputs" / "question2" / "analysis" / "forecast"
     processed_dir.mkdir(parents=True, exist_ok=True)
     output_dir.mkdir(parents=True, exist_ok=True)
 

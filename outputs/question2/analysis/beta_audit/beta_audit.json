@@ -1,0 +1,80 @@
+[
+  {
+    "strategy": "question2",
+    "period": "2025-02-01..2025-12-31",
+    "original": {
+      "planned_cost": 15061914.898558464,
+      "emergency_cost": 960635.7925163691,
+      "total_cost": 16022550.691074831,
+      "emergency_kwh": 204701.74647008206,
+      "charge_kwh": 5721974.941071201,
+      "discharge_kwh": 4641312.280794983,
+      "unused_kwh": 5148130.587179042
+    },
+    "fixed_plan_continuous_beta0": {
+      "planned_cost": 15061914.898558464,
+      "emergency_cost": 855227.6649645733,
+      "total_cost": 15917142.563523034,
+      "emergency_kwh": 141523.1147272881,
+      "charge_kwh": 5799973.251864774,
+      "discharge_kwh": 4704490.912537777,
+      "unused_kwh": 5070132.27638547
+    },
+    "same_day_same_opening_beta0": {
+      "planned_cost": 15061914.898558464,
+      "emergency_cost": 849168.2031971671,
+      "total_cost": 15911083.101755632,
+      "emergency_kwh": 140430.52005876432,
+      "charge_kwh": 5790065.455852727,
+      "discharge_kwh": 4705583.5072063,
+      "unused_kwh": 5080040.072397516
+    },
+    "original_minus_fixed_plan_continuous_bill": 105408.12755179778,
+    "original_minus_daily_paired_bill": 111467.58931919932,
+    "locally_withheld_while_emergency_slots": 4104,
+    "locally_available_extra_discharge_kwh": 181845.66060010722,
+    "original_end_soc": 1245.0907203703705,
+    "fixed_plan_beta0_end_soc": 1245.0907203703705,
+    "paired_beta0_cheaper_days": 201,
+    "paired_original_cheaper_days": 36
+  },
+  {
+    "strategy": "question2_scenarios",
+    "period": "2025-02-01..2025-12-31",
+    "original": {
+      "planned_cost": 14874382.029797753,
+      "emergency_cost": 993997.5805822206,
+      "total_cost": 15868379.610379972,
+      "emergency_kwh": 173027.42405510021,
+      "charge_kwh": 5565414.497206072,
+      "discharge_kwh": 4515728.3074601805,
+      "unused_kwh": 4544588.17224533
+    },
+    "fixed_plan_continuous_beta0": {
+      "planned_cost": 14874382.029797753,
+      "emergency_cost": 1065793.9556813503,
+      "total_cost": 15940175.985479103,
+      "emergency_kwh": 171959.75862424308,
+      "charge_kwh": 5566732.602676266,
+      "discharge_kwh": 4516795.972891038,
+      "unused_kwh": 4543270.066775137
+    },
+    "same_day_same_opening_beta0": {
+      "planned_cost": 14874382.029797753,
+      "emergency_cost": 1065793.9556813503,
+      "total_cost": 15940175.985479103,
+      "emergency_kwh": 171959.75862424308,
+      "charge_kwh": 5566732.602676266,
+      "discharge_kwh": 4516795.972891038,
+      "unused_kwh": 4543270.066775136
+    },
+    "original_minus_fixed_plan_continuous_bill": -71796.37509913184,
+    "original_minus_daily_paired_bill": -71796.37509913184,
+    "locally_withheld_while_emergency_slots": 671,
+    "locally_available_extra_discharge_kwh": 107979.47572053503,
+    "original_end_soc": 1237.8490024603184,
+    "fixed_plan_beta0_end_soc": 1237.8490024603184,
+    "paired_beta0_cheaper_days": 1,
+    "paired_original_cheaper_days": 55
+  }
+]
