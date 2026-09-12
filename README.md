@@ -1,6 +1,6 @@
 # 微网与外部电网电力调控策略
 
-> **问题二当前主方案：LDR（2026-09-12 修订）**。负载预测采用周持久化 L_{d−7}（d<7 用附件1曲线，仅预热期），光伏预测采用七天均值；固定80%分位数＋四阶段截断仿射储能规则；正式期总费 **13,978,077.23 元**。完整论文正文见[问题二完整解答](outputs/question2/current/paper/问题二完整解答_LDR主方案.md)，正式结果见[outputs/question2/current/ldr/result2.xlsx](outputs/question2/current/ldr/result2.xlsx)。负载预测四方案对比见[负载预测方案对比说明](outputs/question2/analysis/load_forecast/负载预测方案对比说明.md)，切换前后费用对照见[b1接入重算对比](outputs/question2/analysis/load_forecast/b1接入重算对比.md)；旧版结果保留在 `archive/` 作对照。
+> **问题二当前主方案：LDR（2026-09-12 修订）**。负载预测采用周持久化 L_{d−7}（d<7 用附件1曲线，仅预热期），光伏预测采用七天均值；固定80%分位数＋四阶段截断仿射储能规则；正式期总费 **13,978,077.23 元**。该方案在当前数据口径、参数边界、搜索预算和已完成对照范围内费用最低，即“当前配置下最优”，不代表全局最优；相似日高斯核暂不接入本轮费用回测。完整论文正文见[问题二完整解答](outputs/question2/current/paper/问题二完整解答_LDR主方案.md)，正式结果见[outputs/question2/current/ldr/result2.xlsx](outputs/question2/current/ldr/result2.xlsx)。负载预测四方案对比见[负载预测方案对比说明](outputs/question2/analysis/load_forecast/负载预测方案对比说明.md)，切换前后费用对照见[b1接入重算对比](outputs/question2/analysis/load_forecast/b1接入重算对比.md)；旧版结果保留在 `archive/` 作对照。
 
 2026 年高教社杯全国大学生数学建模竞赛 C 题。项目目标是在负载、光伏、储能和电价约束下，制定计划购电、滚动调整与紧急购电策略，使供电满足负载并尽量降低总费用。
 

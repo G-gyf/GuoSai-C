@@ -1,0 +1,291 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "现阶段论文图表制作规划（修订版）",
+    "description": "聚焦数据前置分析、问题一现有图组和问题二必要解释；暂缓整体信息图与跨问题总流程图。",
+    "generatedAt": "2026-09-13T00:00:00+08:00",
+    "sources": [
+      {
+        "id": "workspace_inventory",
+        "label": "现有分析与图表资产清单",
+        "path": "outputs",
+        "query": {
+          "engine": "DuckDB",
+          "language": "sql",
+          "description": "枚举现有前置分析、问题一和问题二图表及结果文件，用于限定规划范围。",
+          "sql": "SELECT file FROM glob('outputs/**/*') ORDER BY file",
+          "tables_used": ["outputs/preanalysis", "outputs/question1", "outputs/question2"]
+        }
+      },
+      {
+        "id": "q1_results",
+        "label": "问题一现有结果与图组",
+        "path": "outputs/question1",
+        "query": {
+          "engine": "DuckDB",
+          "language": "sql",
+          "description": "读取问题一结果摘要并核对现有图组所对应的成本、调度和敏感性结果。",
+          "sql": "WITH src AS (SELECT content::JSON AS j FROM read_text('outputs/question1/question1_summary.json')) SELECT CAST(j->'summary'->>'total_cost_yuan' AS DOUBLE) AS optimized_cost, CAST(j->'summary'->>'baseline_cost_yuan' AS DOUBLE) AS baseline_cost, CAST(j->'summary'->>'cost_saving_rate' AS DOUBLE) AS saving_rate FROM src",
+          "tables_used": ["outputs/question1/question1_summary.json", "outputs/question1/question1_schedule.csv", "outputs/question1/question1_battery_ramp_sensitivity.csv"],
+          "filters": ["144个10分钟时段", "问题一当前正式模型"],
+          "metric_definitions": ["节费率=(基准费用-优化费用)/基准费用"]
+        }
+      },
+      {
+        "id": "q2_results",
+        "label": "问题二现有预测、控制与费用结果",
+        "path": "outputs/question2",
+        "query": {
+          "engine": "DuckDB",
+          "language": "sql",
+          "description": "读取问题二正式期预测指标、LDR调度、策略费用和完美预见下界。",
+          "sql": "SELECT * FROM read_csv_auto('outputs/question2/current/paper/tables/strategy_comparison.csv', header=true)",
+          "tables_used": ["outputs/question2/analysis/load_forecast/model_metrics.csv", "outputs/question2/current/ldr/question2_schedule_with_warmup.csv", "outputs/question2/current/paper/tables/strategy_comparison.csv", "outputs/question2/benchmark/perfect_foresight/matched_ldr_summary.json"],
+          "filters": ["正式期2025-02-01至2025-12-31", "高斯核暂不纳入费用比较"]
+        }
+      }
+    ],
+    "cards": [],
+    "charts": [
+      {
+        "id": "current_scope_chart",
+        "title": "当前图表任务数量概览",
+        "subtitle": "仅用于规划管理，不作为论文正式图件",
+        "showDescription": true,
+        "intent": "comparison",
+        "question": "当前制图工作主要集中在哪些模块？",
+        "rationale": "用一张简单条形图概括核心任务数量，帮助控制当前范围。",
+        "type": "horizontalBar",
+        "dataset": "current_scope_counts",
+        "sourceId": "workspace_inventory",
+        "encodings": {
+          "x": {"field": "module", "type": "nominal", "label": "模块"},
+          "y": {"field": "count", "type": "quantitative", "format": "number", "label": "核心任务数"},
+          "tooltip": [
+            {"field": "scope", "type": "text", "label": "范围说明"}
+          ]
+        },
+        "valueFormat": "number",
+        "unit": "项",
+        "palette": {"kind": "sequential", "name": "blue"},
+        "labels": {"values": "all"},
+        "settings": {"sort": "descending", "showValues": true},
+        "layout": "full"
+      }
+    ],
+    "tables": [
+      {
+        "id": "scope_table",
+        "title": "本阶段的范围边界",
+        "subtitle": "先讲清现有步骤，整体信息图等全部问题完成后再统一设计",
+        "showDescription": true,
+        "dataset": "scope_rules",
+        "defaultSort": {"field": "order", "direction": "asc"},
+        "density": "spacious",
+        "sourceId": "workspace_inventory",
+        "layout": "full",
+        "columns": [
+          {"field": "order", "label": "#", "type": "number"},
+          {"field": "category", "label": "类别", "type": "text"},
+          {"field": "decision", "label": "本阶段决定", "type": "text"},
+          {"field": "reason", "label": "判断依据", "type": "text"}
+        ]
+      },
+      {
+        "id": "data_plan_table",
+        "title": "数据前置分析图表计划",
+        "subtitle": "工作编号暂不占用论文正式图号；P0为正文优先，P1为篇幅允许时加入，P2为附录",
+        "showDescription": true,
+        "dataset": "data_plan",
+        "defaultSort": {"field": "order", "direction": "asc"},
+        "density": "spacious",
+        "sourceId": "workspace_inventory",
+        "layout": "full",
+        "columns": [
+          {"field": "order", "label": "#", "type": "number"},
+          {"field": "work_id", "label": "工作编号", "type": "text"},
+          {"field": "title", "label": "候选图表", "type": "text"},
+          {"field": "form", "label": "形式", "type": "text"},
+          {"field": "question", "label": "要回答的问题", "type": "text"},
+          {"field": "source", "label": "现有数据", "type": "text"},
+          {"field": "priority", "label": "优先级", "type": "text"},
+          {"field": "layout_rule", "label": "组合/独立判断", "type": "text"}
+        ]
+      },
+      {
+        "id": "q1_plan_table",
+        "title": "问题一图表保留与微调方案",
+        "subtitle": "问题一现有图组逻辑完整，不以拆分为目标",
+        "showDescription": true,
+        "dataset": "q1_plan",
+        "defaultSort": {"field": "order", "direction": "asc"},
+        "density": "spacious",
+        "sourceId": "q1_results",
+        "layout": "full",
+        "columns": [
+          {"field": "order", "label": "#", "type": "number"},
+          {"field": "asset", "label": "现有图件", "type": "text"},
+          {"field": "decision", "label": "处理决定", "type": "text"},
+          {"field": "single_job", "label": "整张图的任务", "type": "text"},
+          {"field": "why_grouped", "label": "为何可组合", "type": "text"},
+          {"field": "revision", "label": "仅需调整", "type": "text"},
+          {"field": "placement", "label": "建议位置", "type": "text"}
+        ]
+      },
+      {
+        "id": "q2_plan_table",
+        "title": "问题二必要解释与结果图表计划",
+        "subtitle": "把预测、风险、控制和结果分别讲清；仅在同尺度直接比较时使用小倍图",
+        "showDescription": true,
+        "dataset": "q2_plan",
+        "defaultSort": {"field": "order", "direction": "asc"},
+        "density": "spacious",
+        "sourceId": "q2_results",
+        "layout": "full",
+        "columns": [
+          {"field": "order", "label": "#", "type": "number"},
+          {"field": "work_id", "label": "工作编号", "type": "text"},
+          {"field": "title", "label": "候选图表", "type": "text"},
+          {"field": "form", "label": "形式", "type": "text"},
+          {"field": "question", "label": "要回答的问题", "type": "text"},
+          {"field": "content", "label": "保留内容", "type": "text"},
+          {"field": "boundary", "label": "解释边界", "type": "text"},
+          {"field": "priority", "label": "优先级", "type": "text"}
+        ]
+      },
+      {
+        "id": "asset_disposition_table",
+        "title": "已生成图件的处置",
+        "subtitle": "不删除旧文件；这里只决定是否进入当前论文版本及后续如何改造",
+        "showDescription": true,
+        "dataset": "asset_disposition",
+        "defaultSort": {"field": "order", "direction": "asc"},
+        "density": "spacious",
+        "sourceId": "workspace_inventory",
+        "layout": "full",
+        "columns": [
+          {"field": "order", "label": "#", "type": "number"},
+          {"field": "asset", "label": "现有图件", "type": "text"},
+          {"field": "current_decision", "label": "当前决定", "type": "text"},
+          {"field": "next_action", "label": "下一步", "type": "text"}
+        ]
+      },
+      {
+        "id": "production_table",
+        "title": "实际制图批次",
+        "subtitle": "先补前置分析和问题二解释缺口，再做风格统一；暂不进入全篇总设计",
+        "showDescription": true,
+        "dataset": "production_queue",
+        "defaultSort": {"field": "order", "direction": "asc"},
+        "density": "spacious",
+        "sourceId": "workspace_inventory",
+        "layout": "full",
+        "columns": [
+          {"field": "order", "label": "批次", "type": "number"},
+          {"field": "scope", "label": "范围", "type": "text"},
+          {"field": "deliverables", "label": "交付内容", "type": "text"},
+          {"field": "acceptance", "label": "验收标准", "type": "text"}
+        ]
+      }
+    ],
+    "blocks": [
+      {"id": "title", "type": "markdown", "body": "# 现阶段论文图表制作规划（修订版）"},
+      {"id": "technical_summary", "type": "markdown", "body": "## 本次修订结论\n\n- **问题一现有图1和图2继续保留多面板结构。** 它们分别围绕价格信号—响应、控制动作—SOC—成本结果展开，面板共享时间轴并共同回答一个问题；拆开会削弱解释力。\n- **图3保留为技术解释图。** 篇幅充足时进入正文，篇幅紧张时转附录；爬坡率敏感性仍作为附录证据。\n- **当前新增工作聚焦数据前置分析和问题二的必要解释。** 每张图先限定一个分析问题，再决定独立图或小倍图。\n- **整体信息图、跨问题总流程图、全套缩略总览全部延期。** 等所有问题完成、最终方法与结论稳定后再统一制作。\n- **本规划不生成新论文图。** 工作编号仅用于制图管理，最终图号留到论文结构稳定后确定。"},
+      {"id": "scope_heading", "type": "markdown", "body": "## 当前阶段只做局部证据图，不做全篇总设计\n\n判断标准不是面板数量，而是信息是否属于同一个分析任务：同一时间轴、同一对象、必须联读的内容可以组合；不同指标、不同尺度或不同结论应拆开。"},
+      {"id": "scope_block", "type": "table", "tableId": "scope_table"},
+      {"id": "workload_intro", "type": "markdown", "body": "### 工作量集中在前置分析和问题二解释缺口\n\n问题一已有两张可直接保留的正文核心图，因此当前新增任务主要落在数据前置分析和问题二。下面的条形图只用于规划管理，不占论文图号，也不代表最终正文一定保留全部候选图。"},
+      {"id": "workload_chart_block", "type": "chart", "chartId": "current_scope_chart"},
+      {"id": "data_heading", "type": "markdown", "body": "## 数据前置分析：先把可利用结构和不确定性来源说明白\n\n前置分析图只承担数据证据功能，不提前展示优化方法。正文优先呈现典型日内结构、季节差异、电价结构和预测误差；数据清单与质量检查使用表格，不为表而画图。"},
+      {"id": "data_plan_block", "type": "table", "tableId": "data_plan_table"},
+      {"id": "q1_heading", "type": "markdown", "body": "## 问题一：保留现有图组，只做一致性微调\n\n现有图1的三个面板共同解释价格、供需与购电响应；现有图2的三个面板共同解释充放电、SOC和累计成本。两张图的信息关系紧密，属于合理组合，不需要为了形式统一而拆分。"},
+      {"id": "q1_plan_block", "type": "table", "tableId": "q1_plan_table"},
+      {"id": "q1_claim", "type": "markdown", "sourceId": "q1_results", "body": "### 问题一结果表述口径\n\n问题一基准费用为47,921.77元，当前正式模型费用为35,245.31元，节省12,676.47元、26.45%。正文可写“当前模型配置下的最优解”；其范围由变量、约束、设备参数和线性规划模型共同限定。无需再新增一张只重复这两个数字的成本柱状图，精确值放正文和结果表即可。"},
+      {"id": "q2_heading", "type": "markdown", "body": "## 问题二：按预测、风险、控制和结果分别补足证据\n\n问题二目前的主要问题不是结果不足，而是部分图同时承担方法说明、参数展示和结果评价。修订方向是拆开不同任务，但保留真正需要直接比较的小倍图。"},
+      {"id": "q2_plan_block", "type": "table", "tableId": "q2_plan_table"},
+      {"id": "q2_bound_note", "type": "markdown", "sourceId": "q2_results", "body": "### 两个必须固定的表述边界\n\n1. 高斯核尚未完成同口径控制成本回测，因此不进入正式策略费用优劣结论。\n2. 完美预见下界与LDR实际成本的差额为1,725,678.87元。以实际成本为分母是12.35%；以下界为分母是14.08%。两种百分比含义不同，图注和正文必须并列说明。"},
+      {"id": "disposition_heading", "type": "markdown", "body": "## 现有顶刊风格试制图不删除，但重新定位\n\n旧图仍可作为设计草稿和数据校验样张使用。本阶段不把缩略总览或总技术路线放入论文，也不要求所有试制图沿用原来的双面板结构。"},
+      {"id": "asset_disposition_block", "type": "table", "tableId": "asset_disposition_table"},
+      {"id": "method_heading", "type": "markdown", "body": "## 后续制图执行方法\n\n每张图在绘制前先写一句“它要回答什么”，再确认字段、时间范围、比较基准、单位和边界。形式选择遵循：趋势用折线，类别比较用条形或点图，构成用堆叠条，分布用箱线或直方图，不因版式需要把无关内容拼为a、b、c。"},
+      {"id": "production_block", "type": "table", "tableId": "production_table"},
+      {"id": "limitations", "type": "markdown", "body": "## 当前不做的内容\n\n- 不制作问题一到全部后续问题的总流程图。\n- 不制作全篇信息图、视觉摘要或图形目录。\n- 不为了保持统一而拆分问题一现有图1和图2。\n- 不把参数表、终止统计和公式强行转成图。\n- 不把高斯核加入问题二费用比较。\n- 不在论文结构尚未稳定时固定最终图号。"},
+      {"id": "qa_heading", "type": "markdown", "body": "## 单图验收清单\n\n1. 图是否只回答一个主要问题，或多个面板是否确实必须联读？\n2. 标题是否中性描述图中内容，而不是替正文下结论？\n3. 单位、时间范围、样本量和比较基准是否可见？\n4. 颜色之外是否还有线型、填充、位置或直接标签帮助区分？\n5. 金额绝对比较是否从零起轴；若使用聚焦差额尺度，是否明确提示？\n6. 图内数字是否与CSV、JSON、Excel和正文一致？\n7. 是否说明“当前配置下最优”、下界分母差异及高斯核未接入等边界？"},
+      {"id": "next_steps", "type": "markdown", "body": "## 下一步\n\n1. 先确认数据前置分析中进入正文的P0图数量。\n2. 问题一只统一字体、色彩、标题和图注，不重构核心布局。\n3. 问题二先制作预测比较、80%分位风险修正、LDR控制解释、策略费用和下界五类核心图。\n4. 完成全部问题后，再单独规划全篇总流程图和信息图。"},
+      {"id": "further_questions", "type": "markdown", "body": "## 后续需要在完题时再决定的问题\n\n- 最终正文允许多少张图，哪些稳健性图转入附录？\n- 后续问题是否会改变全篇方法主线和颜色映射？\n- 完题后是否需要一张视觉摘要，还是只保留总技术路线图？"}
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "generatedAt": "2026-09-13T00:00:00+08:00",
+    "status": "ready",
+    "datasets": {
+      "scope_rules": [
+        {"order": 1, "category": "保留", "decision": "问题一图1、图2维持现有多面板结构", "reason": "面板共享日内时间轴并共同解释同一机制链"},
+        {"order": 2, "category": "条件保留", "decision": "问题一图3作为技术解释图", "reason": "对偶信息有解释价值，但不是主要结果图"},
+        {"order": 3, "category": "新增重点", "decision": "补齐数据前置分析与问题二必要解释图", "reason": "当前证据缺口主要位于数据特征、风险修正和控制机制"},
+        {"order": 4, "category": "延期", "decision": "总体信息图和跨问题总流程图等全部解题完毕后再做", "reason": "方法主线和全篇结论尚未完全稳定"},
+        {"order": 5, "category": "表格优先", "decision": "数据清单、参数表、差分进化终止统计优先使用表格", "reason": "这些内容以精确查阅为主，图形化不会增加理解"},
+        {"order": 6, "category": "编号策略", "decision": "现阶段使用D、Q1、Q2工作编号", "reason": "避免后续问题完成后反复调整正式图号"}
+      ],
+      "current_scope_counts": [
+        {"module": "数据前置分析P0", "count": 5, "scope": "质量表、典型日内形态、月度净负荷、固定电价、预测时距误差"},
+        {"module": "问题一正文保留", "count": 2, "scope": "现有图1和图2；只做样式微调"},
+        {"module": "问题二核心P0", "count": 6, "scope": "预测、风险、LDR响应、代表日执行、策略成本、完美预见下界"},
+        {"module": "完题后延期", "count": 2, "scope": "总技术路线和整体信息图"}
+      ],
+      "data_plan": [
+        {"order": 1, "work_id": "D-0", "title": "数据来源与质量概览", "form": "审计表格", "question": "各附件包含什么，时间粒度和质量是否足以建模？", "source": "data_inventory.csv、quality_checks.csv", "priority": "P0", "layout_rule": "不画图；精确查阅优先"},
+        {"order": 2, "work_id": "D-1", "title": "负荷、光伏与净负荷的典型日内形态", "form": "均值折线+20%—80%区间带", "question": "储能每天面对的基本供需结构是什么？", "source": "profile_summary.csv", "priority": "P0", "layout_rule": "独立核心图；三条同单位曲线可共图"},
+        {"order": 3, "work_id": "D-2", "title": "日净负荷的月度分布", "form": "月度箱线图或区间点图", "question": "供需规模与波动是否存在季节差异？", "source": "daily_energy_distribution.png及底表", "priority": "P0", "layout_rule": "独立图；负荷与光伏分图可转附录"},
+        {"order": 4, "work_id": "D-3", "title": "固定电价的日内结构", "form": "阶梯线+峰平谷背景带", "question": "问题一的确定性套利空间来自哪里？", "source": "fixed_price_profile.png及附件1", "priority": "P0", "layout_rule": "独立图；不叠加SOC或优化结果"},
+        {"order": 5, "work_id": "D-4", "title": "波动电价的分布特征", "form": "直方图或经验分布", "question": "问题二的电价波动程度有多大？", "source": "variable_price_distribution.png及附件3", "priority": "P1", "layout_rule": "独立图；篇幅不足时转附录"},
+        {"order": 6, "work_id": "D-5", "title": "光伏预测误差随预测时距变化", "form": "MAE与90%误差分位折线", "question": "预测时距增加后不确定性如何扩大？", "source": "forecast_error_by_horizon.csv", "priority": "P0", "layout_rule": "独立图；相同横轴和单位可共图"},
+        {"order": 7, "work_id": "D-6", "title": "新预测发布后的误差改善", "form": "更新前后点图或棒棒糖图", "question": "滚动采用最新预测是否真正降低误差？", "source": "forecast_update_gain.csv", "priority": "P1", "layout_rule": "不与D-5拼接；问题和横轴含义不同"},
+        {"order": 8, "work_id": "D-A1", "title": "关键日期供需剖面", "form": "同尺度小倍图", "question": "典型日、极端日和异常日的形态如何不同？", "source": "key_dates_profiles.png", "priority": "P2", "layout_rule": "允许多面板；每格直接使用日期和日型标题"}
+      ],
+      "q1_plan": [
+        {"order": 1, "asset": "图1 价格信号与需求侧响应", "decision": "保留", "single_job": "解释电价与供需条件如何驱动储能改变购电行为", "why_grouped": "电价、负荷/光伏/净负荷和购电变化共享同一日内时间轴", "revision": "统一总标题位置，精简图注，减少重复图例", "placement": "问题一结果前半部分"},
+        {"order": 2, "asset": "图2 储能策略与经济后果", "decision": "保留", "single_job": "连接充放电动作、SOC可行性和累计成本节省", "why_grouped": "三个面板依次对应动作、状态和经济后果，构成完整机制链", "revision": "收敛标题字号，突出上下限触发，核对节费数字", "placement": "问题一核心结果"},
+        {"order": 3, "asset": "图3 调度机制的对偶解释", "decision": "条件保留", "single_job": "解释为何在特定价格和约束状态下充放电", "why_grouped": "上部边际价值与下部约束触发必须沿同一时间轴对照", "revision": "压缩图例，解释符号，降低视觉密度", "placement": "正文技术解释或附录"},
+        {"order": 4, "asset": "储能爬坡率敏感性分析", "decision": "保留为附录", "single_job": "说明加入不同硬爬坡约束后成本如何变化", "why_grouped": "单指标敏感性曲线无需与主结果拼接", "revision": "明确主模型未启用题面未给定的硬爬坡参数", "placement": "稳健性附录"},
+        {"order": 5, "asset": "问题一图1图2双栏全图", "decision": "不进入论文", "single_job": "仅供内部整体预览", "why_grouped": "两张核心图已各自完整，继续合并会造成页面过长和字号过小", "revision": "保留文件但停止维护", "placement": "内部检查"}
+      ],
+      "q2_plan": [
+        {"order": 1, "work_id": "Q2-1", "title": "负荷预测模型总体误差比较", "form": "独立水平条形图", "question": "当前控制为何选择周持久性预测？", "content": "昨日持久性、周持久性、七日均值的正式期MAPE", "boundary": "高斯核无同口径费用回测，不进入正式费用结论", "priority": "P0"},
+        {"order": 2, "work_id": "Q2-2", "title": "不同日型下的预测误差", "form": "独立热力图", "question": "总体误差是否被某类日期掩盖？", "content": "工作日、周六课程日、周日、节假日的MAPE", "boundary": "各日型样本量必须在副标题或图注中显示", "priority": "P1"},
+        {"order": 3, "work_id": "Q2-3", "title": "代表日预测轨迹", "form": "同尺度小倍图", "question": "总体MAPE在具体日内曲线上意味着什么？", "content": "实际负荷、周持久性预测及必要基线", "boundary": "仅选预先定义的代表日，避免挑选性展示", "priority": "P1"},
+        {"order": 4, "work_id": "Q2-4", "title": "80%分位风险修正", "form": "独立时序图", "question": "点预测如何转化为带风险裕度的计划需求？", "content": "点预测、历史残差区间、80%分位修正曲线", "boundary": "风险曲线只使用决策日前完整历史；80%不是全天可靠性定理", "priority": "P0"},
+        {"order": 5, "work_id": "Q2-5", "title": "LDR输入—输出响应", "form": "独立分段响应曲线", "question": "状态偏差如何转化为库存目标或调整量？", "content": "四阶段规则、上下限截断位置；参数另放表格", "boundary": "LDR包含截断和状态校核，不是无约束纯线性控制器", "priority": "P0"},
+        {"order": 6, "work_id": "Q2-6", "title": "代表日实际控制过程", "form": "独立日内时序图", "question": "LDR如何跟踪目标并受到SOC边界约束？", "content": "参考库存、实际SOC、风险储备及必要的充放电动作", "boundary": "示例日只解释机制，不代替全年统计", "priority": "P0"},
+        {"order": 7, "work_id": "Q2-7", "title": "各策略正式期总成本", "form": "独立零基线水平条形或点图", "question": "当前已实现策略中谁的正式期总成本最低？", "content": "beta=1、beta=0、情景价值控制、LDR", "boundary": "LDR仅比情景控制低0.0368%，不得使用夸张截断坐标或“显著领先”", "priority": "P0"},
+        {"order": 8, "work_id": "Q2-8", "title": "计划购电与紧急购电成本构成", "form": "独立堆叠条形图", "question": "策略成本差异来自计划费还是紧急费？", "content": "四种策略的计划成本和紧急成本", "boundary": "必须同时保留总成本标签，避免只看单一成本分量", "priority": "P1"},
+        {"order": 9, "work_id": "Q2-9", "title": "月度配对节省", "form": "独立发散条形图", "question": "LDR的改进在月份间是否稳定？", "content": "相对beta=1和beta=0的月度节省，保留负值月份", "boundary": "月度差异用于稳健性描述，不将样本内波动写成统计显著性", "priority": "P1"},
+        {"order": 10, "work_id": "Q2-10", "title": "完美预见下界参照", "form": "独立子弹图或两条水平条形", "question": "当前方案距离不可执行的理想信息边界有多远？", "content": "LDR实际成本、完美预见下界、绝对差额及两种百分比", "boundary": "12.35%与14.08%分母不同；差距不能全部归因于预测误差", "priority": "P0"},
+        {"order": 11, "work_id": "Q2-A1", "title": "差分进化终止统计", "form": "审计表格；必要时附录分布图", "question": "达到最大迭代是否等于求解失败？", "content": "324天最大迭代、13天成功终止、337天均进入后续校核", "boundary": "可执行候选不等于收敛证书或全局最优证明", "priority": "P2"}
+      ],
+      "asset_disposition": [
+        {"order": 1, "asset": "图0 确定性到不确定性控制技术路线", "current_decision": "延期", "next_action": "全部问题完成后根据最终模型主线重做"},
+        {"order": 2, "asset": "图7 负载预测日型稳健性", "current_decision": "拆为两个任务", "next_action": "总体MAPE做独立核心图；日型热力图单独作为稳健性图"},
+        {"order": 3, "asset": "图8 80%分位风险修正机制", "current_decision": "保留左侧核心含义", "next_action": "风险时序独立成图；经验分布改为正文公式或附录"},
+        {"order": 4, "asset": "图9 LDR四阶段截断仿射阈值", "current_decision": "拆分不同任务", "next_action": "响应关系、代表日执行和参数表分别处理"},
+        {"order": 5, "asset": "图13 完美预见下界参照", "current_decision": "保留主题并独立呈现", "next_action": "只讲实际成本、下界、绝对差额和百分比口径"},
+        {"order": 6, "asset": "附图A1 差分进化终止与改进分布", "current_decision": "降级为附录候选", "next_action": "正文使用终止统计表；只有需要讨论搜索稳定性时才保留分布图"},
+        {"order": 7, "asset": "图表总览缩略预览", "current_decision": "不进入论文", "next_action": "仅用于内部视觉检查，全部完题后再决定是否制作最终图形目录"}
+      ],
+      "production_queue": [
+        {"order": 1, "scope": "数据前置分析P0", "deliverables": "D-0、D-1、D-2、D-3、D-5", "acceptance": "数据口径正确，每项只回答一个数据问题，不提前混入优化结果"},
+        {"order": 2, "scope": "问题一微调", "deliverables": "现有图1、图2统一样式；图3和敏感性图确定正文/附录位置", "acceptance": "保留原有机制链，不增加重复结果图"},
+        {"order": 3, "scope": "问题二方法P0", "deliverables": "Q2-1、Q2-4、Q2-5、Q2-6", "acceptance": "预测选择、风险修正和LDR动作分别可独立理解"},
+        {"order": 4, "scope": "问题二结果P0", "deliverables": "Q2-7、Q2-10", "acceptance": "成本坐标诚实，0.0368%、12.35%和14.08%口径准确"},
+        {"order": 5, "scope": "问题二补充P1/P2", "deliverables": "Q2-2、Q2-3、Q2-8、Q2-9、Q2-A1", "acceptance": "按论文篇幅筛选进入正文或附录，不为凑数量全部保留"},
+        {"order": 6, "scope": "全部完题后", "deliverables": "总技术路线、整体信息图、正式编号和全篇色彩系统", "acceptance": "建立在最终问题结构、方法和结论均稳定的基础上"}
+      ]
+    }
+  },
+  "sources": [
+    {"id": "workspace_inventory", "label": "现有分析与图表资产清单", "path": "outputs"},
+    {"id": "q1_results", "label": "问题一现有结果与图组", "path": "outputs/question1"},
+    {"id": "q2_results", "label": "问题二现有预测、控制与费用结果", "path": "outputs/question2"}
+  ]
+}
