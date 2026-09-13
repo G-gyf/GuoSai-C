@@ -1,0 +1,50 @@
+{
+  "spec": "14O",
+  "seed": 20250912,
+  "branch_name": "14O",
+  "candidate_ops": [
+    {
+      "hour": 14,
+      "slot": 84,
+      "info": "oracle"
+    }
+  ],
+  "feb1_soc_kwh": 2122.4825093090917,
+  "validation": {
+    "max_balance_error_kwh": 4.547473508864641e-13,
+    "max_state_error_kwh": 0.0,
+    "max_continuity_error_kwh": 0.0,
+    "min_soc_kwh": 1200.0,
+    "max_soc_kwh": 10800.0,
+    "max_charge_kwh": 833.3333333333334,
+    "max_discharge_kwh": 833.3333333333334,
+    "simultaneous_charge_discharge": 0,
+    "emergency_while_charging": 0,
+    "max_settlement_recompute_error": 0.0,
+    "negative_q0": 0,
+    "negative_qA": 0,
+    "pre_six_executed_adjusted": 0,
+    "passed": true
+  },
+  "formal_period": {
+    "days": 334,
+    "total_cost": 14578548.729275655,
+    "retained_cost": 13689915.791389897,
+    "down_cost": 358298.8658315047,
+    "up_cost": 168331.0855841123,
+    "emergency_cost": 362002.98647014244,
+    "emergency_kwh": 66282.79679395548,
+    "down_kwh": 1014733.0117566942,
+    "up_kwh": 174792.43970279617,
+    "unused_kwh": 2155846.293785266,
+    "final_soc_kwh": 2348.371430273632,
+    "start_soc_kwh": 2122.4825093090917
+  },
+  "candidate_lp_statuses": {
+    "14:00/oracle": {
+      "optimal": 334
+    }
+  },
+  "run_seconds": 67.46735879992775,
+  "result_days": 334
+}

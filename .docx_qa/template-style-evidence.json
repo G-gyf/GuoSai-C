@@ -1,0 +1,89 @@
+{
+  "input": "C:\\Users\\lenovo\\Desktop\\\u56fd\u8d5b C\u9898\\\u6a21\u7248.docx",
+  "fonts_by_char_count": {
+    "\u9ed1\u4f53": 12506,
+    "\u5b8b\u4f53": 779
+  },
+  "direct_run_formatting_runs": 421,
+  "direct_paragraph_formatting_paragraphs": 0,
+  "heading_like_paragraphs_not_heading_style": [
+    {
+      "para_index": 3,
+      "text": "AI \u5de5\u5177\u4f7f\u7528\u8be6\u60c5",
+      "style": "Normal"
+    },
+    {
+      "para_index": 4,
+      "text": "\u4e00\u3001\u6240\u7528 AI \u5de5\u5177\u540d\u79f0\u548c\u7248\u672c ",
+      "style": "Normal"
+    },
+    {
+      "para_index": 8,
+      "text": "\u4e8c\u3001\u5177\u4f53\u4f7f\u7528\u76ee\u7684\u548c\u73af\u8282 ",
+      "style": "Normal"
+    },
+    {
+      "para_index": 12,
+      "text": "\u4e09\u3001\u5173\u952e\u4ea4\u4e92\u8bb0\u5f55 ",
+      "style": "Normal"
+    },
+    {
+      "para_index": 14,
+      "text": "\u4ea4\u4e92\u8bb0\u5f55 1\uff1a",
+      "style": "Normal"
+    },
+    {
+      "para_index": 19,
+      "text": "\u4ea4\u4e92\u8bb0\u5f55 2\uff1a ",
+      "style": "Normal"
+    },
+    {
+      "para_index": 23,
+      "text": "\u4ea4\u4e92\u8bb0\u5f55 3\uff1a ",
+      "style": "Normal"
+    },
+    {
+      "para_index": 27,
+      "text": "\u56db\u3001\u91c7\u7eb3\u548c\u4eba\u5de5\u4fee\u6539\u60c5\u51b5\u5e8f\u53f7 ",
+      "style": "Normal"
+    },
+    {
+      "para_index": 31,
+      "text": "\u9644\u5f55\uff1a\u6838\u5fc3\u7a0b\u5e8f\u6a21\u5757\u6458\u5f55",
+      "style": "Normal"
+    }
+  ],
+  "examples": {
+    "direct_run_formatting": [
+      {
+        "para_index": 3,
+        "run_text": "AI \u5de5\u5177\u4f7f\u7528\u8be6\u60c5",
+        "style": "Normal"
+      },
+      {
+        "para_index": 4,
+        "run_text": "\u4e00\u3001\u6240\u7528 AI \u5de5\u5177\u540d\u79f0\u548c\u7248\u672c ",
+        "style": "Normal"
+      },
+      {
+        "para_index": 8,
+        "run_text": "\u4e8c\u3001\u5177\u4f53\u4f7f\u7528\u76ee\u7684\u548c\u73af\u8282 ",
+        "style": "Normal"
+      },
+      {
+        "para_index": 12,
+        "run_text": "\u4e09\u3001\u5173\u952e\u4ea4\u4e92\u8bb0\u5f55 ",
+        "style": "Normal"
+      },
+      {
+        "para_index": 14,
+        "run_text": "\u4ea4\u4e92\u8bb0\u5f55 1\uff1a",
+        "style": "Normal"
+      }
+    ]
+  },
+  "notes": [
+    "Direct formatting is not always wrong, but it often causes inconsistent output when templates change.",
+    "Heading-like paragraphs not using Heading styles can break TOC and accessibility."
+  ]
+}

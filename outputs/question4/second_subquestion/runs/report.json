@@ -1,0 +1,3649 @@
+{
+  "nu": 0.008444444444444444,
+  "seeds": [
+    20250912,
+    20250913,
+    20250914,
+    20250915,
+    20250916
+  ],
+  "main_total_q4_3": 14638588.62,
+  "hour_10": {
+    "hour": "10",
+    "seeds": [
+      {
+        "seed": 20250912,
+        "decomposition": {
+          "cash_cost": {
+            "B": 14638588.62,
+            "S": 14621344.85,
+            "Fpv": 14610467.3,
+            "Fp": 14621361.58,
+            "Fboth": 14610436.13,
+            "O": 14578102.65
+          },
+          "start_soc_kwh": {
+            "B": 2122.482509,
+            "S": 2122.482509,
+            "Fpv": 2122.482509,
+            "Fp": 2122.482509,
+            "Fboth": 2122.482509,
+            "O": 2122.482509
+          },
+          "end_soc_kwh": {
+            "B": 2443.304619,
+            "S": 2443.304619,
+            "Fpv": 2443.304619,
+            "Fp": 2443.304619,
+            "Fboth": 2443.304619,
+            "O": 2443.304619
+          },
+          "adjusted_cost": {
+            "B": 14638567.99,
+            "S": 14621324.22,
+            "Fpv": 14610446.67,
+            "Fp": 14621340.95,
+            "Fboth": 14610415.49,
+            "O": 14578082.02
+          },
+          "nu": 0.008444444444444444,
+          "V_state": 17243.76,
+          "V_forecast_pv": 10877.55,
+          "V_forecast_p": -16.73,
+          "V_forecast_both": 10908.73,
+          "V_total": 28152.49,
+          "UB_forecast": 43242.2,
+          "V_forecast_pv_capture": 0.2515,
+          "V_forecast_p_capture": -0.0004,
+          "V_forecast_both_capture": 0.2523,
+          "settlement": {
+            "B": {
+              "retained_cost": 13775463.34,
+              "down_cost": 314369.58,
+              "up_cost": 202830.75,
+              "emergency_cost": 345924.95,
+              "down_kwh": 921121.65,
+              "up_kwh": 202573.06,
+              "emergency_kwh": 63500.09,
+              "unused_kwh": 2272359.17
+            },
+            "S": {
+              "retained_cost": 13773781.72,
+              "down_cost": 315267.11,
+              "up_cost": 194279.39,
+              "emergency_cost": 338016.64,
+              "down_kwh": 921835.14,
+              "up_kwh": 194503.01,
+              "emergency_kwh": 62153.97,
+              "unused_kwh": 2261578.14
+            },
+            "Fpv": {
+              "retained_cost": 13768040.51,
+              "down_cost": 318082.76,
+              "up_cost": 189550.97,
+              "emergency_cost": 334793.07,
+              "down_kwh": 932540.42,
+              "up_kwh": 187720.49,
+              "emergency_kwh": 62150.7,
+              "unused_kwh": 2243690.65
+            },
+            "Fp": {
+              "retained_cost": 13773755.33,
+              "down_cost": 315280.3,
+              "up_cost": 194309.32,
+              "emergency_cost": 338016.64,
+              "down_kwh": 921861.37,
+              "up_kwh": 194543.58,
+              "emergency_kwh": 62153.97,
+              "unused_kwh": 2261592.47
+            },
+            "Fboth": {
+              "retained_cost": 13768042.48,
+              "down_cost": 318081.77,
+              "up_cost": 189518.81,
+              "emergency_cost": 334793.07,
+              "down_kwh": 932530.23,
+              "up_kwh": 187707.8,
+              "emergency_kwh": 62150.7,
+              "unused_kwh": 2243689.79
+            },
+            "O": {
+              "retained_cost": 13741232.44,
+              "down_cost": 331220.66,
+              "up_cost": 171230.16,
+              "emergency_cost": 334419.39,
+              "down_kwh": 978172.12,
+              "up_kwh": 163166.71,
+              "emergency_kwh": 61623.22,
+              "unused_kwh": 2171999.31
+            }
+          }
+        },
+        "paired": {
+          "V_state_daily": {
+            "kind": "B-S",
+            "value": 17243.76321938738,
+            "mean_per_day": 51.62803359098018,
+            "bootstrap_ci95": [
+              28.54,
+              79.26
+            ],
+            "positive_days": 140,
+            "negative_days": 73,
+            "monthly_sum": {
+              "2": 3528.96,
+              "3": 969.99,
+              "4": -597.08,
+              "5": 318.77,
+              "6": 2013.25,
+              "7": 2694.48,
+              "8": 1618.39,
+              "9": 1214.37,
+              "10": 252.57,
+              "11": 2745.21,
+              "12": 2484.86
+            },
+            "positive_months": 10
+          },
+          "V_both_daily": {
+            "kind": "S-Fboth",
+            "value": 10908.728645384097,
+            "mean_per_day": 32.660864207736815,
+            "bootstrap_ci95": [
+              14.19,
+              56.34
+            ],
+            "positive_days": 147,
+            "negative_days": 90,
+            "monthly_sum": {
+              "2": -543.68,
+              "3": -202.97,
+              "4": 1613.86,
+              "5": 378.02,
+              "6": 3086.13,
+              "7": 1360.29,
+              "8": 381.62,
+              "9": 1200.61,
+              "10": 378.96,
+              "11": 2528.86,
+              "12": 727.03
+            },
+            "positive_months": 9
+          },
+          "V_total_daily": {
+            "kind": "B-Fboth",
+            "value": 28152.49186477148,
+            "mean_per_day": 84.288897798717,
+            "bootstrap_ci95": [
+              52.89,
+              122.52
+            ],
+            "positive_days": 156,
+            "negative_days": 85,
+            "monthly_sum": {
+              "2": 2985.28,
+              "3": 767.01,
+              "4": 1016.78,
+              "5": 696.79,
+              "6": 5099.38,
+              "7": 4054.77,
+              "8": 2000.0,
+              "9": 2414.98,
+              "10": 631.53,
+              "11": 5274.06,
+              "12": 3211.9
+            },
+            "positive_months": 11
+          },
+          "UB_daily": {
+            "kind": "S-O",
+            "value": 43242.20370436647,
+            "mean_per_day": 129.46767576157626,
+            "bootstrap_ci95": [
+              99.11,
+              162.95
+            ],
+            "positive_days": 196,
+            "negative_days": 50,
+            "monthly_sum": {
+              "2": 1673.2,
+              "3": 1719.96,
+              "4": 4349.58,
+              "5": 5111.68,
+              "6": 5582.43,
+              "7": 2286.7,
+              "8": 3889.21,
+              "9": 5434.17,
+              "10": 2912.09,
+              "11": 5140.62,
+              "12": 5142.56
+            },
+            "positive_months": 11
+          },
+          "V_pv_daily": {
+            "kind": "S-Fpv",
+            "value": 10877.5501573646,
+            "mean_per_day": 32.56751544121138,
+            "bootstrap_ci95": [
+              14.1,
+              56.08
+            ],
+            "positive_days": 147,
+            "negative_days": 90,
+            "monthly_sum": {
+              "2": -543.68,
+              "3": -202.97,
+              "4": 1613.86,
+              "5": 377.84,
+              "6": 3084.17,
+              "7": 1360.39,
+              "8": 367.1,
+              "9": 1229.66,
+              "10": 380.97,
+              "11": 2528.86,
+              "12": 681.36
+            },
+            "positive_months": 9
+          },
+          "V_p_daily": {
+            "kind": "S-Fp",
+            "value": -16.728652222698656,
+            "mean_per_day": -0.05008578509790017,
+            "bootstrap_ci95": [
+              -0.25,
+              0.12
+            ],
+            "positive_days": 25,
+            "negative_days": 23,
+            "monthly_sum": {
+              "2": -4.21,
+              "3": -16.17,
+              "4": -2.75,
+              "5": 0.0,
+              "6": 16.13,
+              "7": 0.0,
+              "8": -7.29,
+              "9": -2.3,
+              "10": -0.14,
+              "11": -0.0,
+              "12": -0.0
+            },
+            "positive_months": 2
+          }
+        }
+      },
+      {
+        "seed": 20250913,
+        "decomposition": {
+          "cash_cost": {
+            "B": 14635060.09,
+            "S": 14617486.8,
+            "Fboth": 14610823.16,
+            "O": 14576137.45
+          },
+          "start_soc_kwh": {
+            "B": 2122.482509,
+            "S": 2122.482509,
+            "Fboth": 2122.482509,
+            "O": 2122.482509
+          },
+          "end_soc_kwh": {
+            "B": 2443.304619,
+            "S": 2443.304619,
+            "Fboth": 2443.304619,
+            "O": 2443.304619
+          },
+          "adjusted_cost": {
+            "B": 14635039.46,
+            "S": 14617466.17,
+            "Fboth": 14610802.53,
+            "O": 14576116.82
+          },
+          "nu": 0.008444444444444444,
+          "V_state": 17573.29,
+          "V_forecast_both": 6663.63,
+          "V_total": 24236.92,
+          "UB_forecast": 41349.34,
+          "V_forecast_both_capture": 0.1612,
+          "settlement": {
+            "B": {
+              "retained_cost": 13777021.85,
+              "down_cost": 313644.38,
+              "up_cost": 202261.48,
+              "emergency_cost": 342132.39,
+              "down_kwh": 919556.89,
+              "up_kwh": 202013.72,
+              "emergency_kwh": 61884.61,
+              "unused_kwh": 2271907.25
+            },
+            "S": {
+              "retained_cost": 13775489.29,
+              "down_cost": 314373.59,
+              "up_cost": 193662.76,
+              "emergency_cost": 333961.17,
+              "down_kwh": 919795.37,
+              "up_kwh": 194041.19,
+              "emergency_kwh": 60639.7,
+              "unused_kwh": 2261402.17
+            },
+            "Fboth": {
+              "retained_cost": 13769696.74,
+              "down_cost": 317253.27,
+              "up_cost": 188595.89,
+              "emergency_cost": 335277.27,
+              "down_kwh": 930680.79,
+              "up_kwh": 186935.49,
+              "emergency_kwh": 60941.22,
+              "unused_kwh": 2243568.76
+            },
+            "O": {
+              "retained_cost": 13742896.94,
+              "down_cost": 330388.41,
+              "up_cost": 170501.68,
+              "emergency_cost": 332350.42,
+              "down_kwh": 976331.67,
+              "up_kwh": 162504.23,
+              "emergency_kwh": 60468.69,
+              "unused_kwh": 2172041.73
+            }
+          }
+        },
+        "paired": {
+          "V_state_daily": {
+            "kind": "B-S",
+            "value": 17573.29138209195,
+            "mean_per_day": 52.61464485656272,
+            "bootstrap_ci95": [
+              27.47,
+              84.46
+            ],
+            "positive_days": 139,
+            "negative_days": 72,
+            "monthly_sum": {
+              "2": 3528.96,
+              "3": 969.99,
+              "4": -597.08,
+              "5": 318.77,
+              "6": 1847.98,
+              "7": 3343.58,
+              "8": 1618.39,
+              "9": 1214.37,
+              "10": 252.57,
+              "11": 2745.21,
+              "12": 2330.56
+            },
+            "positive_months": 10
+          },
+          "V_both_daily": {
+            "kind": "S-Fboth",
+            "value": 6663.633565943299,
+            "mean_per_day": 19.95099870042904,
+            "bootstrap_ci95": [
+              3.94,
+              36.58
+            ],
+            "positive_days": 148,
+            "negative_days": 91,
+            "monthly_sum": {
+              "2": -543.68,
+              "3": -202.96,
+              "4": 1613.86,
+              "5": 401.75,
+              "6": 32.58,
+              "7": 231.51,
+              "8": 381.62,
+              "9": 1125.04,
+              "10": 378.96,
+              "11": 2528.86,
+              "12": 716.1
+            },
+            "positive_months": 9
+          },
+          "V_total_daily": {
+            "kind": "B-Fboth",
+            "value": 24236.924948035252,
+            "mean_per_day": 72.56564355699177,
+            "bootstrap_ci95": [
+              47.27,
+              101.52
+            ],
+            "positive_days": 157,
+            "negative_days": 85,
+            "monthly_sum": {
+              "2": 2985.28,
+              "3": 767.03,
+              "4": 1016.78,
+              "5": 720.52,
+              "6": 1880.56,
+              "7": 3575.09,
+              "8": 2000.0,
+              "9": 2339.41,
+              "10": 631.53,
+              "11": 5274.06,
+              "12": 3046.66
+            },
+            "positive_months": 11
+          },
+          "UB_daily": {
+            "kind": "S-O",
+            "value": 41349.3436212658,
+            "mean_per_day": 123.80043000378981,
+            "bootstrap_ci95": [
+              93.88,
+              154.44
+            ],
+            "positive_days": 199,
+            "negative_days": 50,
+            "monthly_sum": {
+              "2": 1673.2,
+              "3": 1719.89,
+              "4": 4349.58,
+              "5": 5197.26,
+              "6": 4225.22,
+              "7": 1619.38,
+              "8": 3889.21,
+              "9": 5434.17,
+              "10": 3041.71,
+              "11": 5140.62,
+              "12": 5059.1
+            },
+            "positive_months": 11
+          }
+        }
+      },
+      {
+        "seed": 20250914,
+        "decomposition": {
+          "cash_cost": {
+            "B": 14633286.52,
+            "S": 14616726.6,
+            "Fboth": 14608733.81,
+            "O": 14574684.81
+          },
+          "start_soc_kwh": {
+            "B": 2122.482509,
+            "S": 2122.482509,
+            "Fboth": 2122.482509,
+            "O": 2122.482509
+          },
+          "end_soc_kwh": {
+            "B": 2443.304619,
+            "S": 2443.304619,
+            "Fboth": 2443.304619,
+            "O": 2443.304619
+          },
+          "adjusted_cost": {
+            "B": 14633265.89,
+            "S": 14616705.97,
+            "Fboth": 14608713.18,
+            "O": 14574664.18
+          },
+          "nu": 0.008444444444444444,
+          "V_state": 16559.92,
+          "V_forecast_both": 7992.79,
+          "V_total": 24552.71,
+          "UB_forecast": 42041.79,
+          "V_forecast_both_capture": 0.1901,
+          "settlement": {
+            "B": {
+              "retained_cost": 13777112.45,
+              "down_cost": 313597.81,
+              "up_cost": 202800.08,
+              "emergency_cost": 339776.18,
+              "down_kwh": 919457.54,
+              "up_kwh": 202540.66,
+              "emergency_kwh": 61282.91,
+              "unused_kwh": 2271809.84
+            },
+            "S": {
+              "retained_cost": 13775578.41,
+              "down_cost": 314327.76,
+              "up_cost": 194216.4,
+              "emergency_cost": 332604.03,
+              "down_kwh": 919696.02,
+              "up_kwh": 194469.54,
+              "emergency_kwh": 60190.28,
+              "unused_kwh": 2261394.42
+            },
+            "Fboth": {
+              "retained_cost": 13769786.81,
+              "down_cost": 317206.97,
+              "up_cost": 189426.55,
+              "emergency_cost": 332313.48,
+              "down_kwh": 930581.43,
+              "up_kwh": 187646.43,
+              "emergency_kwh": 60147.26,
+              "unused_kwh": 2243417.99
+            },
+            "O": {
+              "retained_cost": 13742955.52,
+              "down_cost": 330342.74,
+              "up_cost": 171173.15,
+              "emergency_cost": 330213.39,
+              "down_kwh": 976232.32,
+              "up_kwh": 163138.56,
+              "emergency_kwh": 59847.52,
+              "unused_kwh": 2171956.74
+            }
+          }
+        },
+        "paired": {
+          "V_state_daily": {
+            "kind": "B-S",
+            "value": 16559.92022726119,
+            "mean_per_day": 49.58059948281794,
+            "bootstrap_ci95": [
+              26.78,
+              76.56
+            ],
+            "positive_days": 139,
+            "negative_days": 72,
+            "monthly_sum": {
+              "2": 3528.96,
+              "3": 969.99,
+              "4": -597.08,
+              "5": 318.77,
+              "6": 1854.15,
+              "7": 2317.13,
+              "8": 1618.39,
+              "9": 1214.37,
+              "10": 252.57,
+              "11": 2745.21,
+              "12": 2337.47
+            },
+            "positive_months": 10
+          },
+          "V_both_daily": {
+            "kind": "S-Fboth",
+            "value": 7992.793224710898,
+            "mean_per_day": 23.930518636858977,
+            "bootstrap_ci95": [
+              9.48,
+              39.39
+            ],
+            "positive_days": 147,
+            "negative_days": 92,
+            "monthly_sum": {
+              "2": -543.68,
+              "3": -202.96,
+              "4": 1613.86,
+              "5": 415.11,
+              "6": -283.36,
+              "7": 1852.31,
+              "8": 381.62,
+              "9": 1125.04,
+              "10": 378.96,
+              "11": 2528.86,
+              "12": 727.03
+            },
+            "positive_months": 8
+          },
+          "V_total_daily": {
+            "kind": "B-Fboth",
+            "value": 24552.71345197209,
+            "mean_per_day": 73.51111811967691,
+            "bootstrap_ci95": [
+              47.34,
+              103.28
+            ],
+            "positive_days": 157,
+            "negative_days": 86,
+            "monthly_sum": {
+              "2": 2985.28,
+              "3": 767.03,
+              "4": 1016.78,
+              "5": 733.88,
+              "6": 1570.79,
+              "7": 4169.45,
+              "8": 2000.0,
+              "9": 2339.41,
+              "10": 631.53,
+              "11": 5274.06,
+              "12": 3064.51
+            },
+            "positive_months": 11
+          },
+          "UB_daily": {
+            "kind": "S-O",
+            "value": 42041.79072364874,
+            "mean_per_day": 125.87362492110401,
+            "bootstrap_ci95": [
+              99.41,
+              154.25
+            ],
+            "positive_days": 194,
+            "negative_days": 54,
+            "monthly_sum": {
+              "2": 1673.2,
+              "3": 1719.89,
+              "4": 4349.58,
+              "5": 5100.63,
+              "6": 4138.17,
+              "7": 2653.38,
+              "8": 3659.64,
+              "9": 5434.17,
+              "10": 3030.82,
+              "11": 5140.62,
+              "12": 5141.69
+            },
+            "positive_months": 11
+          }
+        }
+      },
+      {
+        "seed": 20250915,
+        "decomposition": {
+          "cash_cost": {
+            "B": 14637240.66,
+            "S": 14616017.51,
+            "Fboth": 14608773.27,
+            "O": 14573669.3
+          },
+          "start_soc_kwh": {
+            "B": 2122.482509,
+            "S": 2122.482509,
+            "Fboth": 2122.482509,
+            "O": 2122.482509
+          },
+          "end_soc_kwh": {
+            "B": 2443.304619,
+            "S": 2443.304619,
+            "Fboth": 2443.304619,
+            "O": 2443.304619
+          },
+          "adjusted_cost": {
+            "B": 14637220.02,
+            "S": 14615996.87,
+            "Fboth": 14608752.63,
+            "O": 14573648.67
+          },
+          "nu": 0.008444444444444444,
+          "V_state": 21223.15,
+          "V_forecast_both": 7244.24,
+          "V_total": 28467.39,
+          "UB_forecast": 42348.21,
+          "V_forecast_both_capture": 0.1711,
+          "settlement": {
+            "B": {
+              "retained_cost": 13776601.34,
+              "down_cost": 313855.26,
+              "up_cost": 202821.89,
+              "emergency_cost": 343962.17,
+              "down_kwh": 920210.51,
+              "up_kwh": 202569.44,
+              "emergency_kwh": 62491.09,
+              "unused_kwh": 2272484.3
+            },
+            "S": {
+              "retained_cost": 13775013.9,
+              "down_cost": 314611.91,
+              "up_cost": 194457.48,
+              "emergency_cost": 331934.22,
+              "down_kwh": 920509.33,
+              "up_kwh": 194586.11,
+              "emergency_kwh": 61092.83,
+              "unused_kwh": 2261751.99
+            },
+            "Fboth": {
+              "retained_cost": 13769225.61,
+              "down_cost": 317490.21,
+              "up_cost": 189568.72,
+              "emergency_cost": 332488.73,
+              "down_kwh": 931388.8,
+              "up_kwh": 187726.33,
+              "emergency_kwh": 61136.73,
+              "unused_kwh": 2243845.0
+            },
+            "O": {
+              "retained_cost": 13742373.89,
+              "down_cost": 330636.2,
+              "up_cost": 171172.81,
+              "emergency_cost": 329486.4,
+              "down_kwh": 977042.36,
+              "up_kwh": 163126.82,
+              "emergency_kwh": 60652.63,
+              "unused_kwh": 2172065.42
+            }
+          }
+        },
+        "paired": {
+          "V_state_daily": {
+            "kind": "B-S",
+            "value": 21223.14981422033,
+            "mean_per_day": 63.54236471323453,
+            "bootstrap_ci95": [
+              32.59,
+              101.22
+            ],
+            "positive_days": 141,
+            "negative_days": 72,
+            "monthly_sum": {
+              "2": 3528.96,
+              "3": 969.99,
+              "4": -597.08,
+              "5": 318.77,
+              "6": 5353.42,
+              "7": 2897.65,
+              "8": 1618.39,
+              "9": 1214.37,
+              "10": 252.57,
+              "11": 2745.21,
+              "12": 2920.91
+            },
+            "positive_months": 10
+          },
+          "V_both_daily": {
+            "kind": "S-Fboth",
+            "value": 7244.239423611971,
+            "mean_per_day": 21.689339591652608,
+            "bootstrap_ci95": [
+              8.12,
+              36.15
+            ],
+            "positive_days": 146,
+            "negative_days": 92,
+            "monthly_sum": {
+              "2": -543.68,
+              "3": -202.96,
+              "4": 1613.86,
+              "5": 336.98,
+              "6": -99.65,
+              "7": 1167.15,
+              "8": 381.62,
+              "9": 1263.05,
+              "10": 378.96,
+              "11": 2528.86,
+              "12": 420.05
+            },
+            "positive_months": 8
+          },
+          "V_total_daily": {
+            "kind": "B-Fboth",
+            "value": 28467.3892378323,
+            "mean_per_day": 85.23170430488713,
+            "bootstrap_ci95": [
+              53.32,
+              124.96
+            ],
+            "positive_days": 156,
+            "negative_days": 86,
+            "monthly_sum": {
+              "2": 2985.28,
+              "3": 767.03,
+              "4": 1016.78,
+              "5": 655.75,
+              "6": 5253.77,
+              "7": 4064.8,
+              "8": 2000.0,
+              "9": 2477.43,
+              "10": 631.53,
+              "11": 5274.06,
+              "12": 3340.96
+            },
+            "positive_months": 11
+          },
+          "UB_daily": {
+            "kind": "S-O",
+            "value": 42348.205515903086,
+            "mean_per_day": 126.79103447875175,
+            "bootstrap_ci95": [
+              98.16,
+              158.06
+            ],
+            "positive_days": 197,
+            "negative_days": 51,
+            "monthly_sum": {
+              "2": 1673.2,
+              "3": 1719.89,
+              "4": 4349.58,
+              "5": 5048.85,
+              "6": 5652.23,
+              "7": 2262.72,
+              "8": 3659.64,
+              "9": 5433.92,
+              "10": 2912.09,
+              "11": 5140.62,
+              "12": 4495.46
+            },
+            "positive_months": 11
+          }
+        }
+      },
+      {
+        "seed": 20250916,
+        "decomposition": {
+          "cash_cost": {
+            "B": 14632901.91,
+            "S": 14616585.13,
+            "Fboth": 14609366.06,
+            "O": 14576110.39
+          },
+          "start_soc_kwh": {
+            "B": 2122.482509,
+            "S": 2122.482509,
+            "Fboth": 2122.482509,
+            "O": 2122.482509
+          },
+          "end_soc_kwh": {
+            "B": 2443.304619,
+            "S": 2443.304619,
+            "Fboth": 2443.304619,
+            "O": 2443.304619
+          },
+          "adjusted_cost": {
+            "B": 14632881.28,
+            "S": 14616564.5,
+            "Fboth": 14609345.43,
+            "O": 14576089.76
+          },
+          "nu": 0.008444444444444444,
+          "V_state": 16316.79,
+          "V_forecast_both": 7219.07,
+          "V_total": 23535.86,
+          "UB_forecast": 40474.74,
+          "V_forecast_both_capture": 0.1784,
+          "settlement": {
+            "B": {
+              "retained_cost": 13777030.03,
+              "down_cost": 313641.66,
+              "up_cost": 202464.43,
+              "emergency_cost": 339765.79,
+              "down_kwh": 919583.85,
+              "up_kwh": 202228.87,
+              "emergency_kwh": 61719.18,
+              "unused_kwh": 2271931.84
+            },
+            "S": {
+              "retained_cost": 13775497.47,
+              "down_cost": 314370.87,
+              "up_cost": 193966.56,
+              "emergency_cost": 332750.23,
+              "down_kwh": 919822.33,
+              "up_kwh": 194266.35,
+              "emergency_kwh": 60465.81,
+              "unused_kwh": 2261431.2
+            },
+            "Fboth": {
+              "retained_cost": 13769704.92,
+              "down_cost": 317250.55,
+              "up_cost": 189091.18,
+              "emergency_cost": 333319.4,
+              "down_kwh": 930707.74,
+              "up_kwh": 187362.4,
+              "emergency_kwh": 60586.83,
+              "unused_kwh": 2243574.49
+            },
+            "O": {
+              "retained_cost": 13742926.91,
+              "down_cost": 330296.43,
+              "up_cost": 170746.98,
+              "emergency_cost": 332140.07,
+              "down_kwh": 976133.52,
+              "up_kwh": 162739.55,
+              "emergency_kwh": 60508.96,
+              "unused_kwh": 2172227.84
+            }
+          }
+        },
+        "paired": {
+          "V_state_daily": {
+            "kind": "B-S",
+            "value": 16316.785627471018,
+            "mean_per_day": 48.85265157925454,
+            "bootstrap_ci95": [
+              23.21,
+              80.03
+            ],
+            "positive_days": 139,
+            "negative_days": 73,
+            "monthly_sum": {
+              "2": 3528.96,
+              "3": 969.99,
+              "4": -597.08,
+              "5": 318.77,
+              "6": 686.15,
+              "7": 3191.8,
+              "8": 1618.39,
+              "9": 1214.37,
+              "10": 252.57,
+              "11": 2745.21,
+              "12": 2387.66
+            },
+            "positive_months": 10
+          },
+          "V_both_daily": {
+            "kind": "S-Fboth",
+            "value": 7219.071343913096,
+            "mean_per_day": 21.613986059620046,
+            "bootstrap_ci95": [
+              7.35,
+              36.87
+            ],
+            "positive_days": 148,
+            "negative_days": 92,
+            "monthly_sum": {
+              "2": -543.68,
+              "3": -202.96,
+              "4": 1613.86,
+              "5": 400.33,
+              "6": -274.97,
+              "7": 1133.89,
+              "8": 381.62,
+              "9": 1115.79,
+              "10": 378.96,
+              "11": 2528.86,
+              "12": 687.37
+            },
+            "positive_months": 8
+          },
+          "V_total_daily": {
+            "kind": "B-Fboth",
+            "value": 23535.856971384113,
+            "mean_per_day": 70.46663763887459,
+            "bootstrap_ci95": [
+              42.09,
+              101.68
+            ],
+            "positive_days": 158,
+            "negative_days": 86,
+            "monthly_sum": {
+              "2": 2985.28,
+              "3": 767.03,
+              "4": 1016.78,
+              "5": 719.1,
+              "6": 411.19,
+              "7": 4325.69,
+              "8": 2000.0,
+              "9": 2330.16,
+              "10": 631.53,
+              "11": 5274.06,
+              "12": 3075.03
+            },
+            "positive_months": 11
+          },
+          "UB_daily": {
+            "kind": "S-O",
+            "value": 40474.73765064506,
+            "mean_per_day": 121.18184925342833,
+            "bootstrap_ci95": [
+              92.83,
+              150.04
+            ],
+            "positive_days": 195,
+            "negative_days": 54,
+            "monthly_sum": {
+              "2": 1673.2,
+              "3": 1719.89,
+              "4": 4349.58,
+              "5": 5111.35,
+              "6": 3354.45,
+              "7": 1844.88,
+              "8": 3659.64,
+              "9": 5433.91,
+              "10": 3084.83,
+              "11": 5140.62,
+              "12": 5102.38
+            },
+            "positive_months": 11
+          }
+        }
+      }
+    ],
+    "seed_count": 5,
+    "decision": {
+      "pv_forecast_effective_10pct": true,
+      "price_update_effective": true,
+      "economic_positive": true,
+      "bootstrap_ci_lower_positive": true,
+      "stable_months_8_positive": true,
+      "stable_seeds_4_of_5": true,
+      "material_threshold": true,
+      "capture_rate_10pct": true,
+      "emergency_not_worse": true,
+      "state_value": 17783.38,
+      "forecast_pv_value": 10877.55,
+      "forecast_p_value": -16.73,
+      "forecast_both_value": 8005.69,
+      "forecast_both_min": 6663.63,
+      "ub_mean": 41891.26,
+      "capture_rate_pct": 19.1,
+      "threshold_yuan": 7319.29,
+      "emergency_cost_S": 338016.64,
+      "emergency_cost_Fboth": 334793.07,
+      "emergency_kwh_S": 62153.97,
+      "emergency_kwh_Fboth": 62150.7,
+      "price_mae_improvement_pct": 3.76,
+      "price_positive_months_mae": 7.0,
+      "enter_main_strategy": true,
+      "partial_verdict": "enter"
+    }
+  },
+  "hour_14": {
+    "hour": "14",
+    "seeds": [
+      {
+        "seed": 20250912,
+        "decomposition": {
+          "cash_cost": {
+            "B": 14638588.62,
+            "S": 14610332.44,
+            "Fpv": 14599013.21,
+            "Fp": 14610923.03,
+            "Fboth": 14599633.58,
+            "O": 14578548.73
+          },
+          "start_soc_kwh": {
+            "B": 2122.482509,
+            "S": 2122.482509,
+            "Fpv": 2122.482509,
+            "Fp": 2122.482509,
+            "Fboth": 2122.482509,
+            "O": 2122.482509
+          },
+          "end_soc_kwh": {
+            "B": 2443.304619,
+            "S": 2349.080789,
+            "Fpv": 2348.767714,
+            "Fp": 2349.080789,
+            "Fboth": 2348.767714,
+            "O": 2348.37143
+          },
+          "adjusted_cost": {
+            "B": 14638567.99,
+            "S": 14610312.61,
+            "Fpv": 14598993.37,
+            "Fp": 14610903.19,
+            "Fboth": 14599613.74,
+            "O": 14578528.9
+          },
+          "nu": 0.008444444444444444,
+          "V_state": 28255.38,
+          "V_forecast_pv": 11319.23,
+          "V_forecast_p": -590.59,
+          "V_forecast_both": 10698.86,
+          "V_total": 38954.24,
+          "UB_forecast": 31783.71,
+          "V_forecast_pv_capture": 0.3561,
+          "V_forecast_p_capture": -0.0186,
+          "V_forecast_both_capture": 0.3366,
+          "settlement": {
+            "B": {
+              "retained_cost": 13775463.34,
+              "down_cost": 314369.58,
+              "up_cost": 202830.75,
+              "emergency_cost": 345924.95,
+              "down_kwh": 921121.65,
+              "up_kwh": 202573.06,
+              "emergency_kwh": 63500.09,
+              "unused_kwh": 2272359.17
+            },
+            "S": {
+              "retained_cost": 13727742.52,
+              "down_cost": 338775.66,
+              "up_cost": 182740.17,
+              "emergency_cost": 361074.09,
+              "down_kwh": 976234.69,
+              "up_kwh": 185894.59,
+              "emergency_kwh": 65924.18,
+              "unused_kwh": 2204087.78
+            },
+            "Fpv": {
+              "retained_cost": 13722711.11,
+              "down_cost": 341294.36,
+              "up_cost": 178943.15,
+              "emergency_cost": 356064.58,
+              "down_kwh": 982223.4,
+              "up_kwh": 182329.46,
+              "emergency_kwh": 65127.42,
+              "unused_kwh": 2193506.41
+            },
+            "Fp": {
+              "retained_cost": 13727541.83,
+              "down_cost": 338921.52,
+              "up_cost": 182669.66,
+              "emergency_cost": 361790.02,
+              "down_kwh": 976640.49,
+              "up_kwh": 185845.53,
+              "emergency_kwh": 66079.63,
+              "unused_kwh": 2203969.25
+            },
+            "Fboth": {
+              "retained_cost": 13722558.32,
+              "down_cost": 341416.92,
+              "up_cost": 178880.66,
+              "emergency_cost": 356777.67,
+              "down_kwh": 982552.49,
+              "up_kwh": 182286.67,
+              "emergency_kwh": 65276.75,
+              "unused_kwh": 2193467.88
+            },
+            "O": {
+              "retained_cost": 13689915.79,
+              "down_cost": 358298.87,
+              "up_cost": 168331.09,
+              "emergency_cost": 362002.99,
+              "down_kwh": 1014733.01,
+              "up_kwh": 174792.44,
+              "emergency_kwh": 66282.8,
+              "unused_kwh": 2155846.29
+            }
+          }
+        },
+        "paired": {
+          "V_state_daily": {
+            "kind": "B-S",
+            "value": 28255.380007315034,
+            "mean_per_day": 84.59694612968573,
+            "bootstrap_ci95": [
+              25.33,
+              135.03
+            ],
+            "positive_days": 158,
+            "negative_days": 45,
+            "monthly_sum": {
+              "2": 7287.44,
+              "3": 5424.22,
+              "4": 933.19,
+              "5": -767.38,
+              "6": 2519.18,
+              "7": -5626.23,
+              "8": 820.78,
+              "9": 2622.44,
+              "10": 2487.31,
+              "11": 3525.41,
+              "12": 9029.02
+            },
+            "positive_months": 9
+          },
+          "V_both_daily": {
+            "kind": "S-Fboth",
+            "value": 10698.86245516519,
+            "mean_per_day": 32.032522320853865,
+            "bootstrap_ci95": [
+              15.5,
+              51.88
+            ],
+            "positive_days": 198,
+            "negative_days": 136,
+            "monthly_sum": {
+              "2": -32.15,
+              "3": 724.0,
+              "4": 767.67,
+              "5": 814.8,
+              "6": 3478.46,
+              "7": 1571.53,
+              "8": 1437.55,
+              "9": -416.73,
+              "10": 1055.37,
+              "11": 651.22,
+              "12": 647.14
+            },
+            "positive_months": 9
+          },
+          "V_total_daily": {
+            "kind": "B-Fboth",
+            "value": 38954.24246248022,
+            "mean_per_day": 116.62946845053959,
+            "bootstrap_ci95": [
+              55.48,
+              170.85
+            ],
+            "positive_days": 232,
+            "negative_days": 102,
+            "monthly_sum": {
+              "2": 7255.29,
+              "3": 6148.22,
+              "4": 1700.86,
+              "5": 47.42,
+              "6": 5997.65,
+              "7": -4054.7,
+              "8": 2258.33,
+              "9": 2205.71,
+              "10": 3542.68,
+              "11": 4176.63,
+              "12": 9676.16
+            },
+            "positive_months": 10
+          },
+          "UB_daily": {
+            "kind": "S-O",
+            "value": 31783.706932970163,
+            "mean_per_day": 95.16079920050947,
+            "bootstrap_ci95": [
+              56.64,
+              130.92
+            ],
+            "positive_days": 241,
+            "negative_days": 93,
+            "monthly_sum": {
+              "2": 1691.74,
+              "3": 2822.31,
+              "4": 3210.11,
+              "5": 3852.94,
+              "6": 3646.93,
+              "7": 441.45,
+              "8": 4913.42,
+              "9": 1858.51,
+              "10": 5937.15,
+              "11": 2314.02,
+              "12": 1095.13
+            },
+            "positive_months": 11
+          },
+          "V_pv_daily": {
+            "kind": "S-Fpv",
+            "value": 11319.232452737464,
+            "mean_per_day": 33.88991752316606,
+            "bootstrap_ci95": [
+              16.88,
+              54.4
+            ],
+            "positive_days": 201,
+            "negative_days": 133,
+            "monthly_sum": {
+              "2": -28.54,
+              "3": 722.84,
+              "4": 766.79,
+              "5": 820.8,
+              "6": 3652.0,
+              "7": 1745.35,
+              "8": 1437.13,
+              "9": -380.64,
+              "10": 1271.73,
+              "11": 672.05,
+              "12": 639.72
+            },
+            "positive_months": 9
+          },
+          "V_p_daily": {
+            "kind": "S-Fp",
+            "value": -590.5878953764732,
+            "mean_per_day": -1.7682272316660874,
+            "bootstrap_ci95": [
+              -3.7,
+              -0.27
+            ],
+            "positive_days": 145,
+            "negative_days": 174,
+            "monthly_sum": {
+              "2": -3.94,
+              "3": -0.09,
+              "4": -1.9,
+              "5": -1.05,
+              "6": -180.07,
+              "7": -136.72,
+              "8": 4.88,
+              "9": -37.72,
+              "10": -241.91,
+              "11": -20.66,
+              "12": 28.59
+            },
+            "positive_months": 2
+          }
+        }
+      },
+      {
+        "seed": 20250913,
+        "decomposition": {
+          "cash_cost": {
+            "B": 14635060.09,
+            "S": 14608779.56,
+            "Fboth": 14598146.83,
+            "O": 14577221.21
+          },
+          "start_soc_kwh": {
+            "B": 2122.482509,
+            "S": 2122.482509,
+            "Fboth": 2122.482509,
+            "O": 2122.482509
+          },
+          "end_soc_kwh": {
+            "B": 2443.304619,
+            "S": 2349.080789,
+            "Fboth": 2348.767714,
+            "O": 2348.37143
+          },
+          "adjusted_cost": {
+            "B": 14635039.46,
+            "S": 14608759.72,
+            "Fboth": 14598126.99,
+            "O": 14577201.38
+          },
+          "nu": 0.008444444444444444,
+          "V_state": 26279.74,
+          "V_forecast_both": 10632.73,
+          "V_total": 36912.46,
+          "UB_forecast": 31558.34,
+          "V_forecast_both_capture": 0.3369,
+          "settlement": {
+            "B": {
+              "retained_cost": 13777021.85,
+              "down_cost": 313644.38,
+              "up_cost": 202261.48,
+              "emergency_cost": 342132.39,
+              "down_kwh": 919556.89,
+              "up_kwh": 202013.72,
+              "emergency_kwh": 61884.61,
+              "unused_kwh": 2271907.25
+            },
+            "S": {
+              "retained_cost": 13728998.37,
+              "down_cost": 338219.32,
+              "up_cost": 182338.41,
+              "emergency_cost": 359223.46,
+              "down_kwh": 975158.9,
+              "up_kwh": 185462.86,
+              "emergency_kwh": 64477.83,
+              "unused_kwh": 2203531.77
+            },
+            "Fboth": {
+              "retained_cost": 13723795.38,
+              "down_cost": 340860.96,
+              "up_cost": 178490.98,
+              "emergency_cost": 354999.51,
+              "down_kwh": 981477.83,
+              "up_kwh": 181867.27,
+              "emergency_kwh": 63821.29,
+              "unused_kwh": 2192868.46
+            },
+            "O": {
+              "retained_cost": 13691159.45,
+              "down_cost": 357735.42,
+              "up_cost": 167985.08,
+              "emergency_cost": 360341.26,
+              "down_kwh": 1013636.66,
+              "up_kwh": 174420.06,
+              "emergency_kwh": 64723.17,
+              "unused_kwh": 2155171.38
+            }
+          }
+        },
+        "paired": {
+          "V_state_daily": {
+            "kind": "B-S",
+            "value": 26279.738194014382,
+            "mean_per_day": 78.68185088028258,
+            "bootstrap_ci95": [
+              11.63,
+              135.91
+            ],
+            "positive_days": 158,
+            "negative_days": 45,
+            "monthly_sum": {
+              "2": 7287.44,
+              "3": 5424.22,
+              "4": 933.19,
+              "5": -757.56,
+              "6": 257.7,
+              "7": -5620.54,
+              "8": 820.78,
+              "9": 2622.44,
+              "10": 2487.31,
+              "11": 3525.41,
+              "12": 9299.35
+            },
+            "positive_months": 9
+          },
+          "V_both_daily": {
+            "kind": "S-Fboth",
+            "value": 10632.725291366285,
+            "mean_per_day": 31.8345068603781,
+            "bootstrap_ci95": [
+              15.89,
+              50.89
+            ],
+            "positive_days": 198,
+            "negative_days": 136,
+            "monthly_sum": {
+              "2": -32.15,
+              "3": 723.9,
+              "4": 767.67,
+              "5": 787.7,
+              "6": 3259.98,
+              "7": 1855.19,
+              "8": 1437.55,
+              "9": -416.73,
+              "10": 1055.37,
+              "11": 651.22,
+              "12": 543.02
+            },
+            "positive_months": 9
+          },
+          "V_total_daily": {
+            "kind": "B-Fboth",
+            "value": 36912.463485380664,
+            "mean_per_day": 110.51635774066067,
+            "bootstrap_ci95": [
+              41.3,
+              170.82
+            ],
+            "positive_days": 235,
+            "negative_days": 99,
+            "monthly_sum": {
+              "2": 7255.29,
+              "3": 6148.12,
+              "4": 1700.86,
+              "5": 30.14,
+              "6": 3517.68,
+              "7": -3765.35,
+              "8": 2258.33,
+              "9": 2205.71,
+              "10": 3542.68,
+              "11": 4176.63,
+              "12": 9842.38
+            },
+            "positive_months": 10
+          },
+          "UB_daily": {
+            "kind": "S-O",
+            "value": 31558.34083193217,
+            "mean_per_day": 94.4860503950065,
+            "bootstrap_ci95": [
+              55.43,
+              131.69
+            ],
+            "positive_days": 240,
+            "negative_days": 94,
+            "monthly_sum": {
+              "2": 1691.74,
+              "3": 2822.21,
+              "4": 3210.11,
+              "5": 3923.62,
+              "6": 3215.83,
+              "7": 777.29,
+              "8": 4913.42,
+              "9": 1858.51,
+              "10": 5937.15,
+              "11": 2314.02,
+              "12": 894.43
+            },
+            "positive_months": 11
+          }
+        }
+      },
+      {
+        "seed": 20250914,
+        "decomposition": {
+          "cash_cost": {
+            "B": 14633286.52,
+            "S": 14607473.92,
+            "Fboth": 14596788.23,
+            "O": 14577832.15
+          },
+          "start_soc_kwh": {
+            "B": 2122.482509,
+            "S": 2122.482509,
+            "Fboth": 2122.482509,
+            "O": 2122.482509
+          },
+          "end_soc_kwh": {
+            "B": 2443.304619,
+            "S": 2349.080789,
+            "Fboth": 2348.767714,
+            "O": 2348.37143
+          },
+          "adjusted_cost": {
+            "B": 14633265.89,
+            "S": 14607454.08,
+            "Fboth": 14596768.4,
+            "O": 14577812.32
+          },
+          "nu": 0.008444444444444444,
+          "V_state": 25811.81,
+          "V_forecast_both": 10685.68,
+          "V_total": 36497.49,
+          "UB_forecast": 29641.76,
+          "V_forecast_both_capture": 0.3605,
+          "settlement": {
+            "B": {
+              "retained_cost": 13777112.45,
+              "down_cost": 313597.81,
+              "up_cost": 202800.08,
+              "emergency_cost": 339776.18,
+              "down_kwh": 919457.54,
+              "up_kwh": 202540.66,
+              "emergency_kwh": 61282.91,
+              "unused_kwh": 2271809.84
+            },
+            "S": {
+              "retained_cost": 13729107.24,
+              "down_cost": 338166.66,
+              "up_cost": 182709.71,
+              "emergency_cost": 357490.3,
+              "down_kwh": 975065.86,
+              "up_kwh": 185862.04,
+              "emergency_kwh": 63953.08,
+              "unused_kwh": 2203413.19
+            },
+            "Fboth": {
+              "retained_cost": 13723907.37,
+              "down_cost": 340808.17,
+              "up_cost": 178850.2,
+              "emergency_cost": 353222.49,
+              "down_kwh": 981384.79,
+              "up_kwh": 182254.12,
+              "emergency_kwh": 63304.89,
+              "unused_kwh": 2192750.92
+            },
+            "O": {
+              "retained_cost": 13690928.68,
+              "down_cost": 357862.3,
+              "up_cost": 168171.98,
+              "emergency_cost": 360869.19,
+              "down_kwh": 1013930.68,
+              "up_kwh": 174584.84,
+              "emergency_kwh": 64639.53,
+              "unused_kwh": 2155020.74
+            }
+          }
+        },
+        "paired": {
+          "V_state_daily": {
+            "kind": "B-S",
+            "value": 25811.809629046256,
+            "mean_per_day": 77.2808671528331,
+            "bootstrap_ci95": [
+              9.93,
+              134.4
+            ],
+            "positive_days": 158,
+            "negative_days": 45,
+            "monthly_sum": {
+              "2": 7287.44,
+              "3": 5424.22,
+              "4": 933.19,
+              "5": -775.04,
+              "6": -130.33,
+              "7": -5696.98,
+              "8": 820.78,
+              "9": 2622.44,
+              "10": 2487.31,
+              "11": 3525.41,
+              "12": 9313.39
+            },
+            "positive_months": 8
+          },
+          "V_both_daily": {
+            "kind": "S-Fboth",
+            "value": 10685.68123533477,
+            "mean_per_day": 31.993057590822666,
+            "bootstrap_ci95": [
+              15.62,
+              51.35
+            ],
+            "positive_days": 198,
+            "negative_days": 136,
+            "monthly_sum": {
+              "2": -32.15,
+              "3": 723.9,
+              "4": 767.67,
+              "5": 664.94,
+              "6": 3437.11,
+              "7": 1752.17,
+              "8": 1437.55,
+              "9": -416.73,
+              "10": 1055.37,
+              "11": 651.22,
+              "12": 644.62
+            },
+            "positive_months": 9
+          },
+          "V_total_daily": {
+            "kind": "B-Fboth",
+            "value": 36497.49086438103,
+            "mean_per_day": 109.27392474365577,
+            "bootstrap_ci95": [
+              38.92,
+              169.8
+            ],
+            "positive_days": 234,
+            "negative_days": 100,
+            "monthly_sum": {
+              "2": 7255.29,
+              "3": 6148.12,
+              "4": 1700.86,
+              "5": -110.1,
+              "6": 3306.78,
+              "7": -3944.81,
+              "8": 2258.33,
+              "9": 2205.71,
+              "10": 3542.68,
+              "11": 4176.63,
+              "12": 9958.01
+            },
+            "positive_months": 9
+          },
+          "UB_daily": {
+            "kind": "S-O",
+            "value": 29641.757166134965,
+            "mean_per_day": 88.74777594651187,
+            "bootstrap_ci95": [
+              38.96,
+              131.08
+            ],
+            "positive_days": 241,
+            "negative_days": 93,
+            "monthly_sum": {
+              "2": 1691.74,
+              "3": 2822.21,
+              "4": 3210.11,
+              "5": 3799.12,
+              "6": 3362.51,
+              "7": -1350.39,
+              "8": 4913.42,
+              "9": 1858.51,
+              "10": 5937.15,
+              "11": 2314.02,
+              "12": 1083.35
+            },
+            "positive_months": 10
+          }
+        }
+      },
+      {
+        "seed": 20250915,
+        "decomposition": {
+          "cash_cost": {
+            "B": 14637240.66,
+            "S": 14608599.24,
+            "Fboth": 14598021.41,
+            "O": 14576300.05
+          },
+          "start_soc_kwh": {
+            "B": 2122.482509,
+            "S": 2122.482509,
+            "Fboth": 2122.482509,
+            "O": 2122.482509
+          },
+          "end_soc_kwh": {
+            "B": 2443.304619,
+            "S": 2349.080789,
+            "Fboth": 2348.767714,
+            "O": 2348.37143
+          },
+          "adjusted_cost": {
+            "B": 14637220.02,
+            "S": 14608579.4,
+            "Fboth": 14598001.57,
+            "O": 14576280.22
+          },
+          "nu": 0.008444444444444444,
+          "V_state": 28640.62,
+          "V_forecast_both": 10577.83,
+          "V_total": 39218.45,
+          "UB_forecast": 32299.18,
+          "V_forecast_both_capture": 0.3275,
+          "settlement": {
+            "B": {
+              "retained_cost": 13776601.34,
+              "down_cost": 313855.26,
+              "up_cost": 202821.89,
+              "emergency_cost": 343962.17,
+              "down_kwh": 920210.51,
+              "up_kwh": 202569.44,
+              "emergency_kwh": 62491.09,
+              "unused_kwh": 2272484.3
+            },
+            "S": {
+              "retained_cost": 13728902.66,
+              "down_cost": 338262.03,
+              "up_cost": 182737.98,
+              "emergency_cost": 358696.57,
+              "down_kwh": 975325.59,
+              "up_kwh": 185886.07,
+              "emergency_kwh": 64798.42,
+              "unused_kwh": 2204122.41
+            },
+            "Fboth": {
+              "retained_cost": 13723719.21,
+              "down_cost": 340903.67,
+              "up_cost": 178878.48,
+              "emergency_cost": 354520.05,
+              "down_kwh": 981644.52,
+              "up_kwh": 182278.16,
+              "emergency_kwh": 64182.39,
+              "unused_kwh": 2193543.75
+            },
+            "O": {
+              "retained_cost": 13691080.45,
+              "down_cost": 357778.13,
+              "up_cost": 168322.09,
+              "emergency_cost": 359119.38,
+              "down_kwh": 1013803.35,
+              "up_kwh": 174788.81,
+              "emergency_kwh": 65104.8,
+              "unused_kwh": 2155816.54
+            }
+          }
+        },
+        "paired": {
+          "V_state_daily": {
+            "kind": "B-S",
+            "value": 28640.619555020705,
+            "mean_per_day": 85.75035794916379,
+            "bootstrap_ci95": [
+              26.5,
+              136.97
+            ],
+            "positive_days": 158,
+            "negative_days": 45,
+            "monthly_sum": {
+              "2": 7287.44,
+              "3": 5424.22,
+              "4": 933.19,
+              "5": -793.17,
+              "6": 2530.62,
+              "7": -5504.53,
+              "8": 820.78,
+              "9": 2622.44,
+              "10": 2487.31,
+              "11": 3525.41,
+              "12": 9306.92
+            },
+            "positive_months": 9
+          },
+          "V_both_daily": {
+            "kind": "S-Fboth",
+            "value": 10577.830101153173,
+            "mean_per_day": 31.670150003452616,
+            "bootstrap_ci95": [
+              15.06,
+              51.32
+            ],
+            "positive_days": 198,
+            "negative_days": 136,
+            "monthly_sum": {
+              "2": -32.15,
+              "3": 723.9,
+              "4": 767.67,
+              "5": 825.92,
+              "6": 3420.37,
+              "7": 1506.79,
+              "8": 1437.55,
+              "9": -406.58,
+              "10": 1038.52,
+              "11": 651.22,
+              "12": 644.62
+            },
+            "positive_months": 9
+          },
+          "V_total_daily": {
+            "kind": "B-Fboth",
+            "value": 39218.44965617388,
+            "mean_per_day": 117.4205079526164,
+            "bootstrap_ci95": [
+              55.68,
+              172.67
+            ],
+            "positive_days": 232,
+            "negative_days": 102,
+            "monthly_sum": {
+              "2": 7255.29,
+              "3": 6148.12,
+              "4": 1700.86,
+              "5": 32.75,
+              "6": 5950.99,
+              "7": -3997.74,
+              "8": 2258.33,
+              "9": 2215.86,
+              "10": 3525.82,
+              "11": 4176.63,
+              "12": 9951.55
+            },
+            "positive_months": 10
+          },
+          "UB_daily": {
+            "kind": "S-O",
+            "value": 32299.18083379239,
+            "mean_per_day": 96.70413423291134,
+            "bootstrap_ci95": [
+              58.79,
+              132.38
+            ],
+            "positive_days": 240,
+            "negative_days": 94,
+            "monthly_sum": {
+              "2": 1691.74,
+              "3": 2822.21,
+              "4": 3210.11,
+              "5": 3797.04,
+              "6": 4084.1,
+              "7": 597.35,
+              "8": 4913.42,
+              "9": 1854.83,
+              "10": 5924.41,
+              "11": 2314.02,
+              "12": 1089.94
+            },
+            "positive_months": 11
+          }
+        }
+      },
+      {
+        "seed": 20250916,
+        "decomposition": {
+          "cash_cost": {
+            "B": 14632901.91,
+            "S": 14606221.65,
+            "Fboth": 14595505.76,
+            "O": 14574223.37
+          },
+          "start_soc_kwh": {
+            "B": 2122.482509,
+            "S": 2122.482509,
+            "Fboth": 2122.482509,
+            "O": 2122.482509
+          },
+          "end_soc_kwh": {
+            "B": 2443.304619,
+            "S": 2349.080789,
+            "Fboth": 2348.767714,
+            "O": 2348.37143
+          },
+          "adjusted_cost": {
+            "B": 14632881.28,
+            "S": 14606201.81,
+            "Fboth": 14595485.92,
+            "O": 14574203.54
+          },
+          "nu": 0.008444444444444444,
+          "V_state": 26679.47,
+          "V_forecast_both": 10715.89,
+          "V_total": 37395.36,
+          "UB_forecast": 31998.27,
+          "V_forecast_both_capture": 0.3349,
+          "settlement": {
+            "B": {
+              "retained_cost": 13777030.03,
+              "down_cost": 313641.66,
+              "up_cost": 202464.43,
+              "emergency_cost": 339765.79,
+              "down_kwh": 919583.85,
+              "up_kwh": 202228.87,
+              "emergency_kwh": 61719.18,
+              "unused_kwh": 2271931.84
+            },
+            "S": {
+              "retained_cost": 13728997.14,
+              "down_cost": 338216.61,
+              "up_cost": 182462.62,
+              "emergency_cost": 356545.29,
+              "down_kwh": 975185.86,
+              "up_kwh": 185601.55,
+              "emergency_kwh": 64299.02,
+              "unused_kwh": 2203438.14
+            },
+            "Fboth": {
+              "retained_cost": 13723812.75,
+              "down_cost": 340858.12,
+              "up_cost": 178615.18,
+              "emergency_cost": 352219.7,
+              "down_kwh": 981504.79,
+              "up_kwh": 182005.97,
+              "emergency_kwh": 63626.84,
+              "unused_kwh": 2192799.49
+            },
+            "O": {
+              "retained_cost": 13691183.8,
+              "down_cost": 357727.64,
+              "up_cost": 168107.33,
+              "emergency_cost": 357204.61,
+              "down_kwh": 1013663.62,
+              "up_kwh": 174560.16,
+              "emergency_kwh": 64566.46,
+              "unused_kwh": 2155139.94
+            }
+          }
+        },
+        "paired": {
+          "V_state_daily": {
+            "kind": "B-S",
+            "value": 26679.46911233444,
+            "mean_per_day": 79.87865003692946,
+            "bootstrap_ci95": [
+              14.5,
+              135.0
+            ],
+            "positive_days": 159,
+            "negative_days": 44,
+            "monthly_sum": {
+              "2": 7287.44,
+              "3": 5424.22,
+              "4": 933.19,
+              "5": -769.34,
+              "6": 242.54,
+              "7": -5204.84,
+              "8": 820.78,
+              "9": 2622.44,
+              "10": 2487.31,
+              "11": 3525.41,
+              "12": 9310.33
+            },
+            "positive_months": 9
+          },
+          "V_both_daily": {
+            "kind": "S-Fboth",
+            "value": 10715.888807422452,
+            "mean_per_day": 32.08349942342051,
+            "bootstrap_ci95": [
+              15.73,
+              51.18
+            ],
+            "positive_days": 198,
+            "negative_days": 136,
+            "monthly_sum": {
+              "2": -32.15,
+              "3": 723.9,
+              "4": 767.67,
+              "5": 799.64,
+              "6": 3319.91,
+              "7": 1754.74,
+              "8": 1437.55,
+              "9": -406.58,
+              "10": 1055.37,
+              "11": 651.22,
+              "12": 644.62
+            },
+            "positive_months": 9
+          },
+          "V_total_daily": {
+            "kind": "B-Fboth",
+            "value": 37395.35791975689,
+            "mean_per_day": 111.96214946034998,
+            "bootstrap_ci95": [
+              44.19,
+              170.96
+            ],
+            "positive_days": 233,
+            "negative_days": 101,
+            "monthly_sum": {
+              "2": 7255.29,
+              "3": 6148.12,
+              "4": 1700.86,
+              "5": 30.3,
+              "6": 3562.45,
+              "7": -3450.1,
+              "8": 2258.33,
+              "9": 2215.86,
+              "10": 3542.68,
+              "11": 4176.63,
+              "12": 9954.95
+            },
+            "positive_months": 10
+          },
+          "UB_daily": {
+            "kind": "S-O",
+            "value": 31998.2695556409,
+            "mean_per_day": 95.8032022623979,
+            "bootstrap_ci95": [
+              57.02,
+              131.66
+            ],
+            "positive_days": 241,
+            "negative_days": 93,
+            "monthly_sum": {
+              "2": 1669.13,
+              "3": 2822.21,
+              "4": 3210.11,
+              "5": 3740.07,
+              "6": 3871.1,
+              "7": 585.33,
+              "8": 4913.42,
+              "9": 1849.26,
+              "10": 5937.15,
+              "11": 2314.02,
+              "12": 1086.47
+            },
+            "positive_months": 11
+          }
+        }
+      }
+    ],
+    "seed_count": 5,
+    "decision": {
+      "pv_forecast_effective_10pct": true,
+      "price_update_effective": true,
+      "economic_positive": true,
+      "bootstrap_ci_lower_positive": true,
+      "stable_months_8_positive": true,
+      "stable_seeds_4_of_5": true,
+      "material_threshold": true,
+      "capture_rate_10pct": true,
+      "emergency_not_worse": true,
+      "state_value": 27133.4,
+      "forecast_pv_value": 11319.23,
+      "forecast_p_value": -590.59,
+      "forecast_both_value": 10662.2,
+      "forecast_both_min": 10577.83,
+      "ub_mean": 31456.25,
+      "capture_rate_pct": 33.9,
+      "threshold_yuan": 7319.29,
+      "emergency_cost_S": 361074.09,
+      "emergency_cost_Fboth": 356777.67,
+      "emergency_kwh_S": 65924.18,
+      "emergency_kwh_Fboth": 65276.75,
+      "price_mae_improvement_pct": 2.86,
+      "price_positive_months_mae": 6.0,
+      "enter_main_strategy": true,
+      "partial_verdict": "enter"
+    }
+  },
+  "sensitivity": {
+    "hour_9": {
+      "hour": "9",
+      "seeds": [
+        {
+          "seed": 20250912,
+          "decomposition": {
+            "cash_cost": {
+              "B": 14638588.62,
+              "S": 14611830.55,
+              "Fboth": 14600656.06,
+              "O": 14553054.8
+            },
+            "start_soc_kwh": {
+              "B": 2122.482509,
+              "S": 2122.482509,
+              "Fboth": 2122.482509,
+              "O": 2122.482509
+            },
+            "end_soc_kwh": {
+              "B": 2443.304619,
+              "S": 2443.304619,
+              "Fboth": 2394.427027,
+              "O": 2443.304619
+            },
+            "adjusted_cost": {
+              "B": 14638567.99,
+              "S": 14611809.91,
+              "Fboth": 14600635.84,
+              "O": 14553034.17
+            },
+            "nu": 0.008444444444444444,
+            "V_state": 26758.07,
+            "V_forecast_both": 11174.07,
+            "V_total": 37932.15,
+            "UB_forecast": 58775.74,
+            "V_forecast_both_capture": 0.1901,
+            "settlement": {
+              "B": {
+                "retained_cost": 13775463.34,
+                "down_cost": 314369.58,
+                "up_cost": 202830.75,
+                "emergency_cost": 345924.95,
+                "down_kwh": 921121.65,
+                "up_kwh": 202573.06,
+                "emergency_kwh": 63500.09,
+                "unused_kwh": 2272359.17
+              },
+              "S": {
+                "retained_cost": 13774573.46,
+                "down_cost": 314831.78,
+                "up_cost": 216216.08,
+                "emergency_cost": 306209.23,
+                "down_kwh": 918623.55,
+                "up_kwh": 215239.07,
+                "emergency_kwh": 56352.51,
+                "unused_kwh": 2279305.56
+              },
+              "Fboth": {
+                "retained_cost": 13769954.96,
+                "down_cost": 317115.97,
+                "up_cost": 214029.94,
+                "emergency_cost": 299555.19,
+                "down_kwh": 926244.68,
+                "up_kwh": 210450.27,
+                "emergency_kwh": 55204.45,
+                "unused_kwh": 2265507.55
+              },
+              "O": {
+                "retained_cost": 13742762.51,
+                "down_cost": 330497.57,
+                "up_cost": 181882.26,
+                "emergency_cost": 297912.47,
+                "down_kwh": 971591.61,
+                "up_kwh": 169434.61,
+                "emergency_kwh": 54889.27,
+                "unused_kwh": 2177757.32
+              }
+            }
+          },
+          "paired": {
+            "V_state_daily": {
+              "kind": "B-S",
+              "value": 26758.072056926954,
+              "mean_per_day": 80.11398819439208,
+              "bootstrap_ci95": [
+                30.8,
+                141.82
+              ],
+              "positive_days": 118,
+              "negative_days": 97,
+              "monthly_sum": {
+                "2": 8694.2,
+                "3": 2654.12,
+                "4": -1832.67,
+                "5": -708.42,
+                "6": 952.13,
+                "7": 2347.03,
+                "8": -612.03,
+                "9": 799.12,
+                "10": 2397.53,
+                "11": 5030.27,
+                "12": 7036.79
+              },
+              "positive_months": 8
+            },
+            "V_both_daily": {
+              "kind": "S-Fboth",
+              "value": 11174.074332436354,
+              "mean_per_day": 33.45531237256393,
+              "bootstrap_ci95": [
+                10.99,
+                60.94
+              ],
+              "positive_days": 138,
+              "negative_days": 103,
+              "monthly_sum": {
+                "2": 1407.82,
+                "3": -1056.0,
+                "4": 570.75,
+                "5": 1474.88,
+                "6": 2757.7,
+                "7": 87.83,
+                "8": 1101.64,
+                "9": 1584.83,
+                "10": 23.0,
+                "11": 2707.77,
+                "12": 513.85
+              },
+              "positive_months": 10
+            },
+            "V_total_daily": {
+              "kind": "B-Fboth",
+              "value": 37932.14638936331,
+              "mean_per_day": 113.56930056695602,
+              "bootstrap_ci95": [
+                60.35,
+                181.75
+              ],
+              "positive_days": 156,
+              "negative_days": 87,
+              "monthly_sum": {
+                "2": 10102.02,
+                "3": 1598.12,
+                "4": -1261.92,
+                "5": 766.46,
+                "6": 3709.83,
+                "7": 2434.87,
+                "8": 489.61,
+                "9": 2383.95,
+                "10": 2420.53,
+                "11": 7738.04,
+                "12": 7550.64
+              },
+              "positive_months": 10
+            },
+            "UB_daily": {
+              "kind": "S-O",
+              "value": 58775.74133251105,
+              "mean_per_day": 175.97527345063187,
+              "bootstrap_ci95": [
+                136.93,
+                214.91
+              ],
+              "positive_days": 200,
+              "negative_days": 50,
+              "monthly_sum": {
+                "2": 4019.7,
+                "3": 2328.31,
+                "4": 5755.74,
+                "5": 6500.02,
+                "6": 6390.95,
+                "7": 1566.56,
+                "8": 6064.98,
+                "9": 7541.67,
+                "10": 5006.01,
+                "11": 7391.71,
+                "12": 6210.1
+              },
+              "positive_months": 11
+            }
+          }
+        }
+      ],
+      "seed_count": 1,
+      "decision": {
+        "pv_forecast_effective_10pct": true,
+        "price_update_effective": true,
+        "economic_positive": true,
+        "bootstrap_ci_lower_positive": true,
+        "stable_months_8_positive": true,
+        "stable_seeds_4_of_5": false,
+        "material_threshold": true,
+        "capture_rate_10pct": true,
+        "emergency_not_worse": true,
+        "state_value": 26758.07,
+        "forecast_pv_value": 0.0,
+        "forecast_p_value": 0.0,
+        "forecast_both_value": 11174.07,
+        "forecast_both_min": 11174.07,
+        "ub_mean": 58775.74,
+        "capture_rate_pct": 19.0,
+        "threshold_yuan": 7319.29,
+        "emergency_cost_S": 306209.23,
+        "emergency_cost_Fboth": 299555.19,
+        "emergency_kwh_S": 56352.51,
+        "emergency_kwh_Fboth": 55204.45,
+        "price_mae_improvement_pct": 4.04,
+        "price_positive_months_mae": 7.0,
+        "enter_main_strategy": false,
+        "partial_verdict": "statistical_only"
+      }
+    },
+    "hour_11": {
+      "hour": "11",
+      "seeds": [
+        {
+          "seed": 20250912,
+          "decomposition": {
+            "cash_cost": {
+              "B": 14638588.62,
+              "S": 14614523.27,
+              "Fboth": 14608293.61,
+              "O": 14586386.14
+            },
+            "start_soc_kwh": {
+              "B": 2122.482509,
+              "S": 2122.482509,
+              "Fboth": 2122.482509,
+              "O": 2122.482509
+            },
+            "end_soc_kwh": {
+              "B": 2443.304619,
+              "S": 2443.304619,
+              "Fboth": 2443.304619,
+              "O": 2443.304619
+            },
+            "adjusted_cost": {
+              "B": 14638567.99,
+              "S": 14614502.64,
+              "Fboth": 14608272.98,
+              "O": 14586365.51
+            },
+            "nu": 0.008444444444444444,
+            "V_state": 24065.35,
+            "V_forecast_both": 6229.66,
+            "V_total": 30295.01,
+            "UB_forecast": 28137.13,
+            "V_forecast_both_capture": 0.2214,
+            "settlement": {
+              "B": {
+                "retained_cost": 13775463.34,
+                "down_cost": 314369.58,
+                "up_cost": 202830.75,
+                "emergency_cost": 345924.95,
+                "down_kwh": 921121.65,
+                "up_kwh": 202573.06,
+                "emergency_kwh": 63500.09,
+                "unused_kwh": 2272359.17
+              },
+              "S": {
+                "retained_cost": 13767932.5,
+                "down_cost": 318073.64,
+                "up_cost": 185360.25,
+                "emergency_cost": 343156.88,
+                "down_kwh": 937934.25,
+                "up_kwh": 180910.85,
+                "emergency_kwh": 63175.75,
+                "unused_kwh": 2233109.66
+              },
+              "Fboth": {
+                "retained_cost": 13759968.99,
+                "down_cost": 322003.71,
+                "up_cost": 182712.64,
+                "emergency_cost": 343608.27,
+                "down_kwh": 952378.56,
+                "up_kwh": 176927.73,
+                "emergency_kwh": 63254.36,
+                "unused_kwh": 2214438.96
+              },
+              "O": {
+                "retained_cost": 13741472.14,
+                "down_cost": 331154.9,
+                "up_cost": 176868.81,
+                "emergency_cost": 336890.29,
+                "down_kwh": 986354.84,
+                "up_kwh": 168957.32,
+                "emergency_kwh": 62444.66,
+                "unused_kwh": 2171438.59
+              }
+            }
+          },
+          "paired": {
+            "V_state_daily": {
+              "kind": "B-S",
+              "value": 24065.348366407794,
+              "mean_per_day": 72.0519412167898,
+              "bootstrap_ci95": [
+                50.94,
+                97.96
+              ],
+              "positive_days": 140,
+              "negative_days": 41,
+              "monthly_sum": {
+                "2": 534.19,
+                "3": 795.81,
+                "4": 1404.9,
+                "5": 1715.79,
+                "6": 2584.34,
+                "7": 3760.74,
+                "8": 3338.43,
+                "9": 2567.77,
+                "10": 1102.51,
+                "11": 3140.8,
+                "12": 3120.08
+              },
+              "positive_months": 11
+            },
+            "V_both_daily": {
+              "kind": "S-Fboth",
+              "value": 6229.656975824932,
+              "mean_per_day": 18.651667592290213,
+              "bootstrap_ci95": [
+                7.63,
+                29.32
+              ],
+              "positive_days": 139,
+              "negative_days": 81,
+              "monthly_sum": {
+                "2": -432.87,
+                "3": 332.5,
+                "4": 924.07,
+                "5": 882.67,
+                "6": 781.21,
+                "7": 954.16,
+                "8": 219.02,
+                "9": 909.6,
+                "10": 371.11,
+                "11": 1924.41,
+                "12": -636.25
+              },
+              "positive_months": 9
+            },
+            "V_total_daily": {
+              "kind": "B-Fboth",
+              "value": 30295.005342232726,
+              "mean_per_day": 90.70360880908002,
+              "bootstrap_ci95": [
+                67.3,
+                118.46
+              ],
+              "positive_days": 171,
+              "negative_days": 67,
+              "monthly_sum": {
+                "2": 101.33,
+                "3": 1128.31,
+                "4": 2328.97,
+                "5": 2598.46,
+                "6": 3365.55,
+                "7": 4714.9,
+                "8": 3557.46,
+                "9": 3477.37,
+                "10": 1473.62,
+                "11": 5065.21,
+                "12": 2483.83
+              },
+              "positive_months": 11
+            },
+            "UB_daily": {
+              "kind": "S-O",
+              "value": 28137.126598035033,
+              "mean_per_day": 84.24289400609291,
+              "bootstrap_ci95": [
+                49.05,
+                139.03
+              ],
+              "positive_days": 172,
+              "negative_days": 64,
+              "monthly_sum": {
+                "2": 1192.42,
+                "3": 758.6,
+                "4": 1911.29,
+                "5": 3477.7,
+                "6": 8037.77,
+                "7": 1691.7,
+                "8": 1710.07,
+                "9": 3655.77,
+                "10": 1435.86,
+                "11": 2786.32,
+                "12": 1479.62
+              },
+              "positive_months": 11
+            }
+          }
+        }
+      ],
+      "seed_count": 1,
+      "decision": {
+        "pv_forecast_effective_10pct": true,
+        "price_update_effective": true,
+        "economic_positive": true,
+        "bootstrap_ci_lower_positive": true,
+        "stable_months_8_positive": true,
+        "stable_seeds_4_of_5": false,
+        "material_threshold": false,
+        "capture_rate_10pct": true,
+        "emergency_not_worse": true,
+        "state_value": 24065.35,
+        "forecast_pv_value": 0.0,
+        "forecast_p_value": 0.0,
+        "forecast_both_value": 6229.66,
+        "forecast_both_min": 6229.66,
+        "ub_mean": 28137.13,
+        "capture_rate_pct": 22.1,
+        "threshold_yuan": 7319.29,
+        "emergency_cost_S": 343156.88,
+        "emergency_cost_Fboth": 343608.27,
+        "emergency_kwh_S": 63175.75,
+        "emergency_kwh_Fboth": 63254.36,
+        "price_mae_improvement_pct": 3.51,
+        "price_positive_months_mae": 7.0,
+        "enter_main_strategy": false,
+        "partial_verdict": "statistical_only"
+      }
+    },
+    "hour_13": {
+      "hour": "13",
+      "seeds": [
+        {
+          "seed": 20250912,
+          "decomposition": {
+            "cash_cost": {
+              "B": 14638588.62,
+              "S": 14622283.01,
+              "Fboth": 14613247.07,
+              "O": 14584592.35
+            },
+            "start_soc_kwh": {
+              "B": 2122.482509,
+              "S": 2122.482509,
+              "Fboth": 2122.482509,
+              "O": 2122.482509
+            },
+            "end_soc_kwh": {
+              "B": 2443.304619,
+              "S": 2349.080777,
+              "Fboth": 2348.371415,
+              "O": 2348.37143
+            },
+            "adjusted_cost": {
+              "B": 14638567.99,
+              "S": 14622263.17,
+              "Fboth": 14613227.24,
+              "O": 14584572.52
+            },
+            "nu": 0.008444444444444444,
+            "V_state": 16304.81,
+            "V_forecast_both": 9035.93,
+            "V_total": 25340.75,
+            "UB_forecast": 37690.65,
+            "V_forecast_both_capture": 0.2397,
+            "settlement": {
+              "B": {
+                "retained_cost": 13775463.34,
+                "down_cost": 314369.58,
+                "up_cost": 202830.75,
+                "emergency_cost": 345924.95,
+                "down_kwh": 921121.65,
+                "up_kwh": 202573.06,
+                "emergency_kwh": 63500.09,
+                "unused_kwh": 2272359.17
+              },
+              "S": {
+                "retained_cost": 13740992.64,
+                "down_cost": 332067.19,
+                "up_cost": 185140.87,
+                "emergency_cost": 364082.3,
+                "down_kwh": 960313.95,
+                "up_kwh": 188415.79,
+                "emergency_kwh": 66485.61,
+                "unused_kwh": 2222999.98
+              },
+              "Fboth": {
+                "retained_cost": 13736268.84,
+                "down_cost": 334460.6,
+                "up_cost": 178352.36,
+                "emergency_cost": 364165.27,
+                "down_kwh": 965585.75,
+                "up_kwh": 182704.76,
+                "emergency_kwh": 66605.77,
+                "unused_kwh": 2212149.97
+              },
+              "O": {
+                "retained_cost": 13698199.87,
+                "down_cost": 354185.28,
+                "up_cost": 164064.92,
+                "emergency_cost": 368142.27,
+                "down_kwh": 1003589.32,
+                "up_kwh": 172485.81,
+                "emergency_kwh": 67416.2,
+                "unused_kwh": 2166008.11
+              }
+            }
+          },
+          "paired": {
+            "V_state_daily": {
+              "kind": "B-S",
+              "value": 16304.814831536725,
+              "mean_per_day": 48.816810872864444,
+              "bootstrap_ci95": [
+                -20.83,
+                102.14
+              ],
+              "positive_days": 116,
+              "negative_days": 40,
+              "monthly_sum": {
+                "2": 5785.14,
+                "3": 4157.6,
+                "4": 665.84,
+                "5": -790.52,
+                "6": -2084.05,
+                "7": -7993.92,
+                "8": 478.53,
+                "9": 2198.83,
+                "10": 2123.5,
+                "11": 3327.51,
+                "12": 8436.36
+              },
+              "positive_months": 8
+            },
+            "V_both_daily": {
+              "kind": "S-Fboth",
+              "value": 9035.93328009567,
+              "mean_per_day": 27.05369245537626,
+              "bootstrap_ci95": [
+                4.0,
+                52.13
+              ],
+              "positive_days": 171,
+              "negative_days": 163,
+              "monthly_sum": {
+                "2": 948.32,
+                "3": 930.29,
+                "4": 319.3,
+                "5": -1051.13,
+                "6": 3661.09,
+                "7": 1774.52,
+                "8": 1159.25,
+                "9": -1134.66,
+                "10": 366.39,
+                "11": 319.2,
+                "12": 1743.36
+              },
+              "positive_months": 9
+            },
+            "V_total_daily": {
+              "kind": "B-Fboth",
+              "value": 25340.748111632398,
+              "mean_per_day": 75.87050332824072,
+              "bootstrap_ci95": [
+                7.13,
+                131.89
+              ],
+              "positive_days": 204,
+              "negative_days": 130,
+              "monthly_sum": {
+                "2": 6733.46,
+                "3": 5087.89,
+                "4": 985.14,
+                "5": -1841.65,
+                "6": 1577.04,
+                "7": -6219.4,
+                "8": 1637.79,
+                "9": 1064.17,
+                "10": 2489.89,
+                "11": 3646.71,
+                "12": 10179.71
+              },
+              "positive_months": 9
+            },
+            "UB_daily": {
+              "kind": "S-O",
+              "value": 37690.65312044749,
+              "mean_per_day": 112.84626682768709,
+              "bootstrap_ci95": [
+                60.08,
+                160.62
+              ],
+              "positive_days": 238,
+              "negative_days": 96,
+              "monthly_sum": {
+                "2": 2912.28,
+                "3": 3555.76,
+                "4": 3383.42,
+                "5": 3874.24,
+                "6": 5959.24,
+                "7": -1297.82,
+                "8": 5183.93,
+                "9": 2232.39,
+                "10": 6256.0,
+                "11": 2838.82,
+                "12": 2792.38
+              },
+              "positive_months": 10
+            }
+          }
+        }
+      ],
+      "seed_count": 1,
+      "decision": {
+        "pv_forecast_effective_10pct": true,
+        "price_update_effective": true,
+        "economic_positive": true,
+        "bootstrap_ci_lower_positive": true,
+        "stable_months_8_positive": true,
+        "stable_seeds_4_of_5": false,
+        "material_threshold": true,
+        "capture_rate_10pct": true,
+        "emergency_not_worse": true,
+        "state_value": 16304.81,
+        "forecast_pv_value": 0.0,
+        "forecast_p_value": 0.0,
+        "forecast_both_value": 9035.93,
+        "forecast_both_min": 9035.93,
+        "ub_mean": 37690.65,
+        "capture_rate_pct": 24.0,
+        "threshold_yuan": 7319.29,
+        "emergency_cost_S": 364082.3,
+        "emergency_cost_Fboth": 364165.27,
+        "emergency_kwh_S": 66485.61,
+        "emergency_kwh_Fboth": 66605.77,
+        "price_mae_improvement_pct": 2.77,
+        "price_positive_months_mae": 7.0,
+        "enter_main_strategy": false,
+        "partial_verdict": "statistical_only"
+      }
+    },
+    "hour_15": {
+      "hour": "15",
+      "seeds": [
+        {
+          "seed": 20250912,
+          "decomposition": {
+            "cash_cost": {
+              "B": 14638588.62,
+              "S": 14583359.85,
+              "Fboth": 14575306.42,
+              "O": 14561709.47
+            },
+            "start_soc_kwh": {
+              "B": 2122.482509,
+              "S": 2122.482509,
+              "Fboth": 2122.482509,
+              "O": 2122.482509
+            },
+            "end_soc_kwh": {
+              "B": 2443.304619,
+              "S": 2349.080787,
+              "Fboth": 2348.371425,
+              "O": 2348.371427
+            },
+            "adjusted_cost": {
+              "B": 14638567.99,
+              "S": 14583340.01,
+              "Fboth": 14575286.59,
+              "O": 14561689.64
+            },
+            "nu": 0.008444444444444444,
+            "V_state": 55227.97,
+            "V_forecast_both": 8053.42,
+            "V_total": 63281.4,
+            "UB_forecast": 21650.37,
+            "V_forecast_both_capture": 0.372,
+            "settlement": {
+              "B": {
+                "retained_cost": 13775463.34,
+                "down_cost": 314369.58,
+                "up_cost": 202830.75,
+                "emergency_cost": 345924.95,
+                "down_kwh": 921121.65,
+                "up_kwh": 202573.06,
+                "emergency_kwh": 63500.09,
+                "unused_kwh": 2272359.17
+              },
+              "S": {
+                "retained_cost": 13704299.72,
+                "down_cost": 350584.35,
+                "up_cost": 181490.8,
+                "emergency_cost": 346984.98,
+                "down_kwh": 1007733.53,
+                "up_kwh": 184553.99,
+                "emergency_kwh": 63755.58,
+                "unused_kwh": 2170070.2
+              },
+              "Fboth": {
+                "retained_cost": 13701391.93,
+                "down_cost": 352217.93,
+                "up_cost": 178877.41,
+                "emergency_cost": 342819.15,
+                "down_kwh": 1011028.39,
+                "up_kwh": 182201.36,
+                "emergency_kwh": 63116.22,
+                "unused_kwh": 2164426.68
+              },
+              "O": {
+                "retained_cost": 13677107.34,
+                "down_cost": 364794.17,
+                "up_cost": 173352.47,
+                "emergency_cost": 346455.48,
+                "down_kwh": 1037269.78,
+                "up_kwh": 178245.89,
+                "emergency_kwh": 63840.02,
+                "unused_kwh": 2137083.98
+              }
+            }
+          },
+          "paired": {
+            "V_state_daily": {
+              "kind": "B-S",
+              "value": 55227.97235995828,
+              "mean_per_day": 165.3532106585577,
+              "bootstrap_ci95": [
+                119.57,
+                212.58
+              ],
+              "positive_days": 217,
+              "negative_days": 46,
+              "monthly_sum": {
+                "2": 7260.35,
+                "3": 5384.74,
+                "4": 1270.22,
+                "5": -130.98,
+                "6": 13528.38,
+                "7": 2920.42,
+                "8": 2201.46,
+                "9": 2500.31,
+                "10": 4098.97,
+                "11": 5100.02,
+                "12": 11094.08
+              },
+              "positive_months": 10
+            },
+            "V_both_daily": {
+              "kind": "S-Fboth",
+              "value": 8053.422652548448,
+              "mean_per_day": 24.112043869905534,
+              "bootstrap_ci95": [
+                6.64,
+                46.25
+              ],
+              "positive_days": 189,
+              "negative_days": 145,
+              "monthly_sum": {
+                "2": 11.89,
+                "3": 518.17,
+                "4": 1583.76,
+                "5": -83.46,
+                "6": 5053.21,
+                "7": 363.7,
+                "8": 1175.18,
+                "9": -1449.04,
+                "10": 724.23,
+                "11": -153.14,
+                "12": 308.9
+              },
+              "positive_months": 8
+            },
+            "V_total_daily": {
+              "kind": "B-Fboth",
+              "value": 63281.39501250673,
+              "mean_per_day": 189.46525452846325,
+              "bootstrap_ci95": [
+                135.13,
+                246.97
+              ],
+              "positive_days": 247,
+              "negative_days": 87,
+              "monthly_sum": {
+                "2": 7272.24,
+                "3": 5902.91,
+                "4": 2853.98,
+                "5": -214.44,
+                "6": 18581.59,
+                "7": 3284.12,
+                "8": 3376.65,
+                "9": 1051.27,
+                "10": 4823.21,
+                "11": 4946.88,
+                "12": 11402.98
+              },
+              "positive_months": 10
+            },
+            "UB_daily": {
+              "kind": "S-O",
+              "value": 21650.374676671076,
+              "mean_per_day": 64.82148106787747,
+              "bootstrap_ci95": [
+                31.71,
+                93.15
+              ],
+              "positive_days": 237,
+              "negative_days": 97,
+              "monthly_sum": {
+                "2": 628.18,
+                "3": 2124.82,
+                "4": 2633.03,
+                "5": 3152.45,
+                "6": 3532.57,
+                "7": -1327.69,
+                "8": 3807.39,
+                "9": 1163.3,
+                "10": 4220.45,
+                "11": 545.89,
+                "12": 1170.0
+              },
+              "positive_months": 10
+            }
+          }
+        }
+      ],
+      "seed_count": 1,
+      "decision": {
+        "pv_forecast_effective_10pct": true,
+        "price_update_effective": true,
+        "economic_positive": true,
+        "bootstrap_ci_lower_positive": true,
+        "stable_months_8_positive": true,
+        "stable_seeds_4_of_5": false,
+        "material_threshold": true,
+        "capture_rate_10pct": true,
+        "emergency_not_worse": true,
+        "state_value": 55227.97,
+        "forecast_pv_value": 0.0,
+        "forecast_p_value": 0.0,
+        "forecast_both_value": 8053.42,
+        "forecast_both_min": 8053.42,
+        "ub_mean": 21650.37,
+        "capture_rate_pct": 37.2,
+        "threshold_yuan": 7319.29,
+        "emergency_cost_S": 346984.98,
+        "emergency_cost_Fboth": 342819.15,
+        "emergency_kwh_S": 63755.58,
+        "emergency_kwh_Fboth": 63116.22,
+        "price_mae_improvement_pct": 3.15,
+        "price_positive_months_mae": 6.0,
+        "enter_main_strategy": false,
+        "partial_verdict": "statistical_only"
+      }
+    }
+  },
+  "combo": {
+    "10Fboth+14Fboth": {
+      "cash_cost": 14572698.86,
+      "end_soc_kwh": 2348.767714,
+      "adjusted_cost": 14572679.03
+    },
+    "10Fboth+14S": {
+      "cash_cost": 14583108.08,
+      "end_soc_kwh": 2349.080789,
+      "adjusted_cost": 14583088.25
+    },
+    "10S+14Fboth": {
+      "cash_cost": 14584965.01,
+      "end_soc_kwh": 2348.767714,
+      "adjusted_cost": 14584945.18
+    },
+    "V14_given_10": 10409.22,
+    "V10_given_14": 12266.15
+  },
+  "nu_robustness": {
+    "nu_factor_0": {
+      "hour_10": {
+        "V_state": 17243.76,
+        "V_forecast_both": 10908.73
+      },
+      "hour_14": {
+        "V_state": 28256.18,
+        "V_forecast_both": 10698.87
+      }
+    },
+    "nu_factor_0.5": {
+      "hour_10": {
+        "V_state": 17243.76,
+        "V_forecast_both": 10908.73
+      },
+      "hour_14": {
+        "V_state": 28255.78,
+        "V_forecast_both": 10698.86
+      }
+    },
+    "nu_factor_1": {
+      "hour_10": {
+        "V_state": 17243.76,
+        "V_forecast_both": 10908.73
+      },
+      "hour_14": {
+        "V_state": 28255.38,
+        "V_forecast_both": 10698.86
+      }
+    },
+    "nu_factor_1.5": {
+      "hour_10": {
+        "V_state": 17243.76,
+        "V_forecast_both": 10908.73
+      },
+      "hour_14": {
+        "V_state": 28254.98,
+        "V_forecast_both": 10698.86
+      }
+    }
+  },
+  "feasibility": {
+    "runs": {
+      "10Fboth": {
+        "candidate_lp_statuses": {
+          "10:00/both": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "10Fboth_s20250913": {
+        "candidate_lp_statuses": {
+          "10:00/both": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "10Fboth_s20250914": {
+        "candidate_lp_statuses": {
+          "10:00/both": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "10Fboth_s20250915": {
+        "candidate_lp_statuses": {
+          "10:00/both": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "10Fboth_s20250916": {
+        "candidate_lp_statuses": {
+          "10:00/both": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "10Fbothp14Fboth": {
+        "candidate_lp_statuses": {
+          "10:00/both": {
+            "optimal": 334
+          },
+          "14:00/both": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "10Fbothp14S": {
+        "candidate_lp_statuses": {
+          "10:00/both": {
+            "optimal": 334
+          },
+          "14:00/state": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "10Fp": {
+        "candidate_lp_statuses": {
+          "10:00/price_only": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "10Fpv": {
+        "candidate_lp_statuses": {
+          "10:00/pv_only": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "10O": {
+        "candidate_lp_statuses": {
+          "10:00/oracle": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "10O_s20250913": {
+        "candidate_lp_statuses": {
+          "10:00/oracle": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "10O_s20250914": {
+        "candidate_lp_statuses": {
+          "10:00/oracle": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "10O_s20250915": {
+        "candidate_lp_statuses": {
+          "10:00/oracle": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "10O_s20250916": {
+        "candidate_lp_statuses": {
+          "10:00/oracle": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "10S": {
+        "candidate_lp_statuses": {
+          "10:00/state": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "10S_s20250913": {
+        "candidate_lp_statuses": {
+          "10:00/state": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "10S_s20250914": {
+        "candidate_lp_statuses": {
+          "10:00/state": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "10S_s20250915": {
+        "candidate_lp_statuses": {
+          "10:00/state": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "10S_s20250916": {
+        "candidate_lp_statuses": {
+          "10:00/state": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "10Sp14Fboth": {
+        "candidate_lp_statuses": {
+          "10:00/state": {
+            "optimal": 334
+          },
+          "14:00/both": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "11Fboth": {
+        "candidate_lp_statuses": {
+          "11:00/both": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "11O": {
+        "candidate_lp_statuses": {
+          "11:00/oracle": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "11S": {
+        "candidate_lp_statuses": {
+          "11:00/state": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "13Fboth": {
+        "candidate_lp_statuses": {
+          "13:00/both": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "13O": {
+        "candidate_lp_statuses": {
+          "13:00/oracle": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "13S": {
+        "candidate_lp_statuses": {
+          "13:00/state": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "14Fboth": {
+        "candidate_lp_statuses": {
+          "14:00/both": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "14Fboth_s20250913": {
+        "candidate_lp_statuses": {
+          "14:00/both": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "14Fboth_s20250914": {
+        "candidate_lp_statuses": {
+          "14:00/both": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "14Fboth_s20250915": {
+        "candidate_lp_statuses": {
+          "14:00/both": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "14Fboth_s20250916": {
+        "candidate_lp_statuses": {
+          "14:00/both": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "14Fp": {
+        "candidate_lp_statuses": {
+          "14:00/price_only": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "14Fpv": {
+        "candidate_lp_statuses": {
+          "14:00/pv_only": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "14O": {
+        "candidate_lp_statuses": {
+          "14:00/oracle": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "14O_s20250913": {
+        "candidate_lp_statuses": {
+          "14:00/oracle": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "14O_s20250914": {
+        "candidate_lp_statuses": {
+          "14:00/oracle": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "14O_s20250915": {
+        "candidate_lp_statuses": {
+          "14:00/oracle": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "14O_s20250916": {
+        "candidate_lp_statuses": {
+          "14:00/oracle": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "14S": {
+        "candidate_lp_statuses": {
+          "14:00/state": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "14S_s20250913": {
+        "candidate_lp_statuses": {
+          "14:00/state": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "14S_s20250914": {
+        "candidate_lp_statuses": {
+          "14:00/state": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "14S_s20250915": {
+        "candidate_lp_statuses": {
+          "14:00/state": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "14S_s20250916": {
+        "candidate_lp_statuses": {
+          "14:00/state": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "15Fboth": {
+        "candidate_lp_statuses": {
+          "15:00/both": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "15O": {
+        "candidate_lp_statuses": {
+          "15:00/oracle": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "15S": {
+        "candidate_lp_statuses": {
+          "15:00/state": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "9Fboth": {
+        "candidate_lp_statuses": {
+          "9:00/both": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "9O": {
+        "candidate_lp_statuses": {
+          "9:00/oracle": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "9S": {
+        "candidate_lp_statuses": {
+          "9:00/state": {
+            "optimal": 334
+          }
+        },
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "B": {
+        "candidate_lp_statuses": {},
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "B_s20250913": {
+        "candidate_lp_statuses": {},
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "B_s20250914": {
+        "candidate_lp_statuses": {},
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "B_s20250915": {
+        "candidate_lp_statuses": {},
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      },
+      "B_s20250916": {
+        "candidate_lp_statuses": {},
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "fallback_total": 0
+      }
+    },
+    "fallback_total": 0,
+    "lp_failed_total": 0,
+    "lp_optimal_total": 17368,
+    "physics_failures": [],
+    "max_balance_error_kwh": 4.547473508864641e-13,
+    "max_state_error_kwh": 0.0,
+    "b_identity": {
+      "total_cost_diff": 0.0,
+      "max_daily_cost_diff": 0.0,
+      "max_daily_soc_diff": 0.0,
+      "days": 334
+    }
+  }
+}

@@ -205,3 +205,19 @@ python -m src.optimization.question4_3                    # Q4-3 方案B M0/M612
 ```
 
 回归保证：question2_ldr/question2/question3 的新增价格参数全部默认 None，45 天固定价 pilot 与改动前逐位一致（Q2 全天 2,816,128.716 元；Q3 M0 662,478.0974 元、M612 642,222.1668 元，差异均为 0），原 result2/result3 结果不受影响。v2 实现（q4_v2_common / question4_2_v2 / question4_3_v2 / build_workbook_q4_v2 / validate_question4_v2_workbooks）为独立新模块，不修改问题二/三正式管线。
+
+## 问题四最后一小问（是否新增预报与求解可行性，2026-09-14）
+
+对应问题三“请分析是否需要引入其他时刻的预报制定调整购电策略”在波动电价下的分析。在 M612 主策略（0:00 计划＋6:00/12:00 调整）之外，考察 9:00–11:00、13:00–15:00 候选整数时点新增两类预报：**新增光伏预报**（最新官方发布＋当日动态残差修正，复用问题三第二小问预测层）与**新增电价更新预报**（当日已揭示区间价对日前 WP 预报的 42 日滚动 OLS 收缩日级水平修正，严格因果）。每个候选时点六分支成组回测（B/S/Fpv/Fp/Fboth/O，同一 M612 路径同一 SOC 分叉、全年连续、期末库存只计价一次），实现见 `src/optimization/question4_second_subquestion.py`（54 个全年回测、17,368 次候选调整 LP 全部最优、0 失败、0 保底、B≡M612 逐位一致），测试见 `tests/test_question4_second_subquestion.py`（16 项）。
+
+- **结论：需要新增预报——新增的是光伏预报时刻（10:00、14:00 均通过全部门槛）**；库存调整后纯预报价值 10:00 ≈ 10,878 元、14:00 ≈ 11,319 元（5/5 种子为正、95% 块自助 CI 下界>0、9/11 月正、超 0.05%×14,638,588.62≈7,319 元门槛、捕获率 19%/34%、紧急购电不恶化）；两时点独立增量 V10|14≈12,266、V14|10≈10,409 元，组合 10F+14F 库存调整成本 14,572,679.03 元（较 M612 的 14,638,567.99 元合计节省约 6.6 万元，含状态价值）。
+- **日内电价更新预报：预测层有效（剩余时域 MAE 改善 2.8%–4.0%、RMSE 改善 8.4%–9.2%、10:00 逐日改善 CI 严格为正）但单独经济价值≈0**（10:00 −17 元、14:00 −591 元；叠加于光伏预报的边际 +31/−620 元）——不因调整购电策略而单独新增电价更新预报，节费全部归因于光伏预报。
+- **求解可行性**：候选时点调整 LP 按构造恒可行（c=d=0、a=max(R−V,0)、u=max(V−R,0) 平凡可行解），数值审计 17,368 次全部最优、0 失败、0 保底；全部物理校验通过（最大能量平衡误差 4.5e-13 kWh）；因果性经篡改测试验证；B 分支与已锁定 M612 总费差/逐日费差/SOC 差均为 0。
+- 方案与口径见 `outputs/question4/second_subquestion/问题四第二小问_方案与口径.md`，实施与结果见 `runs/问题四第二小问_实施与结果.md`，论文结论口径见 `outputs/question4/second_subquestion/问题四第二小问_论文结论.md`。
+
+```text
+python -m src.optimization.question4_second_subquestion --build-price   # 日内电价更新预报层（含筛选表）
+python -m src.optimization.question4_second_subquestion --run --spec 10Fboth [--seed S]
+python -m src.optimization.question4_second_subquestion --report --include-sensitivity
+python -m unittest tests.test_question4_second_subquestion -v          # 16 项验收测试
+```

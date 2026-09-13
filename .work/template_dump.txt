@@ -1,0 +1,531 @@
+=== TABLE 0 ===
+--- CELL r0 c0 ---
+AI 工具使用详情
+--- CELL r1 c0 ---
+一、所用 AI 工具名称和版本 
+
+
+
+二、具体使用目的和环节 
+
+
+
+三、关键交互记录 
+
+交互记录 1：
+提示词（Prompt）：请围绕“微网与外部电网电力调控策略”赛题，检索并梳理微网购电计划优化、储能充放电调度、日前—日内滚动决策、光伏功率预测与电价波动应对等方面的文献，归纳各文献解决的问题、核心约束与建模求解方法，并说明对本赛题四个问题的适用性与局限。
+
+AI 回复（摘要）：AI 工具归纳了确定性线性规划、随机规划与鲁棒优化、线性决策规则（LDR）及模型预测控制等主要建模路线，梳理出供需平衡、储能容量与充放电功率边界、充放电效率、荷电状态连续性及决策信息非预见性等核心约束，并建议采用“日前计划购电＋日内滚动调整＋紧急购电兜底”的分层框架；未提供任何可直接代入结果表格的数据。（AI所提供详情文件见支撑材料“文献推荐.html”）
+
+交互记录 2： 
+提示词（Prompt）：请对以下数学建模论文文字进行语言润色。要求保持原有建模结论不变，重点优化购电策略模型动机、储能约束逻辑和结果分析的学术表达，避免口语化和重复表述。
+AI 回复（摘要）：AI 工具对原有文字进行了学术化改写，优化了段落衔接和术语表达，并建议将“供需平衡—储能动态约束—求解流程—结果解释”按照论文结构分层表述；未增加新的数据、参数或模型结论。
+
+交互记录 3： 
+提示词（Prompt）：依据各问题已通过约束核验的结果，制作中文学术风格信息图，展示微网购电调控技术路线、价格信号与需求侧响应、储能充放电与荷电状态演变及方案费用对比。图中仅使用已给定的结果数据，排版简洁、适用于数学建模论文。
+AI 回复（摘要）：AI 工具生成了技术路线图、价格机会—净需求—购电响应图、储能动作—库存状态—经济结果图及方案费用对比图。图件作为结果展示辅助材料，具体数值由程序输出结果人工核对后使用。
+
+四、采纳和人工修改情况序号 
+
+
+
+--- CELL r2 c0 ---
+附录：核心程序模块摘录
+--- CELL r3 c0 ---
+问题一：负荷预测与基础调度	
+--- CELL r4 c0 ---
+1. 数据聚合与预测面板构建
+def make_panel(tasks, horizon=2400):
+    """按时段、区域和任务类型汇总任务数量及 GPU 需求。"""
+    panel = (
+        tasks.groupby(["hour", "region", "task_type"])
+        .agg(
+            task_count=("task_id", "count"),
+            gpu_demand=("gpu_num", "sum")
+        )
+        .reset_index()
+    )
+
+    full_index = pd.MultiIndex.from_product(
+        [range(horizon), panel["region"].unique(), panel["task_type"].unique()],
+        names=["hour", "region", "task_type"]
+    )
+
+    panel = (
+        panel.set_index(["hour", "region", "task_type"])
+        .reindex(full_index, fill_value=0)
+        .reset_index()
+    )
+    return panel
+2. 候选预测模型构建
+def candidate_prediction(train_series, horizon, mode):
+    """生成不同时间序列预测方法对应的预测值。"""
+    if mode == "direct_mean":
+        value = train_series.mean()
+        return np.repeat(value, horizon)
+
+    if mode == "rolling_mean":
+        value = train_series.tail(168).mean()
+        return np.repeat(value, horizon)
+
+    if mode == "daily_seasonal":
+        pattern = train_series.tail(24).to_numpy()
+        return np.resize(pattern, horizon)
+
+    if mode == "weekly_seasonal":
+        pattern = train_series.tail(168).to_numpy()
+        return np.resize(pattern, horizon)
+
+    raise ValueError("未知预测模式")
+
+3. 预测模型评价与选择
+def score_predictions(actual, prediction):
+    """计算 MAE、RMSE、WAPE 和系统性偏差。"""
+    error = actual - prediction
+    mae = np.mean(np.abs(error))
+    rmse = np.sqrt(np.mean(error ** 2))
+    wape = np.sum(np.abs(error)) / max(np.sum(np.abs(actual)), 1e-8)
+    bias = np.mean(error)
+
+    return {
+        "MAE": mae,
+        "RMSE": rmse,
+        "WAPE": wape,
+        "Bias": bias
+    }
+
+comparison = pd.DataFrame(model_scores)
+best_model = comparison.sort_values(
+    ["WAPE", "MAE"], ascending=[True, True]
+).iloc[0]["model"]
+
+4. 基础调度的字典序优化
+def solve_lexicographic(model):
+    """先最小化峰值算力占用，再最小化加权等待时间。"""
+
+    # 第一阶段：削减峰值 GPU 使用率
+    peak_result = solve_stage(
+        model=model,
+        objective="peak_gpu_utilization"
+    )
+
+    peak_cap = peak_result["peak_gpu_utilization"] * 1.001
+
+    # 第二阶段：在峰值近似最优条件下改善服务水平
+    wait_result = solve_stage(
+        model=model,
+        objective="weighted_waiting_time",
+        extra_constraints=[
+            ("peak_gpu_utilization", "<=", peak_cap)
+        ]
+    )
+
+    return wait_result
+
+5. 基础约束核验
+def check_schedule(schedule, gpu_capacity, task_info):
+    """核验任务唯一分配、到达时刻及区域算力容量约束。"""
+    violations = []
+
+    for task_id, group in schedule.groupby("task_id"):
+        if len(group) != 1:
+            violations.append(f"任务{task_id}未唯一分配")
+
+    for _, row in schedule.iterrows():
+        if row["start_hour"] < task_info[row["task_id"]]["arrival"]:
+            violations.append(f"任务{row['task_id']}早于到达时刻执行")
+
+    for region, load in schedule.groupby(["region", "hour"])["gpu_num"].sum().items():
+        if load > gpu_capacity[region]:
+            violations.append(f"{region}发生算力容量超限")
+
+    return violations
+
+--- CELL r5 c0 ---
+问题二：碳感知调度与五方案比较
+--- CELL r6 c0 ---
+1. 电力平衡与碳排放核算
+def energy_dispatch(load, renewable, export_cap):
+    """无储能条件下的逐时电力平衡计算。"""
+    direct_renew = np.minimum(load, renewable)
+    grid_purchase = np.maximum(load - renewable, 0)
+
+    renewable_surplus = np.maximum(renewable - load, 0)
+    grid_sale = np.minimum(renewable_surplus, export_cap)
+    curtailment = renewable_surplus - grid_sale
+
+    return {
+        "direct_renew": direct_renew,
+        "grid_purchase": grid_purchase,
+        "grid_sale": grid_sale,
+        "curtailment": curtailment
+    }
+
+def calculate_metrics(dispatch, price, carbon_factor):
+    """计算购电成本、售电收益及实际碳排放。"""
+    purchase_cost = np.sum(dispatch["grid_purchase"] * price)
+    sale_revenue = np.sum(dispatch["grid_sale"] * price)
+    carbon_emission = np.sum(
+        dispatch["grid_purchase"] * carbon_factor
+    )
+
+    return {
+        "net_cost": purchase_cost - sale_revenue,
+        "carbon_emission": carbon_emission
+    }
+
+2. 服务优先的可行初解构造
+def construct_feasible_schedule(tasks, capacity_state):
+    """按截止期紧迫度优先构造满足硬约束的初始排程。"""
+    sorted_tasks = sorted(
+        tasks,
+        key=lambda x: (
+            x["deadline"] - x["arrival"] - x["duration"],
+            -x["gpu_hours"]
+        )
+    )
+
+    schedule = []
+    for task in sorted_tasks:
+        feasible_starts = generate_feasible_starts(
+            task=task,
+            capacity_state=capacity_state
+        )
+
+        if len(feasible_starts) == 0:
+            raise RuntimeError(f"任务{task['task_id']}无可行开工时刻")
+
+        start = min(feasible_starts)
+        assign_task(task, start, capacity_state)
+        schedule.append({
+            "task_id": task["task_id"],
+            "region": task["region"],
+            "start_hour": start
+        })
+
+    return pd.DataFrame(schedule)
+
+3. 局部窗口任务筛选
+def select_window_tasks(schedule, tasks, start_hour, end_hour, max_tasks=120):
+    """筛选完全位于局部时间窗口内的可迁移任务。"""
+    selected = []
+
+    for task in tasks:
+        task_start = schedule.loc[
+            schedule["task_id"] == task["task_id"], "start_hour"
+        ].iloc[0]
+
+        task_end = task_start + task["duration"]
+
+        if task_start >= start_hour and task_end <= end_hour:
+            selected.append(task)
+
+    selected = sorted(
+        selected,
+        key=lambda x: x["gpu_num"] * x["duration"],
+        reverse=True
+    )
+
+    return selected[:max_tasks]
+
+4. 局部 MILP 精修模型
+def local_mip_polish(local_tasks, candidate_starts, fixed_load, capacity):
+    """固定窗口外负荷，对窗口内任务进行重排。"""
+    model = gp.Model("local_schedule")
+
+    x = {}
+    for task in local_tasks:
+        for start in candidate_starts[task["task_id"]]:
+            x[task["task_id"], start] = model.addVar(
+                vtype=GRB.BINARY,
+                name=f"x_{task['task_id']}_{start}"
+            )
+
+    # 每项任务唯一开工
+    for task in local_tasks:
+        model.addConstr(
+            gp.quicksum(
+                x[task["task_id"], start]
+                for start in candidate_starts[task["task_id"]]
+            ) == 1
+        )
+
+    # 时段算力容量约束
+    for hour in range(len(capacity)):
+        local_gpu = gp.quicksum(
+            task["gpu_num"] * x[task["task_id"], start]
+            for task in local_tasks
+            for start in candidate_starts[task["task_id"]]
+            if start <= hour < start + task["duration"]
+        )
+
+        model.addConstr(fixed_load[hour] + local_gpu <= capacity[hour])
+
+    return model, x
+
+5. 碳约束与服务约束设置
+# 零碳方案：购电量必须为零，负荷由绿电直接消纳覆盖
+model.addConstr(
+    gp.quicksum(grid_purchase[t] for t in hours) <= 1e-6
+)
+
+# 服务端点：加权等待时间不超过服务最优值附近
+model.addConstr(
+    weighted_wait <= service_wait_cap
+)
+
+# 经济端点：以净成本最小化为目标
+model.setObjective(net_cost, GRB.MINIMIZE)
+
+
+ 6. 五类方案的统一输出
+scenarios = {
+    "无碳约束服务端点": {"carbon_cap": None, "objective": "service"},
+    "无碳约束经济端点": {"carbon_cap": None, "objective": "cost"},
+    "零碳服务端点": {"carbon_cap": 0.0, "objective": "service"},
+    "零碳平衡方案": {"carbon_cap": 0.0, "objective": "balanced"},
+    "零碳经济端点": {"carbon_cap": 0.0, "objective": "cost"}
+}
+
+result_rows = []
+for name, config in scenarios.items():
+    result = run_scenario(config)
+    result_rows.append({"scenario": name, **result})
+
+pd.DataFrame(result_rows).to_csv(
+    "q2_formal_scenarios.csv",
+    index=False,
+    encoding="utf-8-sig"
+)
+--- CELL r7 c0 ---
+问题三：储能价值评估与电力协同优化
+--- CELL r8 c0 ---
+1. 储能状态变量定义
+VARIABLES = [
+    "direct_renew",     # 可再生能源直接供电
+    "renew_charge",     # 可再生能源充电
+    "grid_charge",      # 电网购电充电
+    "discharge",        # 储能放电
+    "grid_load",        # 电网直接供负荷
+    "grid_sale",        # 可再生能源上网
+    "curtailment",      # 弃电量
+    "soc"               # 储能荷电状态
+]
+
+2. 能源平衡与储能动态约束
+for t in range(T):
+    # 可再生能源分配平衡
+    model.addConstr(
+        direct_renew[t]
+        + renew_charge[t]
+        + grid_sale[t]
+        + curtailment[t]
+        == renewable_output[t]
+    )
+
+    # 设施侧负荷平衡
+    model.addConstr(
+        direct_renew[t]
+        + discharge[t]
+        + grid_load[t]
+        == facility_load[t]
+    )
+
+    # 储能 SOC 演化
+    model.addConstr(
+        soc[t + 1]
+        == soc[t]
+        + eta_charge * (renew_charge[t] + grid_charge[t])
+        - discharge[t] / eta_discharge
+    )
+
+3. 储能运行边界
+for t in range(T):
+    model.addConstr(soc_min <= soc[t])
+    model.addConstr(soc[t] <= soc_max)
+
+    model.addConstr(
+        renew_charge[t] + grid_charge[t] <= charge_power_limit
+    )
+    model.addConstr(
+        discharge[t] <= discharge_power_limit
+    )
+
+4. 两种终端 SOC 设定
+def add_terminal_soc_constraint(model, soc, soc_initial, mode):
+    """分别刻画期末库存保留与日内循环运行。"""
+    if mode == "baseline":
+        model.addConstr(soc[-1] >= soc_initial)
+
+    elif mode == "cyclic":
+        model.addConstr(soc[-1] == soc_initial)
+
+    else:
+        raise ValueError("终端 SOC 模式错误")
+
+5. 成本、碳排放及削峰目标
+net_cost = gp.quicksum(
+    grid_purchase[t] * electricity_price[t]
+    - grid_sale[t] * feed_in_tariff[t]
+    for t in range(T)
+)
+
+carbon_emission = gp.quicksum(
+    grid_purchase[t] * carbon_factor[t]
+    for t in range(T)
+)
+
+peak_grid_purchase = model.addVar(name="peak_grid_purchase")
+
+for t in range(T):
+    model.addConstr(grid_purchase[t] <= peak_grid_purchase)
+
+6. 储能价值计算
+def storage_value(storage_result, no_storage_result):
+    """以无储能方案为参照计算储能带来的改善。"""
+    return {
+        "cost_improvement":
+            no_storage_result["net_cost"] - storage_result["net_cost"],
+
+        "carbon_reduction":
+            no_storage_result["carbon_emission"]
+            - storage_result["carbon_emission"],
+
+        "peak_reduction":
+            no_storage_result["peak_grid_purchase"]
+            - storage_result["peak_grid_purchase"]
+    }
+--- CELL r9 c0 ---
+问题四：算—储—电多目标协同优化
+--- CELL r10 c0 ---
+1. 任务时段代理评分
+def slot_proxy(hour, carbon, renewable, price, peak_pressure):
+    """衡量任务置于某时段的相对优劣。"""
+    score = (
+        0.35 * carbon[hour]
+        - 0.30 * renewable[hour]
+        + 0.20 * price[hour]
+        + 0.15 * peak_pressure[hour]
+    )
+    return score
+
+2. 候选开工时刻生成
+def candidate_starts(task, proxy_score, top_k=3):
+    """保留边界时刻、分位时刻和代理评分最优时刻。"""
+    earliest = task["arrival"]
+    latest = task["deadline"] - task["duration"]
+
+    feasible = list(range(earliest, latest + 1))
+    ranked = sorted(feasible, key=lambda t: proxy_score[t])
+
+    candidates = {
+        earliest,
+        latest,
+        feasible[len(feasible) // 3],
+        feasible[2 * len(feasible) // 3]
+    }
+    candidates.update(ranked[:top_k])
+
+    return sorted(candidates)
+
+3. 局部邻域重调度
+def choose_neighbourhood(tasks, schedule, top_n=80):
+    """优先选择能耗高、可迁移范围大的任务参与局部优化。"""
+    scored_tasks = []
+
+    for task in tasks:
+        flexibility = task["deadline"] - task["arrival"] - task["duration"]
+        impact = task["gpu_num"] * task["duration"]
+
+        scored_tasks.append({
+            "task": task,
+            "score": impact * max(flexibility, 1)
+        })
+
+    scored_tasks = sorted(
+        scored_tasks,
+        key=lambda x: x["score"],
+        reverse=True
+    )
+    return [x["task"] for x in scored_tasks[:top_n]]
+
+4. 局部调度优化约束
+for task in local_tasks:
+    model.addConstr(
+        gp.quicksum(x[task["task_id"], s] for s in starts[task["task_id"]]) == 1
+    )
+
+for t in hours:
+    model.addConstr(
+        fixed_gpu_load[t]
+        + gp.quicksum(
+            task["gpu_num"] * x[task["task_id"], s]
+            for task in local_tasks
+            for s in starts[task["task_id"]]
+            if s <= t < s + task["duration"]
+        )
+        <= gpu_capacity[t]
+    )
+
+5. 算力调度与储能调度的迭代耦合
+current_schedule = initial_schedule
+current_energy = solve_energy(current_schedule, storage_config)
+
+for iteration in range(max_iter):
+    local_tasks = choose_neighbourhood(tasks, current_schedule)
+
+    candidate_schedule = solve_neighbourhood(
+        current_schedule=current_schedule,
+        local_tasks=local_tasks
+    )
+
+    candidate_energy = solve_energy(
+        schedule=candidate_schedule,
+        storage_config=storage_config
+    )
+
+    if accept_solution(candidate_energy, current_energy):
+        current_schedule = candidate_schedule
+        current_energy = candidate_energy
+
+6. 多目标端点求解顺序
+endpoint_config = {
+    "服务端点": ["weighted_wait", "net_cost", "carbon_emission"],
+    "经济端点": ["net_cost", "weighted_wait", "carbon_emission"],
+    "低碳端点": ["carbon_emission", "net_cost", "weighted_wait"],
+    "新能源端点": ["renewable_utilization", "net_cost", "weighted_wait"],
+    "削峰端点": ["peak_grid_purchase", "net_cost", "weighted_wait"]
+}
+
+for endpoint_name, objectives in endpoint_config.items():
+    result = solve_lexicographic_endpoint(
+        objectives=objectives,
+        initial_schedule=initial_schedule
+    )
+
+7. 非支配解筛选
+def dominates(solution_a, solution_b):
+    """判断方案 a 是否支配方案 b。"""
+    indicators = ["net_cost", "weighted_wait", "carbon_emission"]
+
+    no_worse = all(
+        solution_a[k] <= solution_b[k]
+        for k in indicators
+    )
+
+    strictly_better = any(
+        solution_a[k] < solution_b[k]
+        for k in indicators
+    )
+
+    return no_worse and strictly_better
+
+
+pareto_solutions = []
+for candidate in all_solutions:
+    if not any(
+        dominates(other, candidate)
+        for other in all_solutions
+        if other is not candidate
+    ):
+        pareto_solutions.append(candidate)

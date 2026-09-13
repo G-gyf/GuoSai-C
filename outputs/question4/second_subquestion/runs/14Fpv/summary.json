@@ -1,0 +1,50 @@
+{
+  "spec": "14Fpv",
+  "seed": 20250912,
+  "branch_name": "14Fpv",
+  "candidate_ops": [
+    {
+      "hour": 14,
+      "slot": 84,
+      "info": "pv_only"
+    }
+  ],
+  "feb1_soc_kwh": 2122.4825093090917,
+  "validation": {
+    "max_balance_error_kwh": 4.547473508864641e-13,
+    "max_state_error_kwh": 0.0,
+    "max_continuity_error_kwh": 0.0,
+    "min_soc_kwh": 1200.0,
+    "max_soc_kwh": 10800.0,
+    "max_charge_kwh": 833.3333333333334,
+    "max_discharge_kwh": 833.3333333333334,
+    "simultaneous_charge_discharge": 0,
+    "emergency_while_charging": 0,
+    "max_settlement_recompute_error": 0.0,
+    "negative_q0": 0,
+    "negative_qA": 0,
+    "pre_six_executed_adjusted": 0,
+    "passed": true
+  },
+  "formal_period": {
+    "days": 334,
+    "total_cost": 14599013.207102288,
+    "retained_cost": 13722711.113929145,
+    "down_cost": 341294.3623542625,
+    "up_cost": 178943.1495526828,
+    "emergency_cost": 356064.5812662002,
+    "emergency_kwh": 65127.424566178124,
+    "down_kwh": 982223.400825623,
+    "up_kwh": 182329.45637440647,
+    "unused_kwh": 2193506.4136401857,
+    "final_soc_kwh": 2348.7677144812064,
+    "start_soc_kwh": 2122.4825093090917
+  },
+  "candidate_lp_statuses": {
+    "14:00/pv_only": {
+      "optimal": 334
+    }
+  },
+  "run_seconds": 66.72532950009918,
+  "result_days": 334
+}
