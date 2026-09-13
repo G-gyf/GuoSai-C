@@ -1,0 +1,65 @@
+{
+  "tag": "delta_only",
+  "settings": {
+    "name": "ldr_delta_only",
+    "alpha": 0.8,
+    "forecast_days": 7,
+    "residual_days": 21,
+    "stages": 4,
+    "search_seed": 20250912,
+    "search_maxiter": 8,
+    "search_popsize": 5,
+    "delta_bound_kwh": 9600.0,
+    "lambda_bound": 2.0,
+    "load_forecast": "weekly_persist",
+    "plan_generator": "fixed_alpha_0.8_quantile_LP",
+    "controller": "four_stage_clipped_affine_reserve_rule",
+    "lambda_stage_1": 0.0,
+    "parameter_order": [
+      "delta_00_06_kwh",
+      "delta_06_12_kwh",
+      "delta_12_18_kwh",
+      "delta_18_24_kwh",
+      "lambda_06_12",
+      "lambda_12_18",
+      "lambda_18_24"
+    ],
+    "search_acceptance": "selected empirical objective must not exceed zero-parameter objective",
+    "terminal_value_rule": "nu_d = min(day-d decision price)/ETA per day; the summary field below keeps the last day's value",
+    "experiment_settings": {},
+    "experiment_run_kwargs": {
+      "lambda_locked": true
+    }
+  },
+  "formal_period": {
+    "days": 334,
+    "intervals": 48096,
+    "grid_kwh": 21648959.896088224,
+    "charge_kwh": 6208765.59296551,
+    "discharge_kwh": 5029672.4226334905,
+    "emergency_kwh": 129939.27080082125,
+    "unused_kwh": 2660616.501590359,
+    "planned_cost": 13332947.384221531,
+    "emergency_cost": 641518.8809998251,
+    "total_cost": 13974466.265221355,
+    "initial_soc_kwh": 2263.2065799206325,
+    "final_soc_kwh": 1627.3262116666697,
+    "emergency_intervals": 1594
+  },
+  "validation": {
+    "max_balance_error_kwh": 4.547473508864641e-13,
+    "max_state_error_kwh": 0.0,
+    "max_continuity_error_kwh": 0.0,
+    "min_soc_kwh": 1200.0,
+    "max_soc_kwh": 10800.0,
+    "max_charge_kwh": 833.3333333333334,
+    "max_discharge_kwh": 833.3333333333334,
+    "simultaneous_charge_discharge": 0,
+    "emergency_while_charging": 0,
+    "passed": true
+  },
+  "seconds": 322.1558267999935,
+  "calibrated_days": 337,
+  "accepted_search_days": 337,
+  "search_evaluations": 60904
+}

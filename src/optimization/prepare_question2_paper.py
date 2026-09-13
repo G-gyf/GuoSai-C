@@ -24,29 +24,32 @@ def main():
     formal=f[f.date>='2025-02-01'].copy()
     params=pd.read_csv(SRC/'ldr_daily_parameters.csv',parse_dates=['date'])
     dates,l,v,p=load_inputs()
-    np.testing.assert_allclose(f.load_kwh,l.ravel(),atol=1e-8,rtol=0)
-    np.testing.assert_allclose(f.pv_kwh,v.ravel(),atol=1e-8,rtol=0)
-    np.testing.assert_allclose(f.price,np.tile(p,365),atol=1e-12,rtol=0)
+    # 2025-01-01 is a frozen initial-condition day: it has no schedule rows.
+    np.testing.assert_allclose(f.load_kwh,l[1:].ravel(),atol=1e-8,rtol=0)
+    np.testing.assert_allclose(f.pv_kwh,v[1:].ravel(),atol=1e-8,rtol=0)
+    np.testing.assert_allclose(f.price,np.tile(p,364),atol=1e-12,rtol=0)
+    assert pd.Timestamp('2025-01-01') not in set(f.date)
     summaries=json.loads((SRC/'question2_summary.json').read_text(encoding='utf-8'))
     main_settings=next(s for s in summaries if s['settings']['name']=='ldr_quantile_a08')['settings']
     fl,fv=forecasts(l,v)
     if main_settings.get('load_forecast','mean7d')=='weekly_persist':
-        representative=pd.read_excel(ROOT/'附件/附件1.xlsx',sheet_name=0).iloc[:,2].to_numpy(float)/6.0
-        fl=load_forecast_weekly_persist(l,representative)
+        fl=load_forecast_weekly_persist(l)
     max_rule_error=max_score_error=max_grid_error=0.
     score_checked=0
     for d, date in enumerate(dates):
+        if d == 0:
+            # Frozen 1 January: nothing to audit.
+            continue
         day=f[f.date==date]
-        theta=params.loc[d,PARAMETER_NAMES].to_numpy(float)
+        # The diagnostics CSV starts on 2 January (364 rows), so day d maps
+        # to row d-1.
+        theta=params.iloc[d-1][PARAMETER_NAMES].to_numpy(float)
         delta=theta[:4]; lambdas=np.r_[0.,theta[4:]]
         e=float(day.soc_start_kwh.iloc[0]); errsum=0.; signal=0.
-        if d:
-            net,count=planning_net(d,l,v,fl,fv,Settings(alpha=.8))
-            np.testing.assert_allclose(day.planning_net_kwh,net,atol=1e-8,rtol=0)
-            plan,_=solve_plan(net,p,e,float(p.min()/ETA))
-            max_grid_error=max(max_grid_error,float(np.max(np.abs(plan[0]-day.grid_kwh))))
-        else:
-            plan=np.zeros((5,144)); plan[4]=EMIN
+        net,count=planning_net(d,l,v,fl,fv,Settings(alpha=.8))
+        np.testing.assert_allclose(day.planning_net_kwh,net,atol=1e-8,rtol=0)
+        plan,_=solve_plan(net,p,e,float(p.min()/ETA))
+        max_grid_error=max(max_grid_error,float(np.max(np.abs(plan[0]-day.grid_kwh))))
         for t,row in enumerate(day.itertuples()):
             k=t//36
             if t%36==0:
@@ -60,12 +63,12 @@ def main():
             expected=np.array([reserve,signal,c,dis,b,u,e])
             saved=np.array([row.reserve_kwh,row.stage_error_mean_kwh,row.charge_kwh,row.discharge_kwh,row.emergency_kwh,row.unused_kwh,row.soc_end_kwh])
             max_rule_error=max(max_rule_error,float(abs(expected-saved).max()))
-            errsum+=l[d,t]-v[d,t]-(fl[d,t]-fv[d,t]) if d else l[d,t]-v[d,t]
+            errsum+=l[d,t]-v[d,t]-(fl[d,t]-fv[d,t])
         if d>=28:
             scenarios,count=scenario_net_matrix(d,l,v,fl,fv)
             objective=ScenarioObjective(scenarios,fl[d]-fv[d],day.grid_kwh.to_numpy(),day.plan_soc_kwh.to_numpy(),p,float(day.soc_start_kwh.iloc[0]),float(p.min()/ETA))
             selected,zero=float(objective(theta)),float(objective(np.zeros(7)))
-            max_score_error=max(max_score_error,abs(selected-params.selected_scenario_score.iloc[d]),abs(zero-params.zero_scenario_score.iloc[d]))
+            max_score_error=max(max_score_error,abs(selected-params.selected_scenario_score.iloc[d-1]),abs(zero-params.zero_scenario_score.iloc[d-1]))
             assert selected<=zero+1e-6
             score_checked+=1
         if (d+1)%90==0:

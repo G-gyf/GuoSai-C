@@ -1,0 +1,78 @@
+{
+  "window": "2025-01-08/2025-01-31",
+  "grid": [
+    {
+      "price_model": "wp",
+      "gamma": 0.0,
+      "cost_0108_0131": 1408175.807367632,
+      "emergency_cost": 19954.56725592412,
+      "seconds": 3.8198529000364942
+    },
+    {
+      "price_model": "wp",
+      "gamma": 1e-05,
+      "cost_0108_0131": 1410952.4241528949,
+      "emergency_cost": 22850.925039881764,
+      "seconds": 3.5795792999851983
+    },
+    {
+      "price_model": "wp",
+      "gamma": 0.0001,
+      "cost_0108_0131": 1415700.60949748,
+      "emergency_cost": 27617.257851991897,
+      "seconds": 3.6117552999639884
+    },
+    {
+      "price_model": "wp",
+      "gamma": 0.001,
+      "cost_0108_0131": 1416513.713838701,
+      "emergency_cost": 28430.362193212502,
+      "seconds": 3.5918812000309117
+    },
+    {
+      "price_model": "gk",
+      "gamma": 0.0,
+      "cost_0108_0131": 1403984.8452071724,
+      "emergency_cost": 20470.709327111963,
+      "seconds": 3.5065985000983346
+    },
+    {
+      "price_model": "gk",
+      "gamma": 1e-05,
+      "cost_0108_0131": 1406510.6820385237,
+      "emergency_cost": 23059.163710110763,
+      "seconds": 2.8171041999885347
+    },
+    {
+      "price_model": "gk",
+      "gamma": 0.0001,
+      "cost_0108_0131": 1414093.2687271857,
+      "emergency_cost": 30740.65660030829,
+      "seconds": 1.409334400013904
+    },
+    {
+      "price_model": "gk",
+      "gamma": 0.001,
+      "cost_0108_0131": 1414093.2687271857,
+      "emergency_cost": 30740.65660030829,
+      "seconds": 4.709825000012643
+    }
+  ],
+  "chosen_price_model": "wp",
+  "chosen_gamma": 0.0,
+  "tie_break_rule": "prefer wp unless gk is cheaper by more than 0.5%",
+  "wp_best": {
+    "price_model": "wp",
+    "gamma": 0.0,
+    "cost_0108_0131": 1408175.807367632,
+    "emergency_cost": 19954.56725592412,
+    "seconds": 3.8198529000364942
+  },
+  "gk_best": {
+    "price_model": "gk",
+    "gamma": 0.0,
+    "cost_0108_0131": 1403984.8452071724,
+    "emergency_cost": 20470.709327111963,
+    "seconds": 3.5065985000983346
+  }
+}

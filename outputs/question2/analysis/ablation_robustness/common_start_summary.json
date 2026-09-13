@@ -1,0 +1,113 @@
+{
+  "common_initial_soc_kwh": 2263.2065799206325,
+  "runs": {
+    "beta1": {
+      "formal_period": {
+        "grid_kwh": 21634433.90522169,
+        "charge_kwh": 6138342.984917425,
+        "discharge_kwh": 4972630.110114543,
+        "emergency_kwh": 187104.89555826926,
+        "unused_kwh": 2716636.43101041,
+        "planned_cost": 13326727.819560053,
+        "emergency_cost": 838479.8136808755,
+        "total_cost": 14165207.63324093,
+        "days": 334,
+        "intervals": 48096,
+        "initial_soc_kwh": 2263.2065799206325,
+        "final_soc_kwh": 1627.3262116666697,
+        "emergency_intervals": 3932
+      },
+      "validation": {
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "max_state_error_kwh": 0.0,
+        "max_continuity_error_kwh": 0.0,
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_charge_kwh": 833.3333333333334,
+        "max_discharge_kwh": 833.3333333333334,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "passed": true
+      },
+      "seconds": 35.48204259999329
+    },
+    "beta0": {
+      "formal_period": {
+        "grid_kwh": 21649952.897676516,
+        "charge_kwh": 6216394.637573477,
+        "discharge_kwh": 5035851.948765945,
+        "emergency_kwh": 123759.74466836709,
+        "unused_kwh": 2653980.4585706857,
+        "planned_cost": 13333371.38652405,
+        "emergency_cost": 709464.6748372253,
+        "total_cost": 14042836.061361274,
+        "days": 334,
+        "intervals": 48096,
+        "initial_soc_kwh": 2263.2065799206325,
+        "final_soc_kwh": 1627.3262116666697,
+        "emergency_intervals": 864
+      },
+      "validation": {
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "max_state_error_kwh": 0.0,
+        "max_continuity_error_kwh": 0.0,
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_charge_kwh": 833.3333333333334,
+        "max_discharge_kwh": 833.3333333333334,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "passed": true
+      },
+      "seconds": 43.84925589998602
+    },
+    "scenarios": {
+      "formal_period": {
+        "grid_kwh": 20917711.048463225,
+        "charge_kwh": 6155279.91692038,
+        "discharge_kwh": 4986629.86754027,
+        "emergency_kwh": 192142.95973205398,
+        "unused_kwh": 2002014.4638485045,
+        "planned_cost": 12983839.696552195,
+        "emergency_cost": 999128.1463204359,
+        "total_cost": 13982967.842872635,
+        "days": 334,
+        "intervals": 48096,
+        "initial_soc_kwh": 2263.2065799206325,
+        "final_soc_kwh": 1315.2789857407415,
+        "emergency_intervals": 1947
+      },
+      "validation": {
+        "max_balance_error_kwh": 4.547473508864641e-13,
+        "max_state_error_kwh": 0.0,
+        "max_continuity_error_kwh": 0.0,
+        "min_soc_kwh": 1200.0,
+        "max_soc_kwh": 10800.0,
+        "max_charge_kwh": 833.3333333333334,
+        "max_discharge_kwh": 833.3333333333334,
+        "simultaneous_charge_discharge": 0,
+        "emergency_while_charging": 0,
+        "passed": true
+      },
+      "seconds": 1942.6605232000002
+    },
+    "ldr_reference": {
+      "note": "LDR main run already starts 2/1 at the common SOC; ledger reused, not re-run.",
+      "formal_period": {
+        "days": 334,
+        "intervals": 48096,
+        "grid_kwh": 21648740.952936564,
+        "charge_kwh": 6209054.417103641,
+        "discharge_kwh": 5029906.370185378,
+        "emergency_kwh": 129705.32324893482,
+        "unused_kwh": 2660108.7343005673,
+        "planned_cost": 13332849.502003,
+        "emergency_cost": 645227.7311187075,
+        "total_cost": 13978077.233121704,
+        "initial_soc_kwh": 2263.2065799206325,
+        "final_soc_kwh": 1627.3262116666697,
+        "emergency_intervals": 1556
+      }
+    }
+  }
+}

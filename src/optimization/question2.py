@@ -1,13 +1,19 @@
 """Causal Q2: weekly-persistence load forecast, seven-day mean PV forecast,
 21 residual days, risk LP and real-time storage.
 
-Only attachments 1 (tariffs and the warm-up load curve), 2 (actuals), and
-the official output template are inputs. Actual observations are revealed to
-the controller one slot at a time. The planning objective is a proxy, never
-reported as the realized bill. The adopted Q2 convention is
-``load_forecast_weekly_persist`` for load (L_{d-7}, attachment 1 for d < 7)
-and the seven-day same-slot mean for PV; the mean-based load forecast
+Only attachments 1 (tariffs only), 2 (actuals), and the official output
+template are inputs. Actual observations are revealed to the controller one
+slot at a time. The planning objective is a proxy, never reported as the
+realized bill. The adopted Q2 convention is
+``load_forecast_weekly_persist`` for load (L_{d-7}, yesterday persistence
+L_{d-1} for 1 <= d < 7, warm-up only; attachment 1 load and PV are never
+used) and the seven-day same-slot mean for PV; the mean-based load forecast
 remains available via ``forecasts`` for comparison studies only.
+
+2025-01-01 is a frozen initial-condition day: no purchase plan is made, the
+battery does not act, the SOC stays at the 6000 kWh initial value, and the
+day is excluded from all statistics.  The first planning day is 2025-01-02;
+1 January actuals still serve as history for the warm-up forecasts.
 """
 from __future__ import annotations
 
@@ -66,17 +72,35 @@ def forecasts(load, pv):
     return fl, fv
 
 
-def load_forecast_weekly_persist(load, representative):
-    """Weekly persistence load forecast L_{d-7}; attachment 1 for d < 7.
+def load_forecast_weekly_persist(load):
+    """Weekly persistence load forecast L_{d-7}; yesterday persistence for d < 7.
 
-    Mirrors the b1 scheme of the load forecast comparison (问题二预测.docx):
-    the day-0 row stays NaN and is never used (cold-start zero plan).  All
-    values are in kWh per 10-minute interval.
+    Cold start: for 1 <= d < 7 no L_{d-7} exists, so fall back to L_{d-1}
+    (yesterday persistence, the b0 scheme of the load forecast comparison).
+    Attachment 1 load is never used.  The day-0 row stays NaN and is never
+    used as a plan input (1 January is a frozen initial-condition day, not a
+    statistics day).  All values are in kWh per 10-minute interval.
     """
     fl = np.full_like(load, np.nan)
     for d in range(1, len(load)):
-        fl[d] = load[d - 7] if d >= 7 else representative
+        fl[d] = load[d - 7] if d >= 7 else load[d - 1]
     return fl
+
+
+def decision_prices_with_realized(p_plan, p_act, slots=(0,)):
+    """Decision prices with realized values at update instants.
+
+    At an update instant h0 the delivery interval starting at h0 begins now,
+    so its interval-START price is already realized and replaces the
+    forecast in the decision row.  Later slots keep the forecast.  In
+    fixed-price mode ``p_plan`` already equals the settle row and the
+    replacement is a no-op.  (Correction 2 of the review: at 00:00 the
+    00:00 price is a realized actual.)
+    """
+    row = np.asarray(p_plan, float).copy()
+    for h0 in slots:
+        row[h0] = float(p_act[h0])
+    return row
 
 
 def planning_net(d, load, pv, fl, fv, setting):
@@ -137,31 +161,51 @@ def execute_slot(load, pv, grid, energy, reserve):
     return charge, discharge, emergency, unused, end
 
 
-def run_case(dates, load, pv, prices, setting, fl_override=None):
+def run_case(dates, load, pv, prices, setting, fl_override=None,
+             prices_plan=None, prices_actual=None,
+             start_index: int = 1, initial_soc: float = 6000.0):
+    """Causal simulation with optional fluctuating-price separation.
+
+    Defaults reproduce the fixed-price Q2 behavior (``prices`` used for both
+    the day-ahead plan and the realized bill).  For Q4 option B,
+    ``prices_plan[d]`` feeds the day-ahead LP and ``prices_actual[d]``
+    settles the realized bill, both shaped (len(dates), 144).
+
+    ``start_index``/``initial_soc`` start the loop on a later date with a
+    given SOC (common-start backtest); defaults reproduce the frozen-1-Jan
+    natural run.
+    """
     start = time.perf_counter()
     fl, fv = forecasts(load, pv)
     if fl_override is not None:
         fl = fl_override
-    # Lowest tariff is the fixed valley replacement-cost approximation.
-    nu = float(prices.min()/ETA)
-    energy, records = 6000., []
-    for d, date in enumerate(dates):
-        if d:
-            net, count = planning_net(d, load, pv, fl, fv, setting)
-            plan, obj = solve_plan(net, prices, energy, nu)
-        else:
-            net, count, obj = np.zeros(T), 0, 0.
-            plan = np.zeros((5, T))
-            plan[4] = EMIN
+    for name, mat in [("prices_plan", prices_plan), ("prices_actual", prices_actual)]:
+        if mat is not None:
+            mat = np.asarray(mat, float)
+            if mat.shape != (len(dates), T):
+                raise ValueError(f"{name} must have shape ({len(dates)}, {T})")
+    energy, records = float(initial_soc), []
+    for d in range(start_index, len(dates)):
+        date = dates[d]
+        p_plan = prices if prices_plan is None else prices_plan[d]
+        p_act = p_plan if prices_actual is None else prices_actual[d]
+        if prices_actual is not None:
+            # Correction 2: the 00:00-start price of the first interval is
+            # already realized when the 0:00 plan is made.
+            p_plan = decision_prices_with_realized(p_plan, p_act, (0,))
+        # Lowest forecast tariff is the valley replacement-cost approximation.
+        nu = float(p_plan.min()/ETA)
+        net, count = planning_net(d, load, pv, fl, fv, setting)
+        plan, obj = solve_plan(net, p_plan, energy, nu)
         reserve = EMIN + setting.beta*(plan[4]-EMIN)
         for t in range(T):
             initial = energy
             c, dis, buy, unused, energy = execute_slot(load[d,t], pv[d,t], plan[0,t], initial, reserve[t])
             records.append((date, t, date+pd.Timedelta(minutes=10*t),
-                            load[d,t], pv[d,t], prices[t], fl[d,t], fv[d,t], net[t],
+                            load[d,t], pv[d,t], p_act[t], fl[d,t], fv[d,t], net[t],
                             count, plan[0,t], plan[1,t], plan[2,t], plan[4,t], reserve[t],
                             initial, c, dis, buy, unused, energy,
-                            prices[t]*plan[0,t], 5*prices[t]*buy))
+                            p_act[t]*plan[0,t], 5*p_act[t]*buy))
         if (d+1) % 90 == 0:
             print(f'{setting.name}: {d+1}/{len(dates)} days', flush=True)
     columns = ['date','slot','interval_start','load_kwh','pv_kwh','price','forecast_load_kwh',

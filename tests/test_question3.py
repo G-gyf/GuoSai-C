@@ -194,8 +194,7 @@ class TestStrategyProperties(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.dates, cls.load, cls.pv, cls.prices = load_inputs()
-        rep = pd.read_excel("附件/附件1.xlsx", sheet_name=0).iloc[:, 2].to_numpy(float) / 6.0
-        cls.fl = load_forecast_weekly_persist(cls.load, rep)
+        cls.fl = load_forecast_weekly_persist(cls.load)
         cls.fc = build_issuance_curves()
 
     def _run(self, strategy, days):
@@ -215,6 +214,14 @@ class TestStrategyProperties(unittest.TestCase):
             rtol=1e-12,
         )
         validate_question3(frame)
+
+    def test_jan1_is_frozen(self):
+        frame, summary = self._run("M0", 3)
+        self.assertNotIn(pd.Timestamp("2025-01-01"), set(frame.date))
+        self.assertEqual(frame.date.min(), pd.Timestamp("2025-01-02"))
+        self.assertEqual(float(summary["full_year"]["initial_soc_kwh"]), 6000.0)
+        frame612, _ = self._run("M612", 4)
+        self.assertEqual(frame612.date.min(), pd.Timestamp("2025-01-02"))
 
     def test_staged_day_is_causal(self):
         frame_a, _ = self._run("M612", 4)

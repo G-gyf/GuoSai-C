@@ -13,16 +13,16 @@
   },
   "raw_inputs_match": true,
   "recomputed_plan_days": 364,
-  "recomputed_rule_intervals": 52560,
+  "recomputed_rule_intervals": 52416,
   "recomputed_score_days": 337,
   "max_grid_error_kwh": 1.508510649728123e-09,
   "max_rule_error_kwh": 7.275957614183426e-12,
   "max_score_error_yuan": 3.865352482534945e-12,
   "independent_total_bill": 13978077.233121704,
   "source_hashes": {
-    "outputs\\question2\\current\\ldr\\question2_schedule_with_warmup.csv": "27414d46842ca1c3556fd35c56e7a671d139aeb33bad43cde8cc62ed14af73da",
-    "outputs\\question2\\current\\ldr\\ldr_daily_parameters.csv": "29af3a38cf32b8877764e6509f42d744216aea8bae53d99acc39156744c36185",
-    "src\\optimization\\question2_ldr.py": "b28da59f762c5ef786a63fbbe86004b2ead2518cca43dd7c7a21a86d28d8362f"
+    "outputs\\question2\\current\\ldr\\question2_schedule_with_warmup.csv": "f8e61283dd26eb2e8e855b1090c70225727186ce557fbe7bad3abfba7a3773f2",
+    "outputs\\question2\\current\\ldr\\ldr_daily_parameters.csv": "d271a961b1df569748e2af747a155d8e161f0112f42a7fe9d0fc01c0ca849985",
+    "src\\optimization\\question2_ldr.py": "b84ddc9cf0bcca2ab97bec745d5985aa9abaaf734bf4d28a358714cfc9efcdae"
   },
   "passed": true
 }

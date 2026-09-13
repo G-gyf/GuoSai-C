@@ -16,7 +16,7 @@
   "discharge_kwh": 5295549.738894001,
   "unused_kwh": 990168.0903121404,
   "emergency_kwh": 0.0,
-  "seconds": 11.562178300002415,
+  "seconds": 10.321018499991624,
   "validation": {
     "max_balance_error_kwh": 2.2737367544323206e-13,
     "max_state_error_kwh": 0.0,

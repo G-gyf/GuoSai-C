@@ -2,7 +2,8 @@
 day_type_counts,PASS,"{'workday': 200, 'sat_class': 102, 'sunday': 49, 'holiday': 14}","{'workday': 200, 'sat_class': 102, 'sunday': 49, 'holiday': 14}"
 ten_minute_row_count,PASS,52560,52560
 causality,PASS,training_end < issue_ts,True
-nonnegative,PASS,all non-negative,True
-finite_point_forecasts,PASS,finite,True
+nonnegative,PASS,all non-negative on days with a forecast,True
+finite_point_forecasts,PASS,finite on days with a forecast,True
+day0_no_forecast,PASS,2025-01-01 forecasts are NaN (no-forecast cold start),True
 q90_q95_order,PASS,gk_q90 <= gk_q95 wherever both defined,True
 qingming_0404_sat_class,PASS,sat_class,sat_class

@@ -2,6 +2,7 @@
 import unittest
 
 import numpy as np
+import pandas as pd
 
 from src.optimization.question2 import (
     EMIN,
@@ -88,17 +89,15 @@ class Question2LDRTests(unittest.TestCase):
     def test_weekly_persist_load_forecast(self):
         rng = np.random.default_rng(5)
         load = rng.uniform(300, 900, (21, T))
-        representative = rng.uniform(300, 900, T)
-        fl = load_forecast_weekly_persist(load, representative)
+        fl = load_forecast_weekly_persist(load)
         self.assertTrue(np.isnan(fl[0]).all())
         for d in range(1, 7):
-            np.testing.assert_allclose(fl[d], representative)
+            np.testing.assert_allclose(fl[d], load[d - 1])
         for d in range(7, 21):
             np.testing.assert_allclose(fl[d], load[d - 7])
 
     def test_weekly_persist_pilot_run_is_valid(self):
         dates, load, pv, prices = load_inputs()
-        representative = np.full(T, 700.0 / 6.0)
         settings = LDRSettings(load_forecast="weekly_persist")
         frame, _, _, summary, _, _ = run_ldr(
             dates,
@@ -107,7 +106,7 @@ class Question2LDRTests(unittest.TestCase):
             prices,
             settings,
             limit=60,
-            fl=load_forecast_weekly_persist(load, representative),
+            fl=load_forecast_weekly_persist(load),
         )
         self.assertTrue(summary["validation"]["passed"])
         self.assertTrue(
@@ -118,6 +117,23 @@ class Question2LDRTests(unittest.TestCase):
             .all()
             .all()
         )
+
+    def test_jan1_is_frozen_initial_condition(self):
+        dates, load, pv, prices = load_inputs()
+        frame, _, _, summary, _, _ = run_ldr(
+            dates,
+            load,
+            pv,
+            prices,
+            LDRSettings(),
+            limit=10,
+            fl=load_forecast_weekly_persist(load),
+        )
+        self.assertNotIn(pd.Timestamp("2025-01-01"), set(frame.date))
+        self.assertEqual(frame.date.min(), pd.Timestamp("2025-01-02"))
+        # No plan, no battery action on 1 January; SOC stays 6000 kWh.
+        self.assertEqual(summary["full_year"]["initial_soc_kwh"], 6000.0)
+        self.assertEqual(float(frame.soc_start_kwh.iloc[0]), 6000.0)
 
 
 if __name__ == "__main__":

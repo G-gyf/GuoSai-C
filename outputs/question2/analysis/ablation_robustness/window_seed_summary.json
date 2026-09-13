@@ -1,0 +1,175 @@
+{
+  "main_config_total": 13978077.233121708,
+  "ldr_spread_yuan": 79488.34379766881,
+  "ldr_spread_pct": 0.5686643625728256,
+  "max_deviation_from_main_yuan": 72565.09101558477,
+  "ranking_stable": true,
+  "ranking_flips": [],
+  "grid": [
+    {
+      "window": 14,
+      "seed": NaN,
+      "strategy": "beta1",
+      "planned_cost": 13286691.108810797,
+      "emergency_cost": 820428.8888818674,
+      "total_cost": 14107119.997692661,
+      "emergency_kwh": 179523.32734150282,
+      "initial_soc_kwh": 2245.4116887777795,
+      "final_soc_kwh": 1583.0998757407415
+    },
+    {
+      "window": 14,
+      "seed": NaN,
+      "strategy": "beta0",
+      "planned_cost": 13293457.469736876,
+      "emergency_cost": 661449.9968275336,
+      "total_cost": 13954907.466564408,
+      "emergency_kwh": 113044.99654558179,
+      "initial_soc_kwh": 2192.322799888892,
+      "final_soc_kwh": 1583.0998757407415
+    },
+    {
+      "window": 14,
+      "seed": 20250912.0,
+      "strategy": "ldr",
+      "planned_cost": 13293164.93253329,
+      "emergency_cost": 615301.0229757777,
+      "total_cost": 13908465.955509068,
+      "emergency_kwh": 119515.19333948154,
+      "initial_soc_kwh": 2192.322799888892,
+      "final_soc_kwh": 1583.0998757407417
+    },
+    {
+      "window": 14,
+      "seed": 20250913.0,
+      "strategy": "ldr",
+      "planned_cost": 13293195.934372656,
+      "emergency_cost": 612316.2077334675,
+      "total_cost": 13905512.142106123,
+      "emergency_kwh": 118833.43387094508,
+      "initial_soc_kwh": 2192.322799888892,
+      "final_soc_kwh": 1583.0998757407417
+    },
+    {
+      "window": 14,
+      "seed": 20250914.0,
+      "strategy": "ldr",
+      "planned_cost": 13293043.61116594,
+      "emergency_cost": 615678.1447627398,
+      "total_cost": 13908721.75592868,
+      "emergency_kwh": 119087.86589396579,
+      "initial_soc_kwh": 2192.322799888892,
+      "final_soc_kwh": 1583.0998757407417
+    },
+    {
+      "window": 21,
+      "seed": NaN,
+      "strategy": "beta1",
+      "planned_cost": 13326707.14871561,
+      "emergency_cost": 838479.8136808755,
+      "total_cost": 14165186.962396484,
+      "emergency_kwh": 187104.89555826926,
+      "initial_soc_kwh": 2306.4510243650775,
+      "final_soc_kwh": 1627.3262116666697
+    },
+    {
+      "window": 21,
+      "seed": NaN,
+      "strategy": "beta0",
+      "planned_cost": 13333371.38652405,
+      "emergency_cost": 709464.6748372253,
+      "total_cost": 14042836.061361274,
+      "emergency_kwh": 123759.74466836709,
+      "initial_soc_kwh": 2263.2065799206325,
+      "final_soc_kwh": 1627.3262116666697
+    },
+    {
+      "window": 21,
+      "seed": 20250912.0,
+      "strategy": "ldr",
+      "planned_cost": 13332849.502003,
+      "emergency_cost": 645227.7311187075,
+      "total_cost": 13978077.233121708,
+      "emergency_kwh": 129705.3232489348,
+      "initial_soc_kwh": 2263.2065799206325,
+      "final_soc_kwh": 1627.3262116666697
+    },
+    {
+      "window": 21,
+      "seed": 20250913.0,
+      "strategy": "ldr",
+      "planned_cost": 13332750.162945565,
+      "emergency_cost": 646349.1314113042,
+      "total_cost": 13979099.294356868,
+      "emergency_kwh": 129015.8876267743,
+      "initial_soc_kwh": 2263.2065799206325,
+      "final_soc_kwh": 1627.3262116666697
+    },
+    {
+      "window": 21,
+      "seed": 20250914.0,
+      "strategy": "ldr",
+      "planned_cost": 13332763.989039546,
+      "emergency_cost": 652236.4968642475,
+      "total_cost": 13985000.485903792,
+      "emergency_kwh": 130917.76886030959,
+      "initial_soc_kwh": 2263.2065799206325,
+      "final_soc_kwh": 1627.3262116666697
+    },
+    {
+      "window": 28,
+      "seed": NaN,
+      "strategy": "beta1",
+      "planned_cost": 13335918.680822179,
+      "emergency_cost": 816491.2571669059,
+      "total_cost": 14152409.937989086,
+      "emergency_kwh": 183074.05269615908,
+      "initial_soc_kwh": 2270.421548968256,
+      "final_soc_kwh": 1710.3106251481502
+    },
+    {
+      "window": 28,
+      "seed": NaN,
+      "strategy": "beta0",
+      "planned_cost": 13342099.948133212,
+      "emergency_cost": 703359.1428443447,
+      "total_cost": 14045459.090977557,
+      "emergency_kwh": 122696.72923368562,
+      "initial_soc_kwh": 2226.7971045238105,
+      "final_soc_kwh": 1710.3106251481502
+    },
+    {
+      "window": 28,
+      "seed": 20250912.0,
+      "strategy": "ldr",
+      "planned_cost": 13341533.15268852,
+      "emergency_cost": 633156.8384761771,
+      "total_cost": 13974689.991164697,
+      "emergency_kwh": 128802.02623775233,
+      "initial_soc_kwh": 2270.421548968256,
+      "final_soc_kwh": 1710.3106251481502
+    },
+    {
+      "window": 28,
+      "seed": 20250913.0,
+      "strategy": "ldr",
+      "planned_cost": 13341626.738708094,
+      "emergency_cost": 633175.8946527904,
+      "total_cost": 13974802.633360885,
+      "emergency_kwh": 129592.68780794991,
+      "initial_soc_kwh": 2270.421548968256,
+      "final_soc_kwh": 1710.3106251481502
+    },
+    {
+      "window": 28,
+      "seed": 20250914.0,
+      "strategy": "ldr",
+      "planned_cost": 13341525.384064931,
+      "emergency_cost": 633742.5129227175,
+      "total_cost": 13975267.896987647,
+      "emergency_kwh": 129598.34780199392,
+      "initial_soc_kwh": 2270.421548968256,
+      "final_soc_kwh": 1710.3106251481502
+    }
+  ]
+}

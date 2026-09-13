@@ -1,0 +1,55 @@
+{
+  "method": "latest official issuance + same-day dynamic residual correction (21-day rolling ridge, shrink 0.8, clip [0,1.5])",
+  "fallback_rules": [
+    "few_samples(<14)->official",
+    "low_current_error_variance->official",
+    "sign_anomaly_or_clipped->no correction",
+    "validation_window_not_better->official"
+  ],
+  "operative_windows": {
+    "07:00": [
+      42,
+      72
+    ],
+    "08:00": [
+      48,
+      72
+    ],
+    "09:00": [
+      54,
+      72
+    ],
+    "10:00": [
+      60,
+      72
+    ],
+    "11:00": [
+      66,
+      72
+    ],
+    "13:00": [
+      78,
+      108
+    ],
+    "14:00": [
+      84,
+      108
+    ],
+    "15:00": [
+      90,
+      108
+    ],
+    "16:00": [
+      96,
+      108
+    ],
+    "17:00": [
+      102,
+      108
+    ]
+  },
+  "evaluation_grid": "hourly anchors (slot 6h-1) inside the operative window",
+  "formal_period": "2025-02-01..2025-12-31 (334 days)",
+  "causality": "day d uses only days before d; PCHIP anchored at the observed candidate-hour value",
+  "units": "curves in kWh per 10 minutes; hourly in kW"
+}

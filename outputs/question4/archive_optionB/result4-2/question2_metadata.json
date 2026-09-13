@@ -1,0 +1,23 @@
+{
+  "source_sha256": {
+    "附件/附件4.xlsx": "20e9c93aeab5e8e21ae4dd15587f9e190f7408692504c1319598461cd654fe71",
+    "附件/附件1.xlsx": "66b87134f5ecccd68184d3539bb1293ef039f9e0fdd955a589b9bfa7f227c377",
+    "附件/附件2.xlsx": "2e95fd446bfafa0d8c59577b5c2e2ea8b3f1def20dde54a3062556f4da9b4c72",
+    "附件/附件5/result2.xlsx": "1c26494cfc6d754e0bd9bff7e13e1126a73d2d2da6c5336eb251d89b9a1a1a47"
+  },
+  "forecast_window": 7,
+  "residual_window": 21,
+  "quantile_method": "linear",
+  "information_cutoff": "Forecast and residuals strictly before the issue date; actuals revealed slot by slot.",
+  "template_last_purchase_column": "Header 0:00-0:10+1 is the NEXT day 00:00-00:10 (next-day 00:10 observation); this row own 00:00-00:10 is in the previous row; 12-31 last column is 0.",
+  "reported_bill": "planned purchase bill plus 5x emergency bill; no terminal credit deducted",
+  "question": "问题4-2（波动电价下重算问题2）",
+  "price_source": "附件/附件4.xlsx（实际价逐区间结算）",
+  "price_forecast": "weekly_persist p_d=p_{d-7}; 1/2-1/7 available-history mean; 1/1 frozen initial-condition day",
+  "price_decision_rule": "first interval (00:00-00:10) price is realized at 0:00 and replaces the forecast; scenario price column 0 determinized to the realized price",
+  "price_scenarios": "same 21 historical days, same-day paired residuals, clipped at 0, first column determinized",
+  "price_missing_fill": "2025-01-01 00:00-00:10 uses the 1/1 00:10 label price (warm-up ledger)",
+  "settlement": "plan bill sum p_act*g; emergency 5*p_act*b",
+  "risk_alpha": "0.8 fixed a priori (newsvendor ratio independent of price)",
+  "workbook_template": "附件/附件5/result4-2.xlsx"
+}

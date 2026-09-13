@@ -15,7 +15,8 @@ template_mapping,PASS,True,True,日历物理区间到正式结果模板采用明
 actual_numeric_finite,PASS,True,True,负荷、光伏、净负荷与固定电价字段无空值或无穷值
 variable_price_availability,PASS,52559,52559,波动电价可用性标志与源数据覆盖范围一致
 forecast_numeric_finite,PASS,True,True,小时及10分钟光伏预报无空值或无穷值
-baseline_numeric_finite,PASS,True,True,日初负载与光伏基线无空值或无穷值
+baseline_numeric_finite,PASS,True,True,日初负载与光伏基线除2025-01-01外无空值或无穷值
+baseline_day0_no_forecast,PASS,True,True,2025-01-01日初基线为无预测（NaN），与1/1冻结（无计划、电池不动作、不入统计）口径一致
 source_values_nonnegative,PASS,True,True,负载、光伏和两类电价非负；净负荷允许为负
 power_energy_conversion,PASS,True,True,10分钟电量严格等于功率乘以1/6
 fixed_price_alignment,PASS,True,True,固定价格按物理区间起点与附件1时刻标签对齐

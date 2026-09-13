@@ -1,0 +1,38 @@
+{
+  "case": "maxiter_12",
+  "settings": {
+    "name": "maxiter_12",
+    "alpha": 0.8,
+    "forecast_days": 7,
+    "residual_days": 21,
+    "stages": 4,
+    "search_seed": 20250912,
+    "search_maxiter": 12,
+    "search_popsize": 5,
+    "delta_bound_kwh": 9600.0,
+    "lambda_bound": 2.0,
+    "load_forecast": "weekly_persist"
+  },
+  "formal_period": {
+    "days": 334,
+    "intervals": 48096,
+    "grid_kwh": 21648510.645572186,
+    "charge_kwh": 6209498.899282274,
+    "discharge_kwh": 5030266.40075007,
+    "emergency_kwh": 129345.29268424248,
+    "unused_kwh": 2659433.944757555,
+    "planned_cost": 13332750.253638897,
+    "emergency_cost": 635090.2328338261,
+    "total_cost": 13967840.486472718,
+    "initial_soc_kwh": 2263.2065799206325,
+    "final_soc_kwh": 1627.3262116666697,
+    "emergency_intervals": 1618
+  },
+  "calibrated_days": 337,
+  "accepted_search_days": 337,
+  "search_evaluations": 150619,
+  "empirical_scenario_improvement": 215227.11201691677,
+  "seconds": 90.96202950000588,
+  "planner_seconds": 14.83913579993532,
+  "calibration_seconds": 72.82724060010514
+}

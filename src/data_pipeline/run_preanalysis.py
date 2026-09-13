@@ -465,7 +465,7 @@ code{{background:#eef1f5;padding:2px 5px}}@media(max-width:760px){{main{{padding
 <h2>6. 四个必交日期核查</h2>
 {_table_html(key_summary, rows=4)}<img src="figures/key_dates_profiles.png" alt="关键日期曲线">
 <h2>7. 数据使用边界</h2>
-<p>日初基线在 2025-01-01 使用附件1，随后仅使用决策时刻之前已经完成的同终点时刻观测；第8日起固定使用最近7个完整日。问题3与问题4-3中，负载预测固定为0:00版本，光伏可在0:00、6:00、12:00、18:00按附件3更新。实际同日负载与光伏仅供执行仿真、结算和回测使用。</p>
+<p>日初基线在 2025-01-01 无任何历史，置为无预测（NaN）并跳过该日统计，与"1/1 冻结（无计划、电池不动作、SOC 恒 6000 kWh、不入统计）、首个计划日 1/2"口径一致；1/2 起仅使用决策时刻之前已经完成的同终点时刻观测，第8日起固定使用最近7个完整日。问题3与问题4-3中，负载预测固定为0:00版本，光伏可在0:00、6:00、12:00、18:00按附件3更新。实际同日负载与光伏仅供执行仿真、结算和回测使用。</p>
 <h2>8. 异常标记</h2>
 <p>采用 Tukey 外围栏（低于 Q1−3IQR 或高于 Q3+3IQR）形成统计标记，共识别 <strong>{len(anomaly_flags)}</strong> 条记录。该标记仅用于提示复核，不等同于数据错误；所有原值均保留，未删除、平滑或缩尾。</p>
 {_table_html(anomaly_flags, rows=20) if len(anomaly_flags) else '<p>未发现外围栏标记。</p>'}
@@ -489,7 +489,7 @@ def run_pipeline(project_root: Path = PROJECT_ROOT) -> dict[str, Path]:
     dispatch = build_dispatch_10min(raw)
     hourly = build_pv_forecast_hourly(raw["attachment_3"])
     ten_minute = build_pv_forecast_10min(hourly, dispatch)
-    baseline = build_day_ahead_baseline(dispatch, raw["attachment_1"])
+    baseline = build_day_ahead_baseline(dispatch)
     checks = validate_datasets(dispatch, hourly, ten_minute, baseline, raw, contract)
 
     paths = {

@@ -1,6 +1,6 @@
 # 微网与外部电网电力调控策略
 
-> **问题二当前主方案：LDR（2026-09-12 修订）**。负载预测采用周持久化 L_{d−7}（d<7 用附件1曲线，仅预热期），光伏预测采用七天均值；固定80%分位数＋四阶段截断仿射储能规则；正式期总费 **13,978,077.23 元**。该方案在当前数据口径、参数边界、搜索预算和已完成对照范围内费用最低，即“当前配置下最优”，不代表全局最优；相似日高斯核暂不接入本轮费用回测。完整论文正文见[问题二完整解答](outputs/question2/current/paper/问题二完整解答_LDR主方案.md)，正式结果见[outputs/question2/current/ldr/result2.xlsx](outputs/question2/current/ldr/result2.xlsx)。负载预测四方案对比见[负载预测方案对比说明](outputs/question2/analysis/load_forecast/负载预测方案对比说明.md)，切换前后费用对照见[b1接入重算对比](outputs/question2/analysis/load_forecast/b1接入重算对比.md)；旧版结果保留在 `archive/` 作对照。
+> **问题二当前主方案：LDR（2026-09-12/13 修订）**。2025-01-01 为冻结初始条件日（无计划、电池不动作、SOC 恒 6000 kWh、不入统计，首个计划日 1/2）；负载预测采用周持久化 L_{d−7}（d<7 用昨日持久化 L_{d-1}，仅预热期），光伏预测采用七天均值；固定80%分位数＋四阶段截断仿射储能规则；正式期总费 **13,978,077.23 元**。该方案在当前数据口径、参数边界、搜索预算和已完成对照范围内费用最低，即“当前配置下最优”，不代表全局最优；相似日高斯核暂不接入本轮费用回测。完整论文正文见[问题二完整解答](outputs/question2/current/paper/问题二完整解答_LDR主方案.md)，正式结果见[outputs/question2/current/ldr/result2.xlsx](outputs/question2/current/ldr/result2.xlsx)。负载预测四方案对比见[负载预测方案对比说明](outputs/question2/analysis/load_forecast/负载预测方案对比说明.md)，切换前后费用对照见[b1接入重算对比](outputs/question2/analysis/load_forecast/b1接入重算对比.md)；旧版结果保留在 `archive/` 作对照。
 
 2026 年高教社杯全国大学生数学建模竞赛 C 题。项目目标是在负载、光伏、储能和电价约束下，制定计划购电、滚动调整与紧急购电策略，使供电满足负载并尽量降低总费用。
 
@@ -83,7 +83,7 @@ paper/      # 论文正文及附录
 
 前置分析：[数据预处理与前置分析报告](outputs/preanalysis/preanalysis.html)。
 
-当前状态：数据预处理与前置分析、问题1求解已实现；问题2已按负载周持久化＋光伏七天均值、21天历史残差、风险修正日前线性规划与四阶段截断仿射LDR实施，正式结果位于 `outputs/question2/current/ldr/`。问题3已按"0:00 计划＋6:00/12:00 滚动调整＋分段净结算＋三次分段 LDR 校准"的 M612 主策略实施，五套消融与 result3.xlsx 见 `outputs/question3/current/`。光伏预测模块保留为研究备选，不进入当前正式问题2结果。
+当前状态：数据预处理与前置分析、问题1求解已实现；问题2已按负载周持久化＋光伏七天均值、21天历史残差、风险修正日前线性规划与四阶段截断仿射LDR实施，正式结果位于 `outputs/question2/current/ldr/`。问题3已按"0:00 计划＋6:00/12:00 滚动调整＋分段净结算＋三次分段 LDR 校准"的 M612 主策略实施，五套消融与 result3.xlsx 见 `outputs/question3/current/`。问题4已按《问题四优化实施方案.md》v2 完成（发布/执行双账本、价格加权分位数、42 日衰减联合情景、正则化 LDR、1/8–1/31 预评价冻结 WP/γ=0）：Q4-2 主方案 14,636,473.85 元、Q4-3 M612 14,638,588.62 元，result4-2.xlsx/result4-3.xlsx 见 `outputs/question4/`（旧方案 B 归档于 `archive_optionB/`）。光伏预测模块保留为研究备选，不进入当前正式问题2结果。全项目统一口径：2025-01-01 为冻结初始条件日（无计划、电池不动作、SOC 恒 6000 kWh、不进入任何统计），首个计划日为 1/2；每次 0:00 计划只覆盖当日 00:00—24:00，不含次日 00:00+ 购电。例外：问题四 v2 按优化实施方案 §8 将 2025-01-01 定为零计划真实运行日（专门约定）。
 
 问题2旧版基线运行：`python -m src.optimization.question2`。该命令生成全年逐时仿真、正式期明细、三个预设方案对照与表格载荷。使用桌面应用提供的 Node 运行 `outputs/question2/archive/baseline/build_workbook.mjs` 回填官方模板，然后执行 `python -m src.optimization.validate_question2_workbook` 独立核验导出结果。
 
@@ -91,7 +91,7 @@ paper/      # 论文正文及附录
 
 情景价值控制（当前对照方案，负载周持久化）：`python -m src.optimization.question2_scenarios`（默认 `--load-forecast weekly_persist`）恢复无非预见性约束的原情景思路，通过连续松弛与固定方向LP构造物理可行近似解，采用原近似价值控制器；结果写入 `outputs/question2/archive/scenarios/`。七天均值时期的旧情景实验归档于 `outputs/question2/archive/scenarios_mean7d/`（2—12月实际总费15868379.61元，方法、上下界差距和数值检验见 [原情景法检验与对比](outputs/question2/archive/scenarios_mean7d/原情景法检验与对比.md)）。
 
-完美信息基准：`python -m src.optimization.question2_perfect_foresight` 对全时域实际数据做统一LP。全年1—12月费用下限13768559.69元；按现行LDR与情景价值控制方案的2月1日期初库存匹配的2—12月下限见 `outputs/question2/benchmark/perfect_foresight/` 各 `matched_*_summary.json`。完整口径、对偶证据和可比差额见 [完美预见下限测算说明](outputs/question2/benchmark/perfect_foresight/完美预见下限测算说明.md)。
+完美信息基准：`python -m src.optimization.question2_perfect_foresight` 对全时域实际数据做统一LP。2025-01-01 为冻结初始条件日，可比全年下限（1/2—12/31 从 6000 kWh 起步）为 13707080.81 元；按现行LDR与情景价值控制方案的2月1日期初库存匹配的2—12月下限见 `outputs/question2/benchmark/perfect_foresight/` 各 `matched_*_summary.json`。完整口径、对偶证据和可比差额见 [完美预见下限测算说明](outputs/question2/benchmark/perfect_foresight/完美预见下限测算说明.md)。
 
 问题1输出中文论文级图表（400 dpi PNG）：图1按“价格机会—净需求—购电响应”展示价格信号与需求侧响应；图2按“储能动作—库存状态—经济结果”展示储能策略与经济后果；图3利用第一阶段LP的功率平衡影子价格、储能水价值和SOC触界时段解释调度机制。
 
@@ -127,7 +127,7 @@ LDR正式运行：`python -m src.optimization.question2_ldr`（默认 `--load-fo
 
 ## 问题三实施（2026-09-13 修订：Q70 曲线＋共同起点）
 
-主策略 **M612**：0:00 制定原计划 q0（80% 分位数 LP，附件3 0:00 发布 PCHIP 预报）；6:00 与 12:00 按分段净结算对 q0 滚动重解并锁定对应区间（双面报童曲线 **median(Q70, Q90, q0)**，由结算边际先验推导：F=1−R'/(5c)，下调区 R'=0.5c→90%、上调区 R'=1.5c→70%；Q50/Q80/Q90 仅作敏感性对照）；18:00 不调整购电、不使用 18:00 预报、不重新校准，仅代入实测 a18 更新 LDR 保留阈值。LDR 每天 0:00/6:00/12:00 三次分段校准（维度 1/2/4，β=1 与 β=0 双保底）。1月由 M0（仅0:00）共同预热一次，五种策略在 2月1日以同一库存 **2148.598325 kWh** 分叉。
+主策略 **M612**：0:00 制定原计划 q0（80% 分位数 LP，附件3 0:00 发布 PCHIP 预报）；6:00 与 12:00 按分段净结算对 q0 滚动重解并锁定对应区间（双面报童曲线 **median(Q70, Q90, q0)**，由结算边际先验推导：F=1−R'/(5c)，下调区 R'=0.5c→90%、上调区 R'=1.5c→70%；Q50/Q80/Q90 仅作敏感性对照）；18:00 不调整购电、不使用 18:00 预报、不重新校准，仅代入实测 a18 更新 LDR 保留阈值。LDR 每天 0:00/6:00/12:00 三次分段校准（维度 1/2/4，β=1 与 β=0 双保底）。2025-01-01 冻结（无计划、电池不动作、SOC 恒 6000 kWh、不入统计）；1/2–1/31 由 M0（仅0:00）共同预热一次，五种策略在 2月1日以同一库存 **2148.598325 kWh** 分叉。
 
 正式期（2—12月，334 天）实际总费 **13,848,036.20 元**。五套消融的预报时刻价值分解：V6（6:00 更新）=4,641.41 元、V12（12:00 更新）=262,702.49 元、V18_state（18:00 状态重优化）=37,080.24 元、V18_forecast（18:00 新预报纯增量）=388.21 元（约 0.003%）——结论：6:00 与 12:00 预报值得使用，18:00 新光伏预报无经济价值。匹配完美信息下界 12,252,452.93 元，差额 1,595,583.27 元。
 
@@ -139,7 +139,7 @@ LDR正式运行：`python -m src.optimization.question2_ldr`（默认 `--load-fo
 | M61218-S | ＋18:00 状态重优化（沿用12:00预报） | 13,810,955.96 |
 | M61218-F | ＋18:00 新预报 | 13,810,567.76 |
 
-实现口径（结算、预测、风险分位数、阶段信号、校准时域、共同起点）见 [问题三实施方案与口径](docs/问题三/问题三实施方案与口径.md)；全年结果与校验见 [问题三实施与结果说明](outputs/question3/current/问题三实施与结果说明.md)；DE 终止证据见 [DE终止证据说明](outputs/question3/current/DE终止证据说明.md)；官方模板 `outputs/question3/current/result3.xlsx` 已回填并通过独立回读。
+实现口径（结算、预测、风险分位数、阶段信号、校准时域、共同起点）见 [问题三实施方案与口径](docs/问题三/问题三实施方案与口径.md)；全年结果与校验见 [问题三实施与结果说明](outputs/question3/current/问题三实施与结果说明.md)；DE 终止证据见 [DE终止证据说明](outputs/question3/current/DE终止证据说明.md)；官方模板 `outputs/question3/current/result3.xlsx` 已回填并通过独立回读。四个指定日期（2025-03-20、06-21、09-23、12-21）的题目表1/表2/表3 格式结果见 [问题三第一小问四日结果表](outputs/question3/current/paper/问题三第一小问_四日结果表.md)，并已并入主论文 §10.2。
 
 ```text
 python -m src.data_pipeline.question3_forecasts        # PCHIP 预报接口 + 锚点检查
@@ -147,6 +147,61 @@ python -m src.optimization.question3                    # 全年五套策略回�
 python -m src.optimization.question3_sensitivity        # Q50/Q70/Q80/Q90 敏感性（仅报告）
 node outputs/question3/build_workbook_q3.mjs --output-dir outputs/question3/current   # result3.xlsx 回填
 python -m src.optimization.validate_question3_workbook --output-dir outputs/question3/current   # 回读核验
+python -m src.reporting.question3_paper_tables                # 四日表1/表2/表3（题目格式）汇总
 python -m src.optimization.question3_perfect_foresight  # 匹配完美预见下界
 python -m unittest tests.test_question3 -v              # 19 项验收测试
 ```
+
+## 问题三第二小问实施（新增整数时点预报，2026-09-13）
+
+按 `outputs/question3/current/paper/问题三第二小问_新增整数时点预报完整方案.md` 实施：
+
+- **预测层** `src/forecasting/question3_self_forecasts.py`：官方发布 + 当日动态残差修正（21 日滚动岭收缩、符号/方差/验证窗回退），PCHIP 10 分钟化；7:00–17:00 全部候选的因果筛选表、月度稳健性、块自助 CI、高光伏日与抗噪敏感性，产物在 `outputs/question3/second_subquestion/forecasts/`。
+- **经济回测** `src/optimization/question3_second_subquestion.py`：B/S/F/O 四分支（同一 M612 路径、同一候选时点 SOC 分叉、全年连续、期末库存只计价一次），主候选 10:00/14:00 × 5 种子，敏感性 9/11/13/15、组合 10+14、ν∈{0,0.5,1,1.5}、候选时点 LDR 重校准；66 个全年回测全部完成，结果与判定见 `outputs/question3/second_subquestion/runs/问题三第二小问_实施与结果.md`。
+- **结论**：10:00 通过 §5.8 全部门槛（V_forecast=10,067 元、5/5 种子为正、CI 下界>0、正月份 9/11、捕获率 30.7%）→ 建议进入主策略（M612+10:00）；14:00 有统计价值（V_forecast=10,498 元、5/5 种子为正、超实质门槛）但 CI 下界 −5.07 元/日、正月份 7/11<8 → 按严格规则暂不进入；组合增量 V14|10=11,413、V10|14=12,071 元均为正；ν 敏感性下两时点 V_forecast 均为正；候选时点重校准增益约 +26/−2,160 元，确认首轮不重校准设计。
+- **性能**：LDR 情景评分内核改由 numba 编译（`question3.py::_run_rule_kernel`，与 numpy 参考实现逐位一致，40 组随机验证 + 全部回归测试 + B≡M612 复核），单日求解 1.2s→0.15s，全年单次回测约 500s→约 70s。
+
+```text
+python -m src.forecasting.question3_self_forecasts                      # 预测层产物
+python -m src.optimization.question3_second_subquestion --run --spec 10F [--seed ...] [--nu-factor ...] [--recalibrate]
+python -m src.optimization.question3_second_subquestion --report --include-sensitivity
+python -m unittest tests.test_question3_second_subquestion -v           # 11 项验收测试
+```
+
+## 问题四实施（优化方案 v2，2026-09-14，按《问题四优化实施方案.md》）
+
+五层结构:严格因果日前电价预测（周持久化 WP / 四类日型相似日高斯核 GK）→ 同一历史日配对的负荷/光伏/电价联合情景（42 日指数衰减窗，21/63 敏感性）→ 价格加权分位数风险曲线（Q80 计划、Q70/Q90 调整）→ 计划/调整 LP（情景均值决策价、次日最低补能成本终端价值）＋ 正则化 LDR（滚动验证日验收、γ 于 1/8–1/31 预评价窗冻结、<14 日不校准、14–41 日仅 δ）→ 附件 4 实际价逐区间结算。
+
+| 规则 | 口径 |
+|---|---|
+| 发布/执行双账本 | 每日 0:00 计划覆盖 [00:10_d, 00:10_{d+1})（模板 144 列同序）；g_exec[d,0]=g_issue[d−1,143]、g_exec[d,t]=g_issue[d,t−1]；正式期费用以执行账本为准，与发布账本经 carry-in/carry-out 桥接 |
+| 调整生效 | 6:00/12:00/18:00 调整自 6:10/12:10/18:10 起生效；已开始区间永久锁定；决策行不做已实现价替换 |
+| 冷启动 | 2025-01-01 为零计划真实运行日（电池按实际执行，SOC 自 6000 连续演化——问题四专门约定）；1/2–1/7 退化预测；1/8–1/31 WP 预热得共同 2/1 期初 SOC |
+| 结算 | 附件 4 实际价逐区间：计划 Σp·g；调整 p·min(q0,qA)+0.5p(q0−qA)⁺+1.5p(qA−q0)⁺；紧急 5p·b |
+| 12/31 末列 | 由 12/31 0:00 因果计划生成，不机械填 0（该区间执行属 2026 年，经 carry-out 桥出） |
+
+预评价（1/8–1/31 影子回测，模型×γ 网格）:GK γ=0 最省（1,403,984.85 元），WP γ=0 次之（1,408,927.83 元），差距 0.35% < 0.5% 阈值 → 按"差异很小优先 WP"规则冻结 **WP、γ=0**。
+
+正式期（2/1–12/31，334 天，共同 2/1 SOC 分叉）结果:
+- **Q4-2 主方案（价格加权Q80＋正则化LDR）实际总费 14,636,473.85 元**（计划 14,178,616.41＋紧急 457,857.44，紧急电量 82,947.51 kWh）；对照：普通Q80+β=1 为 14,997,082.93、+β=0 为 14,847,940.87、+原LDR 为 14,795,856.10；完美预见下界 12,793,144.36（差 14.41%）。敏感性（正式期总费）：GK 14,573,911.43、窗 21 日 14,665,408.26、窗 63 日 14,634,594.59、普通分位数 14,676,421.23、ν=0 14,653,372.21、ν=当日 14,659,404.07。
+- **Q4-3 M612 主策略实际总费 14,638,588.62 元**（常规结算 14,292,663.67＝保留 13,775,463.34＋下调 314,369.58＋上调 202,830.75，紧急 345,924.95）；M0 为 14,838,584.75、M6 为 14,830,632.91、M61218 为 14,870,531.50 → V6=7,951.84、V12=192,044.29、V18=−231,942.88（18:00 调整在本口径下未带来收益，如实披露）。敏感性（M612）：GK 14,589,593.76、窗 21 日 14,662,007.66、普通分位数 14,678,764.16。
+- 工作簿 result4-2.xlsx / result4-3.xlsx 已回填并通过 §10.1 验收（行 144 列求和＝全天量、行费用＝模板价×本行、carry 桥接误差 < 6e-9、12/31 末列因果生成 622.28 kWh、发布/执行映射逐区间复核）；实施与结果说明、四日表与新旧对比见 `outputs/question4/result4-2/问题四-2实施与结果说明.md`、`result4-3/问题四-3实施与结果说明.md`、`outputs/question4/v2/问题四新旧口径对比.md`。旧的方案 B 口径与结果归档于 `docs/问题四/问题四实施方案与口径.md`（已标注历史）与 `outputs/question4/archive_optionB/`。
+
+```text
+python -m src.optimization.question4_2_v2            # Q4-2: 预热+预评价+主方案+基线+敏感性+下界（约15分钟）
+python -m src.optimization.question4_3_v2            # Q4-3: 预热+M0/M6/M612/M61218+敏感性（约15分钟）
+python -m src.optimization.build_workbook_q4_v2      # result4-2.xlsx / result4-3.xlsx 回填
+python -m src.optimization.validate_question4_v2_workbooks   # §10.1 工作簿验收
+python -m src.reporting.q4_v2_report                 # 实施说明/四日表/新旧对比
+python -m unittest tests.test_question4_v2 -v        # 14 项单元测试
+```
+
+性能说明：LDR 标定采用"整代批量 map"（scipy DE 的 workers 传入批处理可调用对象），把目标函数的逐列 Python 循环从"每候选一遍"降为"每代一遍"（算术逐位一致，约 30 倍加速），Q4-2 全年回测约 4 分钟、Q4-3 单策略约 2–3 分钟。
+
+```text
+# 方案B（历史）命令：其产物已归档于 outputs/question4/archive_optionB/
+python -m src.optimization.question4_2                    # Q4-2 方案B 全年回测（写入 archive 前路径）
+python -m src.optimization.question4_3                    # Q4-3 方案B M0/M612（写入 archive 前路径）
+```
+
+回归保证：question2_ldr/question2/question3 的新增价格参数全部默认 None，45 天固定价 pilot 与改动前逐位一致（Q2 全天 2,816,128.716 元；Q3 M0 662,478.0974 元、M612 642,222.1668 元，差异均为 0），原 result2/result3 结果不受影响。v2 实现（q4_v2_common / question4_2_v2 / question4_3_v2 / build_workbook_q4_v2 / validate_question4_v2_workbooks）为独立新模块，不修改问题二/三正式管线。

@@ -2,8 +2,9 @@
 
 The day-ahead purchase plan is *not* re-optimised in this layer. It is the
 fixed alpha=0.8 quantile-LP plan from :mod:`src.optimization.question2`.
-The day-ahead LOAD forecast is weekly persistence L_{d-7} (attachment 1 for
-d < 7, warm-up only); the PV forecast stays the seven-day same-slot mean.
+The day-ahead LOAD forecast is weekly persistence L_{d-7} (yesterday
+persistence L_{d-1} for d < 7, warm-up only); the PV forecast stays the
+seven-day same-slot mean. Attachment 1 load and PV are never used.
 For each day with a complete 21-day residual window, seven controller
 parameters are calibrated on the same historical scenarios:
 
@@ -23,7 +24,7 @@ import argparse
 import hashlib
 import json
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 
 import numpy as np
@@ -38,6 +39,7 @@ from src.optimization.question2 import (
     EMAX,
     S,
     Settings,
+    decision_prices_with_realized,
     forecasts,
     load_forecast_weekly_persist,
     load_inputs,
@@ -149,8 +151,16 @@ class ScenarioObjective:
         self.prices = np.asarray(prices, dtype=float)
         if self.net.ndim != 2:
             raise ValueError("net_paths must be a two-dimensional scenario matrix")
-        if not all(x.shape == (self.net.shape[1],) for x in [self.forecast, self.grid, self.plan_soc, self.prices]):
+        if not all(x.shape == (self.net.shape[1],) for x in [self.forecast, self.grid, self.plan_soc]):
             raise ValueError("daily vectors must match the scenario horizon")
+        # A 1-D price array is broadcast across scenarios (fixed-price Q2);
+        # an (M, T) matrix supplies one price path per scenario (Q4 option B).
+        if self.prices.ndim == 1:
+            if self.prices.shape != (self.net.shape[1],):
+                raise ValueError("price vector must match the scenario horizon")
+            self.prices = np.broadcast_to(self.prices, self.net.shape)
+        elif self.prices.shape != self.net.shape:
+            raise ValueError("price paths must match the scenario matrix shape")
         self.initial = float(initial)
         self.terminal_value = float(terminal_value)
         self.signals = stage_error_means(self.net, self.forecast)
@@ -189,7 +199,7 @@ class ScenarioObjective:
             _, _, emergency, _, energy = rule_transition(
                 self.net[None, :, t], self.grid[t], energy, reserve
             )
-            emergency_cost += 5.0 * self.prices[t] * emergency
+            emergency_cost += 5.0 * self.prices[:, t] * emergency
         score = np.mean(emergency_cost - self.terminal_value * energy, axis=1)
         self.evaluations += count
         return float(score[0]) if scalar else score
@@ -206,11 +216,23 @@ def calibrate_rule(
     residual_count: int,
     settings: LDRSettings,
     seed: int,
+    price_paths: np.ndarray | None = None,
+    lambda_locked: bool = False,
 ) -> CalibrationResult:
-    """Calibrate seven parameters and retain zero whenever search is worse."""
+    """Calibrate seven parameters and retain zero whenever search is worse.
+
+    ``price_paths`` optionally supplies one scenario price path per net-load
+    scenario (Q4 option B); when None the single ``prices`` vector is
+    broadcast to every scenario, which reproduces the fixed-price Q2 rule.
+
+    ``lambda_locked`` fixes all three feedback coefficients to zero, reducing
+    the search to the four stage intercepts (delta-only ablation).
+    """
     started = time.perf_counter()
     objective = ScenarioObjective(
-        net_paths, forecast_net, grid, plan_soc, prices, initial, terminal_value
+        net_paths, forecast_net, grid, plan_soc,
+        prices if price_paths is None else price_paths,
+        initial, terminal_value,
     )
     zero = np.zeros(7, dtype=float)
     zero_score = objective(zero)
@@ -227,7 +249,10 @@ def calibrate_rule(
         )
 
     bounds = [(-settings.delta_bound_kwh, settings.delta_bound_kwh)] * 4
-    bounds += [(-settings.lambda_bound, settings.lambda_bound)] * 3
+    if lambda_locked:
+        bounds += [(0.0, 0.0)] * 3
+    else:
+        bounds += [(-settings.lambda_bound, settings.lambda_bound)] * 3
     result = differential_evolution(
         objective,
         bounds,
@@ -339,13 +364,44 @@ def _period_metrics(frame: pd.DataFrame) -> dict:
     }
 
 
-def run_ldr(dates, load, pv, prices, settings: LDRSettings, limit: int | None = None, fl=None):
-    """Run the LDR strategy continuously from 1 January at 6000 kWh.
+def run_ldr(dates, load, pv, prices, settings: LDRSettings, limit: int | None = None, fl=None,
+            prices_plan=None, prices_actual=None, price_scenarios_fn=None,
+            residual_days: int | None = None, seed_base: int | None = None,
+            lambda_locked: bool = False, start_index: int = 1,
+            initial_soc: float = 6000.0):
+    """Run the LDR strategy continuously from 2 January at 6000 kWh.
+
+    2025-01-01 is a frozen initial-condition day: no purchase plan is made,
+    the battery does not act, the SOC stays at 6000 kWh and the day is
+    excluded from all statistics; its actuals remain available as forecast
+    history for the warm-up days.
 
     ``fl`` optionally overrides the day-ahead load forecast matrix; when None
     the default seven-day mean is used.  The PV forecast is unchanged.
+
+    Q4 option B (fluctuating prices): ``prices_plan[d]`` are the decision
+    prices for day d (0:00 weekly-persistence forecast), ``prices_actual[d]``
+    the realized settlement prices, and ``price_scenarios_fn(d, m)`` returns
+    the (m, T) scenario price matrix paired with the net-load scenarios.
+    All three default to None, which reproduces the fixed-price Q2 behavior
+    exactly (every day uses the same ``prices`` for decisions and settlement).
+
+    Ablation / robustness extensions (defaults reproduce the main run):
+    ``residual_days`` overrides the 21-day residual window for both the risk
+    curve and the calibration scenarios; ``seed_base`` overrides the base
+    search seed; ``lambda_locked`` fixes all feedback coefficients to zero
+    (delta-only ablation); ``start_index``/``initial_soc`` start the loop on
+    a later date with a given SOC (common-start backtest).
     """
     started = time.perf_counter()
+    settings = replace(
+        settings,
+        residual_days=settings.residual_days if residual_days is None else int(residual_days),
+        search_seed=settings.search_seed if seed_base is None else int(seed_base),
+    )
+    window = int(settings.residual_days)
+    if not 1 <= start_index < len(dates):
+        raise ValueError("start_index must be in [1, len(dates))")
     if limit is None:
         limit = len(dates)
     if not 1 <= limit <= len(dates):
@@ -353,78 +409,87 @@ def run_ldr(dates, load, pv, prices, settings: LDRSettings, limit: int | None = 
     dates = dates[:limit]
     load = load[:limit]
     pv = pv[:limit]
+    for name, mat in [("prices_plan", prices_plan), ("prices_actual", prices_actual)]:
+        if mat is not None:
+            mat = np.asarray(mat, dtype=float)
+            if mat.shape != (len(dates), T):
+                raise ValueError(f"{name} must have shape ({len(dates)}, {T})")
     base_fl, fv = forecasts(load, pv)
     if fl is None:
         fl = base_fl
-    nu = float(prices.min() / ETA)
-    energy = 6000.0
+    energy = float(initial_soc)
     records: list[tuple] = []
     diagnostics: list[dict] = []
     paired: list[dict] = []
 
-    for d, date in enumerate(dates):
+    for d in range(start_index, len(dates)):
+        date = dates[d]
         day_started = time.perf_counter()
-        if d == 0:
-            forecast_net = np.zeros(T)
-            risk_net = np.zeros(T)
-            residual_count = 0
-            plan_proxy_objective = 0.0
-            plan = np.zeros((5, T))
-            plan[4] = EMIN
-            calibration = CalibrationResult(
-                theta=np.zeros(7),
-                zero_score=-nu * EMIN,
-                selected_score=-nu * EMIN,
-                evaluations=0,
-                seconds=0.0,
-                method="zero_plan_cold_start",
-                accepted_search=False,
-                solver_message="1 January cold start",
-            )
-        else:
-            forecast_net = fl[d] - fv[d]
-            risk_net, residual_count = planning_net(
-                d,
-                load,
-                pv,
-                fl,
-                fv,
-                Settings(alpha=settings.alpha),
-            )
-            plan, plan_proxy_objective = solve_plan(risk_net, prices, energy, nu)
-            scenarios, scenario_count = scenario_net_matrix(
-                d, load, pv, fl, fv, residual_days=settings.residual_days
-            )
-            if scenario_count != residual_count:
-                raise AssertionError("risk curve and LDR scenario windows disagree")
-            if scenarios is None:
-                scenarios = forecast_net[None, :]
-            calibration = calibrate_rule(
-                scenarios,
-                forecast_net,
-                plan[0],
-                plan[4],
-                prices,
-                energy,
-                nu,
-                residual_count,
-                settings,
-                settings.search_seed + d,
-            )
+        p_plan = prices if prices_plan is None else prices_plan[d]
+        p_act = p_plan if prices_actual is None else prices_actual[d]
+        if prices_actual is not None:
+            # Correction 2: the 00:00-start price of the first interval is
+            # already realized when the 0:00 plan is made.
+            p_plan = decision_prices_with_realized(p_plan, p_act, (0,))
+        nu = float(p_plan.min() / ETA)
+        forecast_net = fl[d] - fv[d]
+        risk_net, residual_count = planning_net(
+            d,
+            load,
+            pv,
+            fl,
+            fv,
+            Settings(alpha=settings.alpha, residual_days=settings.residual_days),
+        )
+        plan, plan_proxy_objective = solve_plan(risk_net, p_plan, energy, nu)
+        scenarios, scenario_count = scenario_net_matrix(
+            d, load, pv, fl, fv, residual_days=settings.residual_days
+        )
+        if scenario_count != residual_count:
+            raise AssertionError("risk curve and LDR scenario windows disagree")
+        if scenarios is None:
+            scenarios = forecast_net[None, :]
+        scen_prices = None
+        if price_scenarios_fn is not None:
+            scen_prices = price_scenarios_fn(d, scenarios.shape[0])
+            if scen_prices is None:
+                scen_prices = p_plan[None, :]
+            scen_prices = np.asarray(scen_prices, dtype=float)
+            if scen_prices.ndim == 1:
+                scen_prices = scen_prices[None, :]
+            if scen_prices.shape != scenarios.shape:
+                raise ValueError(
+                    "price scenario paths must match the net scenario matrix "
+                    f"(got {scen_prices.shape}, expected {scenarios.shape})"
+                )
+        calibration = calibrate_rule(
+            scenarios,
+            forecast_net,
+            plan[0],
+            plan[4],
+            p_plan,
+            energy,
+            nu,
+            residual_count,
+            settings,
+            settings.search_seed + d,
+            price_paths=scen_prices,
+            lambda_locked=lambda_locked,
+        )
 
         theta = calibration.theta
         delta, lambdas = unpack_theta(theta)
         initial_day_soc = energy
         actual = execute_actual_day(
-            load[d], pv[d], plan[0], plan[4], prices, energy, forecast_net, theta
+            load[d], pv[d], plan[0], plan[4], p_act, energy, forecast_net, theta
         )
         beta1 = execute_actual_day(
-            load[d], pv[d], plan[0], plan[4], prices, energy, forecast_net, np.zeros(7)
+            load[d], pv[d], plan[0], plan[4], p_act, energy, forecast_net, np.zeros(7)
         )
         beta0 = execute_actual_day(
-            load[d], pv[d], plan[0], np.full(T, EMIN), prices, energy, forecast_net, np.zeros(7)
+            load[d], pv[d], plan[0], np.full(T, EMIN), p_act, energy, forecast_net, np.zeros(7)
         )
-        planned_cost_day = float(np.dot(prices, plan[0]))
+        planned_cost_day = float(np.dot(p_act, plan[0]))
         for t in range(T):
             stage = min(t // STAGE_LENGTH, 3)
             records.append(
@@ -434,7 +499,8 @@ def run_ldr(dates, load, pv, prices, settings: LDRSettings, limit: int | None = 
                     date + pd.Timedelta(minutes=10 * t),
                     load[d, t],
                     pv[d, t],
-                    prices[t],
+                    p_act[t],
+                    p_plan[t],
                     fl[d, t],
                     fv[d, t],
                     risk_net[t],
@@ -450,7 +516,7 @@ def run_ldr(dates, load, pv, prices, settings: LDRSettings, limit: int | None = 
                     actual["emergency_kwh"][t],
                     actual["unused_kwh"][t],
                     actual["soc_end_kwh"][t],
-                    prices[t] * plan[0, t],
+                    p_act[t] * plan[0, t],
                     actual["emergency_cost"][t],
                     stage + 1,
                     actual["stage_error_mean_kwh"][t],
@@ -513,6 +579,7 @@ def run_ldr(dates, load, pv, prices, settings: LDRSettings, limit: int | None = 
         "load_kwh",
         "pv_kwh",
         "price",
+        "price_forecast",
         "forecast_load_kwh",
         "forecast_pv_kwh",
         "planning_net_kwh",
@@ -565,8 +632,9 @@ def run_ldr(dates, load, pv, prices, settings: LDRSettings, limit: int | None = 
             "lambda_stage_1": 0.0,
             "parameter_order": PARAMETER_NAMES,
             "search_acceptance": "selected empirical objective must not exceed zero-parameter objective",
+            "terminal_value_rule": "nu_d = min(day-d decision price)/ETA per day; the summary field below keeps the last day's value",
         },
-        "terminal_value": nu,
+        "terminal_value": float(nu),
         "seconds": time.perf_counter() - started,
         "planner_seconds": float(diag_frame.day_seconds.sum() - diag_frame.calibration_seconds.sum()),
         "calibration_seconds": float(diag_frame.calibration_seconds.sum()),
@@ -616,7 +684,7 @@ def write_ldr_report(out: Path, summary: dict, baselines: list[dict], paired: pd
     load_forecast = summary["settings"].get("load_forecast", "mean7d")
     forecast_description = {
         "mean7d": "负载与光伏均为七天均值预测",
-        "weekly_persist": "负载为周持久化预测 L_{d-7}（d<7 使用附件1，仅预热期），光伏仍为七天均值",
+        "weekly_persist": "负载为周持久化预测 L_{d-7}（d<7 使用昨日持久化 L_{d-1}，仅预热期），光伏仍为七天均值",
     }[load_forecast]
     scenario_reference = None
     scenario_path = ROOT / "outputs/question2/archive/scenarios/question2_summary.json"
@@ -634,7 +702,7 @@ def write_ldr_report(out: Path, summary: dict, baselines: list[dict], paired: pd
 
 ## 结论
 
-本次按《问题二完整方案与审查修订》实施固定 α=0.8 分位数日前计划，并在每天零点用最近21个完整历史残差日校准四阶段截断仿射保留阈值。1月1日从6000 kWh连续运行至12月31日；2月1日至12月31日为正式期。{verdict}
+本次按《问题二完整方案与审查修订》实施固定 α=0.8 分位数日前计划，并在每天零点用最近21个完整历史残差日校准四阶段截断仿射保留阈值。2025年1月1日为初始条件日（SOC=6000 kWh，冻结：无计划、电池不动作、不参与统计），1月2日起连续运行至12月31日；2月1日至12月31日为正式期。{verdict}
 
 ## 正式期结果（2025-02-01—2025-12-31）
 
@@ -652,7 +720,7 @@ def write_ldr_report(out: Path, summary: dict, baselines: list[dict], paired: pd
 
 {f"作为不同日前计划与控制器构成的整套策略参考，现有情景价值控制方案正式期费用为{scenario_reference['total_cost']:.2f}元；LDR低{scenario_reference['total_cost'] - formal['total_cost']:.2f}元。该比较不用于拆分纯控制器贡献。" if scenario_reference else "未读取到现有情景价值控制方案结果，因此本说明不列该项参考。"}
 
-## 全年连续账本（2025-01-01—2025-12-31）
+## 全年连续账本（2025-01-02—2025-12-31；1月1日为冻结初始条件日，不计入统计）
 
 - 实际总费用：{full['total_cost']:.2f}元
 - 计划购电费用：{full['planned_cost']:.2f}元
@@ -698,7 +766,7 @@ def write_ldr_outputs(
     diagnostics.to_csv(out / "ldr_daily_parameters.csv", index=False, encoding="utf-8-sig")
     paired.to_csv(out / "same_plan_controller_comparison.csv", index=False, encoding="utf-8-sig")
     rows = [
-        _summary_row("LDR", "2025-01-01/2025-12-31", summary["full_year"]),
+        _summary_row("LDR", "2025-01-02/2025-12-31", summary["full_year"]),
         _summary_row("LDR", "2025-02-01/2025-12-31", summary["formal_period"]),
     ]
     pd.DataFrame(rows).to_csv(out / "ldr_period_summary.csv", index=False, encoding="utf-8-sig")
@@ -747,16 +815,10 @@ def main():
     dates, load, pv, prices = load_inputs()
     fl = None
     if args.load_forecast == "weekly_persist":
-        # Attachment 1 is a single sheet [时间, 电价, 负载, 光伏]; its load
-        # column uses the same row order as attachment 2's columns.
-        representative = (
-            pd.read_excel(ROOT / "附件/附件1.xlsx", sheet_name=0)
-            .iloc[:, 2]
-            .to_numpy(float)
-            / 6.0
-        )
-        assert representative.shape == (T,)
-        fl = load_forecast_weekly_persist(load, representative)
+        # Yesterday persistence bridges the d < 7 warm-up days; attachment 1
+        # load is never used (the day-0 row stays NaN; 1 January is a frozen
+        # initial-condition day and is never planned).
+        fl = load_forecast_weekly_persist(load)
     frame, daily, daily_all, summary, diagnostics, paired = run_ldr(
         dates, load, pv, prices, settings, limit=args.days, fl=fl
     )

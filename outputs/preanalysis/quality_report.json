@@ -1,8 +1,8 @@
 {
   "overall_status": "PASS",
-  "check_count": 29,
+  "check_count": 30,
   "status_counts": {
-    "PASS": 29
+    "PASS": 30
   },
   "failed_checks": [],
   "note": "异常值仅标记，不删除、不平滑、不缩尾。"

@@ -15,5 +15,14 @@ node_modules/
 ~$*.xlsx
 ~$*.docx
 
+# Second-sub-question per-run slot-level schedules are regenerable
+# (run_branch reproduces them); keep daily.csv/summary.json/parameters.
+outputs/question3/second_subquestion/runs/*/schedule*.csv
+
+# Question-4 per-strategy slot-level schedules are regenerable by the
+# question4_2/question4_3 runners; keep result workbooks, dailies and
+# summaries.  This also drops the abandoned v2 variant duplicates.
+outputs/question4/**/*schedule*.csv
+
 
 tmp/

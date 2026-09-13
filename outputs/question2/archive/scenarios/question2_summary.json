@@ -11,8 +11,8 @@
       "direction_enforced": true
     },
     "terminal_value": 0.41255555555555556,
-    "planner_seconds": 398.65001719999054,
-    "current_run_segment_seconds": 1045.4375523000017,
+    "planner_seconds": 983.0627249998797,
+    "current_run_segment_seconds": 2198.0228654000093,
     "result_days": 334,
     "result_intervals": 48096,
     "validation": {

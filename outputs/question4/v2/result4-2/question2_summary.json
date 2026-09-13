@@ -1,0 +1,59 @@
+{
+  "settings": {
+    "price_model": "wp",
+    "gamma": 0.0,
+    "quantile": "price_weighted_q80",
+    "window": 42,
+    "decay_tau": 14.0,
+    "terminal_value": "next_day",
+    "ldr": "regularized_validation_day"
+  },
+  "full_year": {
+    "days": 365,
+    "intervals": 52560,
+    "grid_kwh": 24327808.42790857,
+    "charge_kwh": 7259652.543180335,
+    "discharge_kwh": 5883519.585819071,
+    "emergency_kwh": 224587.96185662405,
+    "unused_kwh": 2903451.293787266,
+    "planned_cost": 15897492.656803314,
+    "emergency_cost": 1179263.0350728284,
+    "total_cost": 17076755.69187614,
+    "initial_soc_kwh": 6000.0,
+    "final_soc_kwh": 2443.3046188888898,
+    "emergency_intervals": 1634
+  },
+  "formal_period": {
+    "days": 334,
+    "intervals": 48096,
+    "grid_kwh": 21852230.400336098,
+    "charge_kwh": 6558569.179562753,
+    "discharge_kwh": 5312241.843474981,
+    "emergency_kwh": 82947.5119256769,
+    "unused_kwh": 2749661.0812073383,
+    "planned_cost": 14178616.411136802,
+    "emergency_cost": 457857.43546587316,
+    "total_cost": 14636473.846602678,
+    "initial_soc_kwh": 2221.9802068350846,
+    "final_soc_kwh": 2443.3046188888898,
+    "emergency_intervals": 1039
+  },
+  "issue_cost": 14178759.319317803,
+  "carry_in": 144.58603370000003,
+  "carry_out": 287.4942147,
+  "exec_plan_cost": 14178616.411136802,
+  "bridge_error": 0.0,
+  "validation": {
+    "max_balance_error_kwh": 4.547473508864641e-13,
+    "max_state_error_kwh": 0.0,
+    "max_continuity_error_kwh": 0.0,
+    "min_soc_kwh": 1200.0,
+    "max_soc_kwh": 10800.0,
+    "max_charge_kwh": 833.3333333333334,
+    "max_discharge_kwh": 833.3333333333334,
+    "simultaneous_charge_discharge": 0,
+    "emergency_while_charging": 0,
+    "passed": true
+  },
+  "seconds": 191.83781579995411
+}

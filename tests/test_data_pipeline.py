@@ -91,7 +91,8 @@ class DataPipelineAcceptanceTests(unittest.TestCase):
         trained = self.baseline[self.baseline["training_end"].notna()]
         self.assertTrue((trained["training_end"] < trained["issue_ts"]).all())
         first_day = self.baseline[self.baseline["plan_date"].eq(pd.Timestamp("2025-01-01"))]
-        self.assertTrue(first_day["forecast_source"].eq("attachment_1_cold_start").all())
+        self.assertTrue(first_day["forecast_source"].eq("no_forecast_cold_start").all())
+        self.assertTrue(first_day[["load_forecast_kw", "pv_forecast_kw"]].isna().all().all())
         self.assertTrue(self.baseline[self.baseline["plan_date"].ge(pd.Timestamp("2025-01-08"))]["history_days"].eq(7).all())
 
     def test_quality_report_and_key_dates(self) -> None:

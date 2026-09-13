@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.data_pipeline.ingest import PROJECT_ROOT, load_contract, read_attachments
+from src.data_pipeline.ingest import PROJECT_ROOT, load_contract
 from src.forecasting.load_day_ahead import (
     GRID_H,
     GRID_K,
@@ -30,16 +30,11 @@ def run_load_pipeline(project_root: Path = PROJECT_ROOT) -> dict[str, Path]:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     contract = load_contract(project_root)
-    raw = read_attachments(project_root)
     dispatch = pd.read_parquet(processed_dir / "dispatch_10min.parquet")
-    representative_load = pd.to_numeric(
-        raw["attachment_1"].iloc[:, 2], errors="raise"
-    ).to_numpy(float)
     baseline = pd.read_parquet(processed_dir / "day_ahead_baseline_10min.parquet")
 
     result = build_load_day_ahead(
         dispatch,
-        representative_load,
         baseline=baseline,
         k=KERNEL_K,
         h=KERNEL_H,

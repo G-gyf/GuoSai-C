@@ -1,0 +1,19 @@
+{
+  "risk_coverage_overall": 0.7694402860944777,
+  "point_coverage_overall": 0.5085246174318031,
+  "reserve_at_min_pct": 42.11161011310712,
+  "reserve_at_max_pct": 1.1892880904856953,
+  "feedback_shift_over_1kwh_pct": 63.772455089820355,
+  "paired_saving_beta1_yuan": 193363.1352298013,
+  "paired_saving_beta0_yuan": 64236.94371852056,
+  "generated_figures": [
+    "fig01_workflow.png",
+    "fig02_strategy_costs.png",
+    "fig03_forecast_tradeoffs.png",
+    "fig04_risk_calibration.png",
+    "fig05_controller_interpretability.png",
+    "fig06_paired_savings.png",
+    "fig07_sensitivity.png",
+    "fig08_key_dates.png"
+  ]
+}

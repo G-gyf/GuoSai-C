@@ -183,8 +183,9 @@ def value_reserves(net,grid,prices,nu,step=25.):
     return reserves
 
 
-def run(dates,load,pv,prices,limit,step=25.,time_limit=30.,checkpoint=None,fl=None,load_forecast="mean7d"):
-    base_fl,fv=forecasts(load,pv); energy=6000.; nu=float(prices.min()/ETA)
+def run(dates,load,pv,prices,limit,step=25.,time_limit=30.,checkpoint=None,fl=None,load_forecast="mean7d",
+        start_index=1, initial_soc=6000.0):
+    base_fl,fv=forecasts(load,pv); energy=float(initial_soc); nu=float(prices.min()/ETA)
     if fl is None:
         fl=base_fl
     records=[]; diagnostics=[]; paired=[]
@@ -194,18 +195,14 @@ def run(dates,load,pv,prices,limit,step=25.,time_limit=30.,checkpoint=None,fl=No
         with checkpoint.open('rb') as handle:
             first_day,energy,records,diagnostics,paired=pickle.load(handle)
         print(f'Resume at day {first_day+1}',flush=True)
-    for d in range(first_day,limit):
+    for d in range(max(first_day, start_index), limit):
+        # 1 January is a frozen initial-condition day: no plan, no battery
+        # action, SOC stays 6000 kWh and the day is excluded from statistics.
         date=dates[d]
-        if d:
-            net=scenarios(d,load,pv,fl,fv)
-            grid,traj,diag=stochastic_plan(net,prices,energy,nu,time_limit,branch_only=True)
-            reserves=value_reserves(net,grid,prices,nu,step)
-            means=traj.mean(axis=0)
-        else:
-            net=np.zeros((1,T)); grid=np.zeros(T); reserves=np.full(T,EMIN)
-            means=np.zeros((5,T)); means[4]=EMIN
-            diag={'seconds':0.,'scenario_count':0,'binary_cells':0,'separation_rounds':0,
-                  'solver_status':0,'relative_gap':0.,'relaxed_objective':0.,'direction_feasible_objective':0.}
+        net=scenarios(d,load,pv,fl,fv)
+        grid,traj,diag=stochastic_plan(net,prices,energy,nu,time_limit,branch_only=True)
+        reserves=value_reserves(net,grid,prices,nu,step)
+        means=traj.mean(axis=0)
         diag['date']=str(date.date()); diagnostics.append(diag)
         # Paired controller audit: same day's g AND same actual starting SOC.
         # The greedy path is reset daily; it is NOT an independent annual policy.
@@ -267,9 +264,7 @@ def main():
     args.output.mkdir(parents=True,exist_ok=True)
     fl=None
     if args.load_forecast=='weekly_persist':
-        representative=pd.read_excel(ROOT/'附件/附件1.xlsx',sheet_name=0).iloc[:,2].to_numpy(float)/6.0
-        assert representative.shape==(T,)
-        fl=load_forecast_weekly_persist(load,representative)
+        fl=load_forecast_weekly_persist(load)
     f,daily,s,diag,pair=run(dates,load,pv,prices,args.days,args.step,args.time_limit,
                             args.output/'checkpoint.pkl',fl=fl,load_forecast=args.load_forecast)
     diag.to_csv(args.output/'scenario_solver_diagnostics.csv',index=False)

@@ -10,9 +10,9 @@ main{background:#fff;padding:34px 44px;box-shadow:0 2px 16px #dfe4ec}h1,h2,h3{co
 code{background:#eef1f5;padding:2px 5px}@media(max-width:760px){main{padding:20px}.grid{grid-template-columns:1fr}}
 </style></head><body><main>
 <h1>数据预处理与前置分析报告</h1>
-<p class="meta">生成时间：2026-09-12 20:22 CST。本报告仅使用题目附件，不引入日历、节假日、天气或其他外部特征；不包含优化策略与求解结果。</p>
+<p class="meta">生成时间：2026-09-13 09:50 CST。本报告仅使用题目附件，不引入日历、节假日、天气或其他外部特征；不包含优化策略与求解结果。</p>
 <h2>1. 数据契约与质量结论</h2>
-<p>日历物理区间主表共 <strong>52,560</strong> 条记录，正式结果期共 <strong>48,096</strong> 个10分钟物理区间。质量检查共 29 项，失败项为 <span class="pass">0</span>。</p>
+<p>日历物理区间主表共 <strong>52,560</strong> 条记录，正式结果期共 <strong>48,096</strong> 个10分钟物理区间。质量检查共 30 项，失败项为 <span class="pass">0</span>。</p>
 <table class="dataframe data-table">
   <thead>
     <tr style="text-align: right;">
@@ -141,7 +141,14 @@ code{background:#eef1f5;padding:2px 5px}@media(max-width:760px){main{padding:20p
       <td>PASS</td>
       <td>True</td>
       <td>True</td>
-      <td>日初负载与光伏基线无空值或无穷值</td>
+      <td>日初负载与光伏基线除2025-01-01外无空值或无穷值</td>
+    </tr>
+    <tr>
+      <td>baseline_day0_no_forecast</td>
+      <td>PASS</td>
+      <td>True</td>
+      <td>True</td>
+      <td>2025-01-01日初基线为无预测（NaN），与1/1冻结（无计划、电池不动作、不入统计）口径一致</td>
     </tr>
     <tr>
       <td>source_values_nonnegative</td>
@@ -589,7 +596,7 @@ code{background:#eef1f5;padding:2px 5px}@media(max-width:760px){main{padding:20p
   </tbody>
 </table><img src="figures/key_dates_profiles.png" alt="关键日期曲线">
 <h2>7. 数据使用边界</h2>
-<p>日初基线在 2025-01-01 使用附件1，随后仅使用决策时刻之前已经完成的同终点时刻观测；第8日起固定使用最近7个完整日。问题3与问题4-3中，负载预测固定为0:00版本，光伏可在0:00、6:00、12:00、18:00按附件3更新。实际同日负载与光伏仅供执行仿真、结算和回测使用。</p>
+<p>日初基线在 2025-01-01 无任何历史，置为无预测（NaN）并跳过该日统计，与"1/1 冻结（无计划、电池不动作、SOC 恒 6000 kWh、不入统计）、首个计划日 1/2"口径一致；1/2 起仅使用决策时刻之前已经完成的同终点时刻观测，第8日起固定使用最近7个完整日。问题3与问题4-3中，负载预测固定为0:00版本，光伏可在0:00、6:00、12:00、18:00按附件3更新。实际同日负载与光伏仅供执行仿真、结算和回测使用。</p>
 <h2>8. 异常标记</h2>
 <p>采用 Tukey 外围栏（低于 Q1−3IQR 或高于 Q3+3IQR）形成统计标记，共识别 <strong>0</strong> 条记录。该标记仅用于提示复核，不等同于数据错误；所有原值均保留，未删除、平滑或缩尾。</p>
 <p>未发现外围栏标记。</p>

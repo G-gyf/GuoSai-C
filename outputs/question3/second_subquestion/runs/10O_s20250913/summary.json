@@ -1,0 +1,54 @@
+{
+  "spec": "10O",
+  "seed": 20250913,
+  "nu_factor": 1.0,
+  "recalibrate": false,
+  "branch_name": "10O_s20250913",
+  "candidate_ops": [
+    {
+      "slot": 60,
+      "info": "oracle",
+      "hour": 10
+    }
+  ],
+  "warmup_feb1_soc_kwh": 2148.5983254415123,
+  "validation": {
+    "max_balance_error_kwh": 2.2737367544323206e-13,
+    "max_state_error_kwh": 0.0,
+    "max_continuity_error_kwh": 0.0,
+    "min_soc_kwh": 1200.0,
+    "max_soc_kwh": 10800.0,
+    "max_charge_kwh": 833.3333333333334,
+    "max_discharge_kwh": 833.3333333333334,
+    "simultaneous_charge_discharge": 0,
+    "emergency_while_charging": 0,
+    "max_settlement_recompute_error": 0.0,
+    "negative_q0": 0,
+    "negative_qA": 0,
+    "pre_six_executed_adjusted": 0,
+    "passed": true
+  },
+  "formal_period": {
+    "days": 334,
+    "intervals": 48096,
+    "q0_kwh": 21965917.31751172,
+    "qA_kwh": 21067246.880529016,
+    "down_kwh": 1041650.9083447912,
+    "up_kwh": 142980.4713620893,
+    "charge_kwh": 6353205.045848228,
+    "discharge_kwh": 5146640.243545654,
+    "emergency_kwh": 81391.41254902373,
+    "unused_kwh": 2002883.9958087986,
+    "retained_cost": 12894646.847449832,
+    "down_cost": 330597.45272641344,
+    "up_cost": 142688.81681246322,
+    "emergency_cost": 409938.59657097876,
+    "total_cost": 13777871.713559689,
+    "initial_soc_kwh": 2148.5983254415123,
+    "final_soc_kwh": 1543.9800936761133,
+    "emergency_intervals": 1178,
+    "adjusted_intervals": 7028
+  },
+  "run_seconds": 1935.5416201000044,
+  "result_days": 334
+}

@@ -1,4 +1,4 @@
-﻿"""Joint-horizon perfect-information cost lower bounds for Question 2."""
+"""Joint-horizon perfect-information cost lower bounds for Question 2."""
 from __future__ import annotations
 import json
 import time
@@ -68,7 +68,11 @@ def main():
     out=ROOT/'outputs/question2/benchmark/perfect_foresight'; out.mkdir(parents=True,exist_ok=True)
     dates,l,v,p=load_inputs()
     scenarios=json.loads((ROOT/'outputs/question2/archive/scenarios/question2_summary.json').read_text(encoding='utf-8'))
-    annual=solve_horizon(dates,l,v,p,6000.,'full_year',out)
+    # 1 January is a frozen initial-condition day for every causal strategy
+    # (no plan, no battery action, SOC stays 6000 kWh, excluded from
+    # statistics), so the comparable perfect-information bound starts on
+    # 2 January at 6000 kWh.
+    annual=solve_horizon(dates[1:],l[1:],v[1:],p,6000.,'full_year',out)
     results=[annual]
     # Match each causal policy's ACTUAL February opening inventory. A suffix
     # of the full-year optimum is not used as the suffix-only lower bound.
@@ -84,15 +88,15 @@ def main():
     comparisons='\n'.join(f'| {r["case"]} | {r["causal_policy_cost_yuan"]:,.2f} | {r["cost_lower_bound_yuan"]:,.2f} | {r["gap_to_bound_yuan"]:,.2f} | {r["gap_as_fraction_of_actual"]:.2%} | {r["excess_over_lower_bound"]:.2%} |' for r in results[1:])
     report=f'''# 问题二完美预见费用下限
 
-将附件2全年实际负载与光伏视为事先完全已知，按附件1固定周期电价，对全时域进行一次统一线性规划。2025年1—12月购电费用下限为 **{annual['cost_lower_bound_yuan']:,.2f}元**，购电量{annual['grid_kwh']:,.6f} kWh。该下限不是七天预测模型，也不是365个单日最优值简单相加。
+将附件2实际负载与光伏视为事先完全已知，按附件1固定周期电价，对全时域进行一次统一线性规划。2025年1月2日—12月31日购电费用下限为 **{annual['cost_lower_bound_yuan']:,.2f}元**，购电量{annual['grid_kwh']:,.6f} kWh。该下限不是七天预测模型，也不是364个单日最优值简单相加。
 
 ## 口径
 
-保留10分钟粒度、充放电各90%效率、1200—10800 kWh库存、5000 kW充放电功率、无售电与允许免费未利用供能。全年从1月1日6000 kWh起步，库存跨天连续。不设每日闭环，不强制年末回到6000，不加入人为日末库存价值项；年末仅受实际库存上下界约束。原预测方案的首日冷启动规则不适用于这个完美信息反事实，因为首日也已知供需。
+保留10分钟粒度、充放电各90%效率、1200—10800 kWh库存、5000 kW充放电功率、无售电与允许免费未利用供能。各因果策略把2025-01-01作为冻结初始条件日（无计划、电池不动作、SOC恒6000 kWh、不入统计），因此可比下限从1月2日6000 kWh起步，库存跨天连续。不设每日闭环，不强制年末回到6000，不加入人为日末库存价值项；年末仅受实际库存上下界约束。原预测方案的首日冷启动规则不适用于这个完美信息反事实，因为首日也已知供需。
 
 在完全预见且计划购电无限额的题设下，紧急购电可提前转为同一时段普通计划购电，价格更低，所以最优解不需要紧急购电，紧急费用为0。
 
-目标为min sum(c*g)，约束为g+D=L−V+C+U，E下一时段=E当前+0.9C−D/0.9，配合设备边界及非负性。一次性优化52560个时段，约262800个连续变量。末日之后的数据与电量价值均不引入。
+目标为min sum(c*g)，约束为g+D=L−V+C+U，E下一时段=E当前+0.9C−D/0.9，配合设备边界及非负性。一次性优化52416个时段，约262080个连续变量。末日之后的数据与电量价值均不引入。
 
 ## 下限与可比结果
 
@@ -100,7 +104,7 @@ def main():
 |---|---|---:|---:|---:|
 {rows}
 
-full_year是完整自然年下限。matched_scenario和matched_risk_reserve分别将2月1日起点设为两种实际策略的预热后库存，独立求解2—12月下限。不能拿全年下限直接减2—12月实际费用，也不能把全年最优解的2—12月切片直接称为独立正式期下限。
+full_year是2025-01-02—12-31（1月1日冻结、不入统计）的自然年可比下限。matched_scenario和matched_risk_reserve分别将2月1日起点设为两种实际策略的预热后库存，独立求解2—12月下限。不能拿全年下限直接减2—12月实际费用，也不能把全年最优解的2—12月切片直接称为独立正式期下限。
 
 | 可比策略 | 实际费用 元 | 同期同初始库存下限 元 | 差额 元 | 差额占实际费用 | 实际费用高于下限 |
 |---|---:|---:|---:|---:|---:|

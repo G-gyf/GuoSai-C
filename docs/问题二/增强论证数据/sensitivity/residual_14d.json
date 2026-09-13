@@ -1,0 +1,38 @@
+{
+  "case": "residual_14d",
+  "settings": {
+    "name": "residual_14d",
+    "alpha": 0.8,
+    "forecast_days": 7,
+    "residual_days": 14,
+    "stages": 4,
+    "search_seed": 20250912,
+    "search_maxiter": 8,
+    "search_popsize": 5,
+    "delta_bound_kwh": 9600.0,
+    "lambda_bound": 2.0,
+    "load_forecast": "weekly_persist"
+  },
+  "formal_period": {
+    "days": 334,
+    "intervals": 48096,
+    "grid_kwh": 21596612.671036787,
+    "charge_kwh": 6240220.926260723,
+    "discharge_kwh": 5055127.250902919,
+    "emergency_kwh": 119515.19333948154,
+    "unused_kwh": 2591844.6940517975,
+    "planned_cost": 13293164.93253329,
+    "emergency_cost": 615301.0229757777,
+    "total_cost": 13908465.95550907,
+    "initial_soc_kwh": 2192.322799888892,
+    "final_soc_kwh": 1583.0998757407415,
+    "emergency_intervals": 1422
+  },
+  "calibrated_days": 344,
+  "accepted_search_days": 344,
+  "search_evaluations": 108584,
+  "empirical_scenario_improvement": 231650.76047338053,
+  "seconds": 54.654279300011694,
+  "planner_seconds": 12.883810000130325,
+  "calibration_seconds": 41.31592489994364
+}

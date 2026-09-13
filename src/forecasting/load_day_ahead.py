@@ -10,7 +10,11 @@ Implements the comparison specified in ``问题二预测.docx`` §负载预测:
 
 All pool construction, sigma, kernel parameters, residual statistics and
 bound quantiles use completed plan dates strictly before each 00:00 issue
-timestamp.  Attachment 3 is never read; no regression/ML is used.
+timestamp.  Cold start: the first calendar day has no history and is marked
+no-forecast (NaN, excluded from error statistics); days with fewer than 7
+completed days fall back to yesterday persistence L_{d-1}.  Attachment 3 is
+never read; attachment 1 load and PV are never used; no regression/ML is
+used.
 """
 
 from __future__ import annotations
@@ -109,12 +113,16 @@ def gaussian_kernel_forecasts(
     k: int = KERNEL_K,
     h: float = KERNEL_H,
     tau: float = KERNEL_TAU,
+    sigma_floor: float = KERNEL_SIGMA_FLOOR_KW,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Walk-forward similar-day Gaussian-kernel forecasts.
 
     Returns (forecasts, pool_sizes).  Rows where no same-type prior day
-    exists are NaN and must be handled by the caller (yesterday persistence
-    fallback, or the attachment-1 cold-start curve on the first day).
+    exists are NaN and must be handled by the caller.  The project
+    convention: day 0 (2025-01-01) stays NaN (frozen initial-condition
+    day, excluded from statistics) and d < 7 falls back to yesterday
+    persistence L_{d-1}; attachment 1 is never used for load or PV cold
+    starts.
     """
     days, slots = load_matrix.shape
     daily_mean = _daily_mean(load_matrix)
@@ -132,8 +140,8 @@ def gaussian_kernel_forecasts(
             continue
         r7_pool = r7[pool]
         sigma = float(np.std(r7_pool))
-        if sigma < KERNEL_SIGMA_FLOOR_KW:
-            sigma = KERNEL_SIGMA_FLOOR_KW
+        if sigma < sigma_floor:
+            sigma = sigma_floor
         scores = ((r7_pool - r7[d]) / sigma) ** 2 / (2.0 * h**2) + (d - pool) / tau
         k_eff = min(k, len(pool))
         order = np.argsort(scores)[:k_eff]
@@ -161,8 +169,10 @@ def rolling_type_quantile_residuals(
     """
     days, slots = residuals.shape
     quantiles = np.full((days, slots), np.nan)
+    finite_rows = np.isfinite(residuals).all(axis=1)
     for d in range(days):
         same = np.flatnonzero(day_type_series[:d] == day_type_series[d])
+        same = same[finite_rows[same]]
         if len(same) >= min_days:
             quantiles[d] = np.quantile(residuals[same], q, axis=0)
     return quantiles
@@ -180,7 +190,6 @@ class LoadForecastResult:
 
 def build_load_day_ahead(
     dispatch: pd.DataFrame,
-    representative_load_kw: np.ndarray,
     baseline: pd.DataFrame | None = None,
     k: int = KERNEL_K,
     h: float = KERNEL_H,
@@ -199,9 +208,6 @@ def build_load_day_ahead(
     )
     days, slots = load_matrix.shape
     day_types = build_day_type_frame(dates)["day_type"].to_numpy()
-    representative = np.asarray(representative_load_kw, dtype=float)
-    if representative.shape != (slots,):
-        raise ValueError(f"Attachment 1 load curve must have {slots} values")
 
     # Scheme B2 reuses the exact Q2 baseline artifact when available so the
     # comparison is identical to the current pipeline's load input.
@@ -224,20 +230,25 @@ def build_load_day_ahead(
         b2_matrix = np.empty_like(load_matrix)
         for d in range(days):
             if d == 0:
-                b2_matrix[d] = representative
+                b2_matrix[d] = np.nan
             else:
                 b2_matrix[d] = load_matrix[max(0, d - 7) : d].mean(axis=0)
 
     b0_matrix = np.empty_like(load_matrix)
     b1_matrix = np.empty_like(load_matrix)
     for d in range(days):
-        b0_matrix[d] = load_matrix[d - 1] if d > 0 else representative
-        b1_matrix[d] = load_matrix[d - 7] if d >= 7 else representative
+        b0_matrix[d] = load_matrix[d - 1] if d > 0 else np.nan
+        if d >= 7:
+            b1_matrix[d] = load_matrix[d - 7]
+        elif d > 0:
+            b1_matrix[d] = load_matrix[d - 1]
+        else:
+            b1_matrix[d] = np.nan
 
     gk_matrix, pool_sizes = gaussian_kernel_forecasts(load_matrix, day_types, k, h, tau)
     for d in range(days):
         if not np.isfinite(gk_matrix[d]).all():
-            gk_matrix[d] = load_matrix[d - 1] if d > 0 else representative
+            gk_matrix[d] = load_matrix[d - 1] if d > 0 else np.nan
 
     schemes = {
         "b0": b0_matrix,
@@ -453,16 +464,24 @@ def _quality_checks(ten: pd.DataFrame, day_types: np.ndarray) -> pd.DataFrame:
         True,
     )
     value_columns = ["load_b0_kw", "load_b1_kw", "load_b2_kw", "load_gk_kw"]
+    day0 = ten["plan_date"].eq(pd.Timestamp("2025-01-01"))
+    non_day0 = ten.loc[~day0, value_columns]
     add(
         "nonnegative",
-        bool(ten[value_columns].ge(0).all().all()),
-        "all non-negative",
+        bool(non_day0.ge(0).all().all()),
+        "all non-negative on days with a forecast",
         True,
     )
     add(
         "finite_point_forecasts",
-        bool(np.isfinite(ten[value_columns].to_numpy(dtype=float)).all()),
-        "finite",
+        bool(np.isfinite(non_day0.to_numpy(dtype=float)).all()),
+        "finite on days with a forecast",
+        True,
+    )
+    add(
+        "day0_no_forecast",
+        bool(ten.loc[day0, value_columns].isna().all().all()),
+        "2025-01-01 forecasts are NaN (no-forecast cold start)",
         True,
     )
     add(

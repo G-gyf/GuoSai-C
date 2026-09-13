@@ -78,8 +78,12 @@ class LoadDayAheadAcceptanceTests(unittest.TestCase):
         trained = self.ten[self.ten["training_end"].notna()]
         self.assertTrue((trained["training_end"] < trained["issue_ts"]).all())
         columns = ["load_b0_kw", "load_b1_kw", "load_b2_kw", "load_gk_kw"]
-        self.assertTrue(self.ten[columns].ge(0).all().all())
-        self.assertTrue(np.isfinite(self.ten[columns].to_numpy(dtype=float)).all())
+        day0 = self.ten["plan_date"].eq(pd.Timestamp("2025-01-01"))
+        non_day0 = self.ten.loc[~day0, columns]
+        self.assertTrue(non_day0.ge(0).all().all())
+        self.assertTrue(np.isfinite(non_day0.to_numpy(dtype=float)).all())
+        # No-forecast cold start: 2025-01-01 rows are NaN in every scheme.
+        self.assertTrue(self.ten.loc[day0, columns].isna().all().all())
 
     def test_kernel_pool_is_same_type_and_prior_only(self) -> None:
         matrix = np.abs(np.random.default_rng(7).normal(5000, 500, (60, 144)))
@@ -133,11 +137,8 @@ class LoadDayAheadAcceptanceTests(unittest.TestCase):
         changed = subset.copy()
         cutoff = pd.Timestamp("2025-02-15")
         changed.loc[changed["plan_date"].ge(cutoff), "load_actual_kw"] *= 1.25
-        representative = pd.to_numeric(
-            subset.iloc[0:144]["load_actual_kw"], errors="raise"
-        ).to_numpy(float)
-        original = build_load_day_ahead(subset, representative)
-        perturbed = build_load_day_ahead(changed, representative)
+        original = build_load_day_ahead(subset)
+        perturbed = build_load_day_ahead(changed)
         before = original.ten_minute[original.ten_minute["plan_date"].lt(cutoff)]
         before_changed = perturbed.ten_minute[perturbed.ten_minute["plan_date"].lt(cutoff)]
         columns = ["load_b0_kw", "load_b1_kw", "load_b2_kw", "load_gk_kw"]

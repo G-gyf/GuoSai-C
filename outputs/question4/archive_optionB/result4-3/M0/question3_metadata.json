@@ -1,0 +1,20 @@
+{
+  "strategy": "M0",
+  "source_sha256": {
+    "附件/附件4.xlsx": "20e9c93aeab5e8e21ae4dd15587f9e190f7408692504c1319598461cd654fe71",
+    "附件/附件1.xlsx": "66b87134f5ecccd68184d3539bb1293ef039f9e0fdd955a589b9bfa7f227c377",
+    "附件/附件2.xlsx": "2e95fd446bfafa0d8c59577b5c2e2ea8b3f1def20dde54a3062556f4da9b4c72",
+    "附件/附件3.xlsx": "8a61b06c52bd0d639a1cc37c61a7d9f5b75edcbca718f64c1bd3498ec9f9d843",
+    "附件/附件5/result3.xlsx": "c59da470cabd0be23f602c95c8aa9d11ec224a0cdac216b3e1f218e65d006bdc"
+  },
+  "settlement": "p*min(q0,qA) + 0.5p*(q0-qA)+ + 1.5p*(qA-q0)+ + 5p*b",
+  "information_cutoff": "each update uses only the issuance forecast and residuals available before its clock time",
+  "template_last_purchase_column": "0:00-0:10+1 is the NEXT day 00:00-00:10 (same mapping as question 2 appendix B)",
+  "reported_bill": "retained + down penalty + up premium + 5x emergency; no terminal credit deducted",
+  "question": "问题4-3（波动电价下重算问题3）",
+  "price_source": "附件/附件4.xlsx（实际价逐区间结算）",
+  "price_forecast": "weekly_persist p_d=p_{d-7}; 1/2-1/7 available-history mean; 1/1 frozen initial-condition day",
+  "price_decision_rule": "at each update instant (0:00/6:00/12:00/18:00 re-optimisation) the first interval of the horizon has an already-realized price that replaces the forecast; scenario price first column determinized",
+  "price_scenarios": "same 21 historical days, same-day paired residuals, clipped at 0, first column determinized",
+  "workbook_template": "附件/附件5/result4-3.xlsx"
+}

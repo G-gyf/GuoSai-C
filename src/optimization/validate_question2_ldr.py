@@ -1,4 +1,4 @@
-﻿"""Independent validation of the revised Question 2 LDR result bundle."""
+"""Independent validation of the revised Question 2 LDR result bundle."""
 from __future__ import annotations
 
 import argparse
@@ -26,15 +26,15 @@ def main() -> None:
     workbook = json.loads((out / "question2_workbook_validation.json").read_text(encoding="utf-8"))
     dates, _, _, prices = load_inputs()
 
-    assert len(schedule) == 365 * 144
+    assert len(schedule) == 364 * 144
     assert len(formal) == 334 * 144
-    assert pd.DatetimeIndex(schedule.date.drop_duplicates()).equals(dates)
-    assert np.array_equal(schedule.slot.to_numpy(), np.tile(np.arange(144), 365))
+    assert pd.DatetimeIndex(schedule.date.drop_duplicates()).equals(dates[1:])
+    assert np.array_equal(schedule.slot.to_numpy(), np.tile(np.arange(144), 364))
     expected_intervals = np.concatenate(
-        [date.to_datetime64() + np.arange(144) * np.timedelta64(10, "m") for date in dates]
+        [date.to_datetime64() + np.arange(144) * np.timedelta64(10, "m") for date in dates[1:]]
     )
     assert np.array_equal(schedule.interval_start.to_numpy(dtype="datetime64[ns]"), expected_intervals)
-    np.testing.assert_allclose(schedule.price.to_numpy(), np.tile(prices, 365), atol=0, rtol=0)
+    np.testing.assert_allclose(schedule.price.to_numpy(), np.tile(prices, 364), atol=0, rtol=0)
 
     physical = validate_schedule(schedule)
     independently_planned = float(np.dot(formal.grid_kwh, formal.price))
@@ -44,8 +44,8 @@ def main() -> None:
     assert abs(independently_emergency - summary["emergency_cost"]) < 1e-6
     assert abs(independently_total - summary["total_cost"]) < 1e-6
 
-    assert len(diagnostics) == 365
-    expected_counts = np.array([max(0, d - max(7, d - 21)) for d in range(365)])
+    assert len(diagnostics) == 364
+    expected_counts = np.array([max(0, d - max(7, d - 21)) for d in range(1, 365)])
     np.testing.assert_array_equal(diagnostics.residual_count.to_numpy(), expected_counts)
     parameter_values = diagnostics[PARAMETER_NAMES].to_numpy(float)
     warmup = diagnostics.residual_count < 21
@@ -59,7 +59,7 @@ def main() -> None:
     assert schedule.soc_start_kwh.min() >= EMIN - 1e-7
     assert schedule.soc_end_kwh.max() <= EMAX + 1e-7
 
-    assert len(paired) == 365
+    assert len(paired) == 364
     formal_paired = paired[paired.date >= pd.Timestamp("2025-02-01")]
     assert abs(formal_paired.ldr_emergency_cost.sum() - formal.emergency_cost.sum()) < 1e-6
     assert workbook["passed"] is True
@@ -67,9 +67,10 @@ def main() -> None:
 
     result = {
         "passed": True,
-        "schedule_rows_full_year": len(schedule),
+        "frozen_jan1": "2025-01-01 has no schedule rows: no plan, no battery action, SOC stays 6000 kWh",
+        "schedule_rows_planning_year": len(schedule),
         "schedule_rows_formal_period": len(formal),
-        "dates_full_year": int(schedule.date.nunique()),
+        "dates_planning_year": int(schedule.date.nunique()),
         "dates_formal_period": int(formal.date.nunique()),
         "physical_validation": physical,
         "causal_residual_count_sequence": True,

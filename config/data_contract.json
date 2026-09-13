@@ -43,7 +43,7 @@
     "interpolation": "linear",
     "lower_bound_kw": 0,
     "baseline_window_days": 7,
-    "cold_start_source": "附件1",
+    "cold_start_source": "frozen_initial_condition_day_no_plan",
     "pv_day_ahead": {
       "hour_blocks": 24,
       "slots_per_hour_block": 6,

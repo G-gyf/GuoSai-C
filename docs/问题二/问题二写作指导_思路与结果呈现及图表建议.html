@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>问题二论文写作指导：建模思路 · 结果呈现 · 图表生成</title>
+<style>
+  :root{
+    --ink:#1f2733; --muted:#5b6b7f; --line:#d9e1ec; --bg-soft:#f5f8fc;
+    --blue:#1f5fa8; --blue-dark:#143f72; --amber:#b97a1c; --red:#b3372f; --green:#2e7d4f;
+    --code-bg:#f4f6f9;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; font-family:"Microsoft YaHei","PingFang SC","Hiragino Sans GB","Segoe UI",sans-serif;
+       color:var(--ink); line-height:1.78; font-size:15.5px; background:#fff;}
+  .wrap{max-width:1020px; margin:0 auto; padding:0 28px 80px;}
+
+  header.banner{background:linear-gradient(135deg,#143f72 0%,#1f5fa8 55%,#2e7d9e 100%);
+    color:#fff; padding:44px 0 38px; margin-bottom:26px;}
+  header.banner .wrap{padding-bottom:0;}
+  .kicker{font-size:13px; letter-spacing:3px; opacity:.85; margin-bottom:10px;}
+  h1{font-size:29px; line-height:1.35; margin:0 0 10px; font-weight:700;}
+  .subtitle{font-size:15px; opacity:.92; margin:0; max-width:860px;}
+
+  h2{font-size:22px; margin:52px 0 14px; padding:10px 0 10px 14px;
+     border-left:5px solid var(--blue); background:var(--bg-soft); color:var(--blue-dark);}
+  h3{font-size:17.5px; margin:32px 0 10px; color:var(--blue-dark);
+     padding-bottom:6px; border-bottom:1px solid var(--line);}
+  h4{font-size:15.5px; margin:22px 0 8px; color:var(--ink);}
+  p{margin:10px 0;}
+  ul,ol{margin:8px 0; padding-left:26px;}
+  li{margin:5px 0;}
+  strong{color:#123a66;}
+  em{font-style:normal; font-family:Georgia,"Times New Roman",serif;}
+
+  a{color:var(--blue); text-decoration:none;}
+  a:hover{text-decoration:underline;}
+
+  .toc{background:var(--bg-soft); border:1px solid var(--line); border-radius:10px;
+       padding:18px 26px; margin:26px 0;}
+  .toc h2{margin:0 0 10px; padding:0; border:none; background:none; font-size:17px;}
+  .toc ol{margin:4px 0; padding-left:22px; column-count:2; column-gap:40px;}
+  .toc li{margin:3px 0; font-size:14.5px;}
+  @media print{.toc ol{column-count:1;}}
+
+  table{border-collapse:collapse; width:100%; margin:14px 0; font-size:14px;}
+  th{background:#e8eff8; color:#123a66; font-weight:600;}
+  th,td{border:1px solid var(--line); padding:7px 10px; text-align:left; vertical-align:top;}
+  tr:nth-child(even) td{background:#fafcff;}
+  td.num,th.num{text-align:right; font-variant-numeric:tabular-nums;}
+  .caption{font-size:13px; color:var(--muted); margin:-6px 0 16px;}
+
+  .box{border-radius:8px; padding:12px 18px; margin:16px 0; border:1px solid; font-size:14.5px;}
+  .box .bt{font-weight:700; display:block; margin-bottom:4px;}
+  .tip{border-color:#bcd7ee; background:#eef5fc;} .tip .bt{color:var(--blue-dark);}
+  .warn{border-color:#f0c9c4; background:#fdf1ef;} .warn .bt{color:var(--red);}
+  .demo{border-color:#d8c7ef; background:#f7f2fd;} .demo .bt{color:#6b3fa0;}
+  .ok{border-color:#bfe2cc; background:#eefaf2;} .ok .bt{color:var(--green);}
+
+  pre{background:var(--code-bg); border:1px solid var(--line); border-radius:8px;
+      padding:14px 16px; overflow-x:auto; font-size:13px; line-height:1.55;
+      font-family:Consolas,"Courier New",monospace;}
+  code{font-family:Consolas,"Courier New",monospace; background:#eef1f5; padding:1px 5px;
+       border-radius:4px; font-size:13px;}
+  pre code{background:none; padding:0;}
+
+  .refs{font-size:13.8px;}
+  .refs li{margin:8px 0; padding-left:14px; text-indent:-14px;}
+
+  .pill{display:inline-block; font-size:12px; border-radius:10px; padding:1px 10px;
+        margin-right:6px; color:#fff; font-weight:600;}
+  .p-blue{background:var(--blue);} .p-amber{background:var(--amber);}
+  .p-red{background:var(--red);} .p-green{background:var(--green);}
+
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  @media(max-width:820px){.grid2{grid-template-columns:1fr;}}
+
+  footer{margin-top:60px; padding-top:16px; border-top:1px solid var(--line);
+         color:var(--muted); font-size:13px;}
+  @media print{
+    header.banner{background:#143f72 !important; -webkit-print-color-adjust:exact;}
+    body{font-size:12.5px;} h2{page-break-after:avoid;} pre,table{page-break-inside:avoid;}
+  }
+</style>
+</head>
+<body>
+
+<header class="banner">
+  <div class="wrap">
+    <div class="kicker">2026 高教社杯全国大学生数学建模竞赛 · C 题</div>
+    <h1>问题二论文写作指导：建模思路 · 结果呈现 · 图表生成</h1>
+    <p class="subtitle">以本队问题二实际实施方案（周持久化负载预测＋光伏七天均值＋80% 分位数风险修正＋四阶段截断仿射保留规则 LDR，正式期实际总费 13,978,077.23 元）为依据，结合可查证文献，给出论文该部分的写作思路、结果呈现与图表生成建议。</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+<div class="box tip"><span class="bt">本指南怎么用</span>
+本指南是「教练视角」的写作指导，不是论文正文本身。第一部分讲评委看什么，第二部分给章节框架，第三部分逐块讲建模思路与<strong>求解过程</strong>怎么写、每处配什么文献、示范句怎么写，第四部分给<strong>填好数字的成品表</strong>与结果段七拍叙事线，第五部分给图表清单、绘图代码与图注引图句，第六部分是失分点、交稿核对清单与答辩模拟问答，第七部分是参考文献列表与引用落点。写作时对照执行，可显著降低"模型做了、论文没写透"的失分风险。
+</div>
+
+<nav class="toc">
+  <h2>目录</h2>
+  <ol>
+    <li><a href="#s1">一、评委视角：问题二到底考什么</a></li>
+    <li><a href="#s2">二、论文写作总体框架（章节与篇幅建议）</a></li>
+    <li><a href="#s3">三、建模思路的写作与文献衔接（核心）</a></li>
+    <li><a href="#s4">四、结果呈现建议（成品表＋叙事线＋分节写法）</a></li>
+    <li><a href="#s5">五、图表生成建议（图清单＋代码＋图注引图句）</a></li>
+    <li><a href="#s6">六、常见失分点与交稿自查清单</a></li>
+    <li><a href="#s7">七、参考文献与引用落点</a></li>
+    <li><a href="#s8">附录：本指南与本队产物对照索引</a></li>
+  </ol>
+</nav>
+
+<!-- ===================== 一 ===================== -->
+<h2 id="s1">一、评委视角：问题二到底考什么</h2>
+
+<p>问题二与问题一的本质区别，在于把"确定性单日调度"升级为<strong>"信息不确定下的日前承诺（day-ahead commitment）＋日内追索（recourse）"</strong>问题：每天 0:00 锁定全天普通购电计划，实际负载与光伏随后逐时段揭示；计划电量买多了不可退、买少了按 <strong>交易时刻电价的 5 倍</strong>紧急补购，储能作为唯一可日内调用的缓冲资源。论文写作前先明确三个层次和两条红线：</p>
+
+<h3>1.1 三个递进层次（论文的骨架就是它）</h3>
+<table>
+<tr><th style="width:15%">层次</th><th style="width:42%">要解决的问题</th><th>本队做法（论文中的对应章节）</th></tr>
+<tr><td><strong>预测层</strong></td><td>0:00 时如何用历史数据预测当天负载与光伏，并刻画"预测有多不准"</td><td>负载周持久化 L̂<sub>d</sub>=L<sub>d−7</sub>、光伏七天均值；最近 21 个历史日的负载—光伏成对残差构造情景（§3）</td></tr>
+<tr><td><strong>计划层</strong></td><td>计划购电量应预留多少风险余量（买多浪费 vs 买少 5 倍补购）</td><td>80% 分位数风险修正曲线上的两阶段线性规划，锁定计划 g<sup>Q</sup> 与参考库存 E<sup>p</sup>（§4）</td></tr>
+<tr><td><strong>执行层</strong></td><td>日内缺口出现时，电池"现在放还是留着以后放"</td><td>四阶段截断仿射保留阈值 R<sub>t</sub>，每天 0:00 在历史情景上校准 7 个参数，日内因果执行（§5）</td></tr>
+</table>
+
+<h3>1.2 两条红线（评委必查，违反即重大失分）</h3>
+<ul>
+<li><span class="pill p-red">红线 1</span><strong>因果性（信息非预见性）</strong>：任何当日决策只能用"决策时刻之前"已获得的信息。用未来实际负载/光伏去选参数、选计划、回看最优，都属于"用答案出题"，一旦被评委识破，模型再复杂也归零。论文中要<strong>显式声明</strong>：残差池只用 d−1 及以前、阶段误差信号只用本阶段开始前已完成区间、参数与计划在 0:00 锁定。</li>
+<li><span class="pill p-red">红线 2</span><strong>物理与账目闭环</strong>：逐时段供需平衡、SOC 递推与跨日连续、功率与容量边界、无同时充放电、无"一边紧急购电一边充电"、费用可独立复算、模板回填与明细一致。论文第 8 章（模型检验）必须给出一张核验表来证明这一点。</li>
+</ul>
+
+<h3>1.3 评委想看到的三件事</h3>
+<ol>
+<li><strong>经济直觉</strong>：5 倍惩罚价格如何进入模型（80% 分位数背后的报童逻辑），而不是拍脑袋定一个分位数；</li>
+<li><strong>方法学依据</strong>：预测、情景生成、决策规则、求解算法各有出处，文献引用落在具体模型组件上（见第三部分）；</li>
+<li><strong>诚实的结果观</strong>：报了费用、报了对照、报了校验，也说明结论的适用边界，不把启发式搜索说成全局最优，不把事后下界说成可执行策略。</li>
+</ol>
+
+<!-- ===================== 二 ===================== -->
+<h2 id="s2">二、论文写作总体框架（章节与篇幅建议）</h2>
+
+<p>以下框架按"问题一~问题四共写一篇论文"的常规排版设计，问题二部分建议占全文 <strong>35%～40%</strong>。若单独成章，可直接套用。</p>
+
+<table>
+<tr><th style="width:22%">章节</th><th style="width:44%">内容与写作要点</th><th style="width:12%">建议篇幅</th><th>对应本指南</th></tr>
+<tr><td>问题二重述与分析</td><td>点出"日前锁定＋5 倍紧急补购＋储能缓冲"的结构；一句话点明与问题一的区别（信息不确定）；引出三个层次</td><td>0.5 页</td><td>§1、§3.1</td></tr>
+<tr><td>模型假设与符号</td><td>假设逐条编号且<strong>可辩护</strong>（效率、不售电、跨日继承库存、离散实时响应）；符号表只保留正文用到的</td><td>0.5 页</td><td>—</td></tr>
+<tr><td>预测与情景生成</td><td>负载日型结构→周持久化（附四方案对比一小段）；光伏七天均值；残差情景定义式；诚实交代预热期</td><td>1～1.5 页</td><td>§3.2</td></tr>
+<tr><td>日前计划模型</td><td>报童推导 80% 分位数→风险曲线→两阶段 LP（目标、平衡、储能约束、词典序）；端值代理的说明</td><td>1.5～2 页</td><td>§3.3、§3.4</td></tr>
+<tr><td>日内执行规则与参数校准</td><td>阶段划分、误差信号 a<sub>k</sub>、截断仿射阈值、统一充放电函数；情景经验目标；差分进化配置表</td><td>1.5～2 页</td><td>§3.5–§3.7</td></tr>
+<tr><td>求解流程</td><td>冻结初始条件日→每日 5 步伪代码；信息边界说明（非预见性论证）；计算量（全年约 93 秒：LP 17.7 秒＋校准 74.6 秒）</td><td>0.5～1 页</td><td>§3.8</td></tr>
+<tr><td>结果与分析</td><td>总费对比表→机制解释（加权单价）→配对对照→下界定位→四指定日期（表 1/2/3 格式）</td><td>2～3 页</td><td>第四部分</td></tr>
+<tr><td>模型检验</td><td>物理核验表＋账单独立复算＋信息边界测试；模板回读说明</td><td>0.5 页</td><td>第四部分 4.4</td></tr>
+<tr><td>灵敏度与讨论</td><td>四策略对照即"计划×控制器"的消融；预测方案对比；下界差额讨论；局限逐条列出</td><td>1～1.5 页</td><td>§3.9、第四部分</td></tr>
+<tr><td>问题二小结</td><td>方法一句话＋结果一句话＋边界一句话（套用"当前配置下最优"的完整限定语）</td><td>0.3 页</td><td>§4.5</td></tr>
+</table>
+
+<div class="box tip"><span class="bt">摘要写法（问题二占的篇幅）</span>
+摘要按"问题—方法—结果—结论"四要素写。问题二建议 3～4 句：①对象与约束（日前锁定计划、5 倍紧急价、储能参数）；②方法链（周持久化＋七天均值预测，21 日成对残差情景，80% 分位数风险修正 LP，四阶段截断仿射保留规则＋差分进化校准）；③核心数字（正式期 2025-02-01~12-31 实际总费 13,978,077.23 元，计划费 13,332,849.50 元、紧急费 645,227.73 元，较 β=1 基线节费 187,109.73 元约 1.32%）；④检验与结论（逐时平衡/因果性核验通过，"当前配置下最优"及其限定）。<strong>摘要只报正式期数字，不报含 1 月预热与冻结日的全年 15,749,745.67 元</strong>，否则口径混用。</div>
+
+<!-- ===================== 三 ===================== -->
+<h2 id="s3">三、建模思路的写作与文献衔接（核心）</h2>
+
+<p>评委最容易给"模型堆砌、没有思想"打低分。本节逐块给出：<strong>思路一句话 → 对应文献及用法 → 可写入论文的示范句 → 写作注意事项</strong>。</p>
+
+<h3>3.1 问题分析段怎么写</h3>
+<p>问题分析不要复述题目，要写出<strong>决策结构</strong>：①决策变量分两级——日前计划 g（锁定）与日内储能动作 C、D（逐时响应）；②成本结构不对称——普通电价 c 与 5c 的紧急电价，且未用计划电无残值；③信息结构——0:00 只知道历史，日内逐时段揭示。这一段是后面所有模型的"引言"，用两句话点出与问题一的区别：问题一是确定性的，问题二的<em>N</em><sub>d,t</sub> 是随机变量。</p>
+<div class="box demo"><span class="bt">示范句</span>
+"与问题一的确定性单日调度不同，问题二要求每天 0:00 在仅知历史信息的条件下锁定全天购电计划，日内实际净负荷逐时段揭示。这一结构使计划购电决策成为一个带高额缺货惩罚的随机优化问题：购电量低于实际需求时，缺口需以交易时刻电价 5 倍紧急补购，而购电量高于需求的部分没有残值。储能设备的日内充放电构成对随机实现的追索（recourse），其运行规则本身也必须在制定时满足信息非预见性。"</div>
+
+<h3>3.2 预测与情景生成：经验分布与样本平均近似</h3>
+<p><strong>思路一句话</strong>：用"周内日型结构＋简单外推"得到点预测，用"历史预测残差的经验分布"构造有限情景集，把随机优化近似为确定性优化。</p>
+
+<h4>（1）负载预测：周持久化为什么站得住</h4>
+<p>附件 2 的负载存在稳定的周内日型结构（周一~周四与周日日均约 5150 kW，周五/周六约 3260 kW），且该差异逐月、跨假期成立。周持久化 L̂<sub>d,t</sub>=L<sub>d−7,t</sub> 直接复用同一日型曲线，不引入日型混合偏差；它与"昨日持久化、七天均值、相似日高斯核"四方案的正式期对比是很好的证据段（MAPE 4.13% vs 15.66%/19.07%/4.02%）。<strong>写作要点</strong>：先给日型结构的证据（1～2 个数字即可），再说选型理由，最后交代 d&lt;7 的预热口径：负载退化为昨日持久化 L<sub>d−1</sub>（不再使用附件 1 负载曲线，附件 1 只提供固定电价），光伏用已有历史均值。</p>
+<div class="box demo"><span class="bt">示范句（含文献）</span>
+"小区负载呈现稳定的周内日型结构，因此采用周持久化预测。持久化（persistence）类方法是电力负荷预测公认的基准方法之一 [7]，其优点是无参数、无训练样本需求且天然保持日型一致性。正式期四方案对比显示，周持久化 MAPE 为 4.13%，显著优于昨日持久化的 15.66% 与七天均值的 19.07%——后两者分别因无法刻画周内日型差异、混合不同日型产生系统性偏差。"</div>
+
+<h4>（2）光伏预测：七天同区间均值</h4>
+<p>光伏功率天气波动快、周内结构弱，用最近七天同一时段均值平滑。写作时一句话带过即可，不必展开；重点放在"预测残差"上。</p>
+
+<h4>（3）残差情景：经验分布 + 样本平均近似（SAA）</h4>
+<p>对每个历史日 i，用<strong>当时可获得的预测</strong>计算残差 ε<sup>L</sup>、ε<sup>V</sup>（负载用七天前曲线、光伏用当时七天均值——这是因果性的关键细节，论文必须写明"历史残差用当时预测计算，而非决策日重新拟合"）。取最近 21 个完整残差日，把完整日曲线作为一个情景 ω，等权 1/M，构造 N<sub>d,t,ω</sub>=[L̂+ε<sup>L</sup>]<sup>+</sup>−[V̂+ε<sup>V</sup>]<sup>+</sup>。这实质是<strong>残差经验分布上的样本平均近似</strong>，21 条情景保持日内相关性与负载—光伏同日配对。</p>
+<div class="box demo"><span class="bt">示范句（含文献）</span>
+"将历史预测残差的经验分布作为净负荷不确定性的离散近似，构成有限情景集 {N<sub>d,·,ω</sub>}，等概率加权下以样本平均近似（sample average approximation）随机期望目标 [5]。与独立重采样的自助法（bootstrap）不同，本方法按完整日路径取样，保留了残差的日内时序相关及负载与光伏的同日配对关系。需强调，历史残差均按该历史日当时可用的预测计算，保证情景构造不引入未来信息。"</div>
+<div class="box warn"><span class="bt">注意事项</span>
+①21 条情景是有限样本，论文中不能把它说成"真实分布"或"总体已知"；②全年共 337 个校准日（1/29 起具备完整 21 日残差窗，其中 1/29–1/31 位于预热段、2/1–12/31 共 334 天位于正式期），残差窗不足的预热日一律用零参数基线，写作时要交代；③高斯核预测当前只做了精度对比、未接入费用回测，若在文中提及，务必说明"不纳入费用比较"，避免与主结论矛盾。</div>
+
+<h3>3.3 80% 分位数：报童模型的经济推导（全文最有价值的 5 行公式）</h3>
+<p><strong>思路一句话</strong>：忽略储能与日末价值，单时段计划 g 的目标是 c·g + 5c·E[(N−g)<sup>+</sup>]，其一阶条件给出 P(N≤g)=0.8——<strong>5 倍紧急价格直接推出 80% 分位数</strong>，不是拍脑袋选参。</p>
+<p>论文中建议完整写出这段推导（4～6 行）：</p>
+<pre><code>min  F(g) = c·g + 5c·E[(N − g)⁺]
+g≥0
+
+若最优解处分布连续，则内部解满足
+F′(g) = c − 5c·P(N &gt; g) = 0   ⇒   P(N ≤ g) = 1 − 1/5 = 0.8</code></pre>
+<p>随后定义风险修正曲线 Ñ<sub>d,t</sub> = max{N̂<sub>d,t</sub>, Q<sub>0.8</sub>(N<sub>d,t,1</sub>,…,N<sub>d,t,M</sub>)}（取 max 保证规划净需求不低于点预测）。</p>
+<div class="box demo"><span class="bt">示范句（含文献）</span>
+"计划购电量与紧急购电量的成本权衡具有经典的报童（newsvendor）结构 [1]：普通购电对应提前订货，五倍紧急购电对应缺货惩罚。单时段模型的一阶条件表明，最优计划购电量是净负荷分布的 1−1/5=0.8 分位数。据此将 80% 分位水平作为预先固定的风险设计嵌入完整模型，形成逐时段风险修正曲线。"</div>
+<div class="box warn"><span class="bt">注意事项（极易被追问）</span>
+①明确写出"式(6)是<strong>单时段无储能</strong>模型的结论，加入储能耦合后式(7)是风险设计，<strong>不是完整系统的最优性定理</strong>"——这一句是防答辩扣分的护身符；②明确"80% 不是全天供电可靠性"；③强调 α=0.8 由题目给出的 5 倍价格系数事前固定，<strong>未按全年结果反向选参</strong>（否则就是数据窥探）。</div>
+
+<h3>3.4 日前 LP 与日末库存价值代理</h3>
+<p><strong>思路一句话</strong>：在风险曲线上求解确定性等价 LP 得到 g<sup>Q</sup> 与参考库存 E<sup>p</sup>，用最低价 ν=min c/η 为日末库存定价，缓解"单日只顾放空电池"的短视。</p>
+<ul>
+<li>目标：min Σ c<sub>t</sub>g<sub>t</sub> − ν·E<sup>p</sup><sub>T</sub>，其中 ν=min<sub>t</sub>c<sub>t</sub>/η≈0.4126 元/kWh；</li>
+<li>约束：平衡 g+D<sup>p</sup>=Ñ+C<sup>p</sup>+U<sup>p</sup>；库存递推 E<sup>p</sup><sub>t</sub>=E<sup>p</sup><sub>t−1</sub>+ηC<sup>p</sup><sub>t</sub>−D<sup>p</sup><sub>t</sub>/η；边界 1200≤E≤10800、0≤C,D≤833.33；</li>
+<li>两阶段词典序：先最小化费用，再在 10⁻⁶ 元容差内最小化充放电吞吐，消除等成本退化解中的无效充放电。</li>
+</ul>
+<div class="box demo"><span class="bt">示范句（含文献）</span>
+"日末库存价值项 νE<sup>p</sup><sub>T</sub> 以最低购电成本为库存定价，是滚动时域（rolling horizon）框架下对跨日价值函数的一阶近似 [6]：它使单日规划倾向于保留可用于后续日期的电量，又不构成实际退款或收入。完整问题二的跨日衔接依靠实际执行库存的连续传递，而非强制日初日末库存相等。"</div>
+<div class="box warn"><span class="bt">注意事项</span>
+端值代理只是近似，论文不要声称"精确跨日最优"；问题二<strong>不继承问题一的 E<sub>0</sub>=E<sub>T</sub> 约束</strong>，假设里要写明。</div>
+
+<h3>3.5 截断仿射保留规则：仿射决策规则（LDR）的落地与诚实表述</h3>
+<p><strong>思路一句话</strong>：把"电池该不该现在放电"参数化为随观测误差反馈的仿射阈值 R<sub>t</sub>=clip(E<sup>p</sup><sub>t</sub>+δ<sub>k</sub>+λ<sub>k</sub>a<sub>k</sub>, 1200, 10800)，在历史情景上按统一执行函数校准，保证"日前怎么评、日内就怎么执行"。</p>
+<ul>
+<li><strong>阶段信号</strong>：四阶段 0–6、6–12、12–18、18–24 时；a<sub>k</sub> 为阶段开始前<strong>已完成区间</strong>的净负荷预测误差均值（a₁=0），阶段内固定——只用量到当时的信息；</li>
+<li><strong>统一执行函数</strong>：r=N−g<sup>Q</sup>；C=min{(−r)⁺, S, (E<sub>max</sub>−e)/η}；D=min{r⁺, S, η(e−R)⁺}；b=r⁺−D；E′=e+ηC−D/η——"富余才充、缺口才放、放不够才紧急购电"，物理可行性由此构造性保证；</li>
+<li><strong>校准目标</strong>：固定 g<sup>Q</sup>，在 21 条情景上平均 Σ5c·b − νE<sub>T</sub>，选 (δ,λ)。</li>
+</ul>
+<div class="box demo"><span class="bt">示范句（含文献）</span>
+"日内充放电规则采用仿射决策规则（affine decision rule）的构造思想：决策动作显式表示为截至当前观测信息的仿射（经截断后为分段仿射）函数，从而在结构上满足非预见性（nonanticipativity）约束 [2][3]。与直接求解多阶段随机规划相比，决策规则把日内追索空间压缩到低维参数族，使问题可在每天 0:00 于历史情景上快速校准。本模型的保留阈值 R<sub>t</sub>=clip(E<sup>p</sup><sub>t</sub>+δ<sub>k(t)</sub>+λ<sub>k(t)</sub>a<sub>k(t)</sub>, E<sub>min</sub>, E<sub>max</sub>) 由参考轨迹、阶段截距与误差反馈三项构成；δ=λ=0 退化为固定参考轨迹保留规则，全部 δ=−9600、λ=0 经截断后退化为即时补缺规则。"</div>
+<div class="box warn"><span class="bt">注意事项（术语纪律）</span>
+①文献 [2][3] 中的 LDR 指"不确定量线性函数"的调整鲁棒解，本模型的阈值是<strong>仿射部分经 clip 截断、再经正部与最小值合成</strong>的分段仿射规则——论文必须写"截断仿射/分段仿射"，<strong>不要声称全部动作是纯线性决策</strong>，这是引用文献与实际模型之间的诚实边界；②文献的 LDR 是"在已知不确定集上求鲁棒解"，本模型是"在经验情景上校准规则"，两者思想同源但问题设定不同，示范句用"构造思想"而非"直接应用"的措辞是刻意的；③"日前—日内一致"的准确含义是"同一输入路径、同一参数、同一初始库存下，情景评价与日内执行逐时一致"，不是"预测情景等于真实路径"。</div>
+
+<h3>3.6 求解阶段一：日前两阶段 LP 的实现细节</h3>
+<p><strong>思路一句话</strong>：把风险曲线上的计划问题写成 720 个连续变量、288 条等式的标准 LP，用 HiGHS 两阶段词典序求解——第一阶段最小化费用，第二阶段只在费用最优值的 10⁻⁶ 元容差内最小化充放电吞吐。</p>
+
+<h4>（1）变量与约束规模</h4>
+<table>
+<tr><th>变量组</th><th>维度</th><th>含义</th><th>边界</th></tr>
+<tr><td>g<sub>t</sub></td><td>144</td><td>计划购电量</td><td>[0, +∞)</td></tr>
+<tr><td>C<sub>t</sub>, D<sub>t</sub></td><td>各 144</td><td>参考充、放电量</td><td>[0, 833.3333]</td></tr>
+<tr><td>U<sub>t</sub></td><td>144</td><td>未利用供能（松弛）</td><td>[0, +∞)</td></tr>
+<tr><td>E<sub>t</sub></td><td>144</td><td>参考库存</td><td>[1200, 10800]</td></tr>
+</table>
+<p>合计 5×144=720 个连续变量；等式约束 2×144=288 条（每区间一条供需平衡 g+D=Ñ+C+U、一条库存递推 E<sub>t</sub>=E<sub>t−1</sub>+ηC−D/η）。论文中写出变量定义和三类约束即可，不必列全 288 条。</p>
+
+<h4>（2）两阶段词典序求解</h4>
+<ol>
+<li><strong>第一阶段</strong>：min Σc<sub>t</sub>g<sub>t</sub> − ν·E<sup>p</sup><sub>T</sub>，得到最优值 first.fun；</li>
+<li><strong>第二阶段</strong>：在原约束上追加一条不等式 Σc<sub>t</sub>g<sub>t</sub> − ν·E<sup>p</sup><sub>T</sub> ≤ first.fun + 10⁻⁶，再最小化吞吐 Σ(C<sub>t</sub>+D<sub>t</sub>)；</li>
+<li><strong>求解器</strong>：HiGHS（经 <code>scipy.optimize.linprog(method='highs')</code> 调用，开源工业级 LP 求解器）；</li>
+<li><strong>后处理</strong>：把 |x|&lt;10⁻⁸ 的变量置零，断言平衡残差 &lt;10⁻⁵ kWh、变量 ≥ −10⁻⁶、同一区间 C 与 D 不同时为正。</li>
+</ol>
+<div class="box warn"><span class="bt">词典序容差怎么写</span>
+10⁻⁶ 元容差的含义要说清：它允许第二阶段"为消除无效吞吐在费用上多花至多一百万分之一元"，是<strong>等成本解的精修</strong>，不是"为省吞吐牺牲费用"。无效吞吐指"充了又放"的 81% 往返损耗环，它不影响费用最优值但会让表格出现毫无意义的充放电对。</div>
+
+<h4>（3）数值与性能</h4>
+<ul>
+<li>每天求解一个 LP，全年 364 个计划日合计约 <strong>17.7 秒</strong>，平均每题不到 50 毫秒；</li>
+<li>端值 ν 取<strong>当日决策电价最小值除以 η</strong>（固定电价下所有天相同 =0.412556 元/kWh；按日取最小值是为问题四波动电价预留的一致口径）；</li>
+<li>输出 g<sup>Q</sup> 与参考轨迹 E<sup>p</sup>（连同参考充放电 C<sup>p</sup>、D<sup>p</sup> 一并保存，供核验用）。</li>
+</ul>
+
+<h3>3.7 求解阶段二：规则校准的差分进化全流程</h3>
+<p><strong>思路一句话</strong>：经验目标含 clip、正部与最小值，是 7 维有界区域上的不可微非凸黑箱；用差分进化在固定预算内直接搜索，并以"不劣于零参数基线"作为接受门槛。</p>
+
+<h4>（1）目标函数的性质（为什么选直接搜索）</h4>
+<ul>
+<li>参数 θ 经 R<sub>t</sub>=clip(E<sup>p</sup><sub>t</sub>+δ<sub>k</sub>+λ<sub>k</sub>a<sub>k</sub>) 进入充放电规则，而 a<sub>k</sub> 又随每条情景路径变化——目标值必须通过 21 条情景 × 144 个区间的完整递推才能得到，<strong>无解析形式、无梯度</strong>；</li>
+<li>含 min/max/clip → 分段仿射、非凸，存在多个局部解；</li>
+<li>单个候选的评估成本 = 21×144=3024 次状态转移，向量化实现后为毫秒级，这使得"小种群、少代数、每日重算"的方案可行；</li>
+<li>候选方案对比：7 维网格指数爆炸；局部搜索无梯度可依且依赖初值；DE 在低维有界连续问题上稳健、实现直接、天然支持向量化评估。</li>
+</ul>
+
+<h4>（2）编码、边界与评估函数</h4>
+<p>θ=(δ₁,δ₂,δ₃,δ₄,λ₂,λ₃,λ₄)∈ℝ⁷，λ₁≡0；边界为 δ<sub>k</sub>∈[−9600,9600] kWh、λ<sub>k</sub>∈[−2,2]（工程预设，未按全年结果反向挑选）。评估函数对每个候选 θ：从实际日初库存出发，对 21 条情景逐区间调用同一 <code>rule_transition</code>，返回 score(θ)=mean<sub>ω</sub>[Σ<sub>t</sub>5c·b<sub>t,ω</sub> − νE<sub>T,ω</sub>]。先评零参数得到 zero_score（θ=0 即 β=1 规则）；残差窗不足 21 日的预热日直接回退零参数，不启动搜索。</p>
+
+<h4>（3）算法四要素与固定配置</h4>
+<pre><code>变异（best/1）:  v_i = x_best + F·(x_r1 − x_r2),   F ~ U(0.5, 1.0)
+交叉（二项式）:  u_ij = v_ij 若 rand &lt; CR=0.7，否则 x_ij
+选择（一对一贪心）:  x_i ← u_i 若 score(u_i) &lt; score(x_i)
+初始化:  拉丁超立方（latin hypercube）均匀覆盖 + 显式注入 x₀ = 0
+终止:  仅靠代数预算（tol=atol=0，不设置目标值收敛判据）
+接受:  θ* ← 种群最优；若 score(θ*) &gt; zero_score + 10⁻⁸ 则 θ* ← 0（保底 β=1）
+种子:  20250912 + 当日序（确定性可复现；只用日序，不含未来信息）</code></pre>
+<table>
+<tr><th style="width:26%">项目</th><th>实际设置</th></tr>
+<tr><td>算法</td><td>DE <code>best/1/bin</code>（scipy <code>differential_evolution</code>）</td></tr>
+<tr><td>维度与边界</td><td>7 维；δ∈[−9600,9600] kWh、λ∈[−2,2]</td></tr>
+<tr><td>种群</td><td>popsize=5 → 7×5=<strong>35 个个体</strong></td></tr>
+<tr><td>代数预算</td><td>maxiter=<strong>8 代</strong> → 每个校准日约 <strong>315 次评估</strong>（35 个个体 × 9 轮＋1 次零参数；13 个提前收敛日更少；全年共 106,309 次）</td></tr>
+<tr><td>变异/交叉</td><td>F∈U(0.5,1.0)（抖动）、CR=0.7</td></tr>
+<tr><td>更新策略</td><td>deferred（代内整体更新，配合向量化一次评估整个种群）</td></tr>
+<tr><td>评估方式</td><td>候选 × 情景 × 区间三维向量化，单进程</td></tr>
+<tr><td>种子/接受</td><td>20250912＋日序；不劣于零参数＋10⁻⁸ 才接受，否则回退</td></tr>
+</table>
+<p>全年统计：337 个校准日共评估 106,309 组参数，其中 <strong>324 天达到 8 代预算上限、13 天种群在预算内收敛</strong>；校准总耗时约 74.6 秒（平均 0.22 秒/天）。</p>
+
+<div class="box demo"><span class="bt">示范句（含文献）</span>
+"式(22)的目标函数包含截断与最小值运算，不具备可利用的梯度结构，故采用差分进化算法进行七维有界直接搜索 [4]。种群规模 35、迭代预算 8 代，拉丁超立方初始化并显式加入零参数候选；每天使用固定种子（基准种子加当日序）保证确定性可复现，且种子不含任何未来信息。仅当候选经验目标不劣于零参数基线（容差 10⁻⁸ 元）时方被接受，否则回退基线——该接受规则把'最坏情形不劣于基线'作为硬性保证，而把'找到全局最优'留给有限预算之外。"</div>
+<div class="box warn"><span class="bt">注意事项（评审视角）</span>
+①337 个校准日中 324 天达到预算上限，论文<strong>必须写"有限预算搜索不保证全局最优"</strong>，把"被接受"与"收敛"分开表述——"被接受"只表示满足可行性与零参数保底检查；②δ、λ 的边界是工程预设，写明"未按全年结果反向挑选范围"；③不要写"DE 找到最优参数"，写"在预算内找到不劣于零参数基线的候选参数"；④若答辩被问"为什么不用 MILP 精确化"，回答：把正部/截断精确表达需要 big-M 与有效变量界，且经验目标本身是对历史情景的近似，精确求解近似问题并不能带来可证收益，直接搜索＋保底规则在每天 0:00 的时间预算内是更稳妥的工程选择。</div>
+
+<h3>3.8 求解阶段三：每日流程与全年滚动仿真</h3>
+<p><strong>思路一句话</strong>：全年 364 个计划日重复"预测→风险曲线→LP→校准→锁定执行"五步；2025-01-01 为冻结初始条件日，正式期从 2 月 1 日继承真实库存开始统计。</p>
+
+<h4>（1）初始化与预热时间表</h4>
+<table>
+<tr><th style="width:22%">日期</th><th>口径</th></tr>
+<tr><td>2025-01-01</td><td><strong>冻结初始条件日</strong>：无购电计划、电池不动作、SOC 恒 6000 kWh、不进入任何统计；当日实际数据仅作为后续预测的历史</td></tr>
+<tr><td>01-02 ~ 01-07</td><td>负载退化为昨日持久化 L<sub>d−1</sub>；光伏用已有历史均值；残差窗不足 → θ=0（β=1 规则）</td></tr>
+<tr><td>01-08 起</td><td>负载周持久化 L<sub>d−7</sub>；光伏完整七天均值</td></tr>
+<tr><td>01-09 ~ 01-28</td><td>逐日积累预测残差（1/9 起产生第一条完整预测窗残差）</td></tr>
+<tr><td>01-29 起</td><td>21 条完整残差窗可用，开始每日 DE 校准（全年共 337 个校准日）</td></tr>
+<tr><td>02-01 ~ 12-31</td><td><strong>正式期 334 天、48,096 区间</strong>：题目结果表与全部费用统计</td></tr>
+</table>
+
+<h4>（2）每日五步（论文建议给出如下伪代码）</h4>
+<pre><code>每天 0:00（日期 d，实际日初库存 E）:
+  1. 预测:  fl[d] = L_{d-7}（d&lt;7 用 L_{d-1}），fv[d] = 最近七天同区间均值
+  2. 情景与风险曲线:  用最近 21 个残差日构造 {N_ω}，
+        Ñ[t] = max(N̂[t], Q_0.8({N_ω[t]}))
+  3. 日前 LP:  (g^Q, E^p) ← solve_plan(Ñ, c, E, ν = min(c)/η)
+  4. 校准:    θ ← calibrate_rule({N_ω}, N̂, g^Q, E^p, E; seed=20250912+d)
+  5. 锁定执行:  对 t = 1..144
+        阶段起点(0,36,72,108)处锁定信号 a_k = 已完成区间误差均值（k=1 时 a=0）
+        R_t = clip(E^p_t + δ_k + λ_k·a_k, 1200, 10800)
+        (C_t, D_t, b_t, U_t, E_{t+1}) ← rule_transition(N_t^obs, g^Q_t, E_t, R_t)
+        计费:  c_t·g^Q_t + 5·c_t·b_t
+  次日 0:00:  E ← E_144（真实库存跨日传递）</code></pre>
+
+<h4>（3）配对回放与全年循环</h4>
+<ul>
+<li><strong>配对回放（控制器消融）</strong>：每天在<strong>同一 g<sup>Q</sup>、同一日初库存</strong>下，额外用 θ=0（β=1 规则）与"E<sup>p</sup> 替换为 E<sub>min</sub> 且 θ=0"（β=0 规则）各执行一遍，逐日对齐后累计——用于隔离"控制器"与"计划"的贡献，其累计值<strong>不是</strong>三种策略各自连续运行的年度账单（正式期配对节费：对 β=1 节 193,363.14 元、对 β=0 节 64,236.94 元）；</li>
+<li><strong>独立连续运行</strong>：β=1、β=0 基线各自由 1/2 起按自己的执行结果连续运行全年（其购电计划随各自库存轨迹变化），与 LDR 形成"整套策略"对照；</li>
+<li><strong>账本与性能</strong>：全年 364 个计划日 × 144 区间 = 52,416 区间明细账本（含预热），其中正式期 48,096 区间；全年运行约 <strong>93 秒</strong>（日前 LP 17.7 秒＋参数校准 74.6 秒）。</li>
+</ul>
+<div class="box ok"><span class="bt">论文写法</span>
+流程图（预测→情景→LP→校准→执行→库存传递的闭环）＋本节伪代码＋预热时间表，三件套即可让评委完整复现流程。补一句"全流程唯一随机源是校准种子，而种子只含基准值与当日序，因此运行可完全复现，且天然满足信息因果性"——可复现性与因果性在同一句话里交代。</div>
+
+<h3>3.9 求解阶段四：完美信息下界与差额解释</h3>
+<p><strong>思路一句话</strong>：把正式期全部实际供需当作预先已知、匹配同一期初库存求解统一 LP，得到费用下界 12,252,398.36 元，用于定位方案"离理想多远"。</p>
+<div class="box demo"><span class="bt">示范句（含文献）</span>
+"匹配完美信息下界对应随机规划中完美信息期望值（wait-and-see）的事后反事实版本 [6]：它允许计划与储能动作在全时域联合优化，是可达到的费用下界而非可执行策略。LDR 实际费用较该下界高 1,725,678.87 元，占实际费用的 12.35%（或以下界为基准高 14.08%，两种比例分母不同）。该差额混合了信息不确定、风险修正、分层近似、有限搜索与边界处理等因素，不能全部归因于预测误差，也不能认为更换控制器即可全部消除。"</div>
+<p>下界的<strong>求解细节</strong>同样值得写进论文（两句话即可，但能显著增强可信度）：</p>
+<ul>
+<li><strong>模型与规模</strong>：下界问题把正式期 334 天 × 144 区间（48,096 个区间）串联成一个与日前 LP 同构的大 LP（每区间 5 个变量，约 24 万连续变量），供需全部预先已知，年末库存只要求不低于 1,200 kWh（下界允许在年末把电池放空到下限）；用 HiGHS 一次求解；</li>
+<li><strong>对偶证据</strong>：由 LP 强对偶性，该解同时提供"可行费用"与"下界证书"——本队计算中原始目标与对偶目标同为 12,252,398.36 元，对偶间隙约 1.4×10⁻⁷ 元，因此该值确为同起始库存、同物理约束下的费用下界，而非随便一个可行方案的费用；</li>
+<li><strong>匹配口径</strong>：下界与 LDR 使用同一 2 月 1 日期初库存 2,263.206580 kWh；LDR 实际年末库存 1,627.33 kWh 高于下界允许的 1,200 kWh，说明费用比较不依靠"年末少留库存"。</li>
+</ul>
+
+<h3>3.10 引言/问题分析处的微网背景文献</h3>
+<p>问题分析或模型评价处可用 1～2 条微网能量管理综述支撑"预测不确定下日前计划＋日内调节"的框架选择：</p>
+<div class="box demo"><span class="bt">示范句</span>
+"微网能量管理的主流范式是日前计划与日内滚动调节相结合的两级结构 [8]：日前在预测信息上优化购电与储能安排，日内依据更精确的实际信息修正储能动作。不确定情形下的微网优化与控制技术综述表明，随机规划、鲁棒优化与规则式决策是该领域三类主要方法 [9]。本文结合问题二的五倍紧急购电结构，采用'风险修正确定性规划＋经验情景校准的决策规则'这一折中方案，兼顾求解稳定性与信息因果性。"</div>
+
+<!-- ===================== 四 ===================== -->
+<h2 id="s4">四、结果呈现建议（成品表＋叙事线＋分节写法）</h2>
+
+<h3>4.1 呈现总原则</h3>
+<ul>
+<li><strong>先总后分</strong>：先给正式期总表（费用、电量、库存），再给四指定日期明细，最后给校验表；</li>
+<li><strong>先费用后机制</strong>：报完"LDR 最低"之后，紧接着用加权单价解释<em>为什么</em>紧急电量略多、费用反而更低（见 4.3 叙事线）；</li>
+<li><strong>口径声明前置</strong>：所有表格第一次出现时注明"正式期 2025-02-01~12-31、334 天、48096 个区间；1/1 为冻结初始条件日，全年（364 个计划日）数字仅用于初始化验证，不参与排名"；</li>
+<li><strong>数字规范</strong>：电量保留 6 位小数、费用保留 2 位、百分比保留 1～2 位并写清分母；正文与表格、摘要三处数字必须一致（末位舍入差异要在表下注说明）。</li>
+</ul>
+
+<h3>4.2 表格清单与成品表（可直接抄入论文，数字已核验）</h3>
+<p>先给"表与数据文件的对照关系"，再给出<strong>填好数字的成品表</strong>——论文中照抄即可，表注务必保留（口径说明是防扣分的关键）。</p>
+
+<table>
+<tr><th style="width:14%">编号</th><th style="width:34%">表格内容</th><th style="width:36%">数据来源</th><th>呈现要点</th></tr>
+<tr><td>T1</td><td>四策略正式期费用对照总表</td><td><code>strategy_comparison.csv</code></td><td>列为：计划费/紧急费/实际总费/紧急电量/期初期末 SOC；LDR 行加粗；表注写明对照口径</td></tr>
+<tr><td>T2</td><td>紧急购电加权单价机制表</td><td>同 T1 的 <code>emergency_average_price</code></td><td>证明费用优势来自紧急购电时序（4.48/5.73/5.20/4.97 元/kWh），引出机制解释</td></tr>
+<tr><td>T3</td><td>同计划、同日初库存配对对照表</td><td><code>same_plan_controller_comparison.csv</code></td><td>LDR 对 β=1 节费 193,363.14 元、对 β=0 节费 64,236.94 元；表注：配对≠独立连续运行</td></tr>
+<tr><td>T4</td><td>四指定日期汇总（题目表 1）</td><td><code>question2_key_dates.csv</code></td><td>按题目格式列 6 个时点购电量＋全天购电量＋购电费；3/20、6/21、12/21 紧急购电为 0</td></tr>
+<tr><td>T5</td><td>四指定日期储能充放电（题目表 2）</td><td><code>question2_key_battery.csv</code></td><td>六段 4 小时充放电量＋0:00/24:00 SOC；块内同充同放是不同 10min 区间，需加注</td></tr>
+<tr><td>T6</td><td>指定日期紧急购电（题目表 3）</td><td><code>key_emergency_intervals.csv</code></td><td>仅 9/23 有两条：15:00-15:10（64.56 kWh）、20:10-20:20（10.23 kWh），其余三日填"无"</td></tr>
+<tr><td>T7</td><td>物理与账单核验表</td><td><code>question2_summary.json → validation</code></td><td>平衡误差 ~1e−13、SOC 连续 0 误差、无同时充放电、无紧急充电、独立复算一致</td></tr>
+<tr><td>T8(可选)</td><td>月度费用汇总表</td><td><code>monthly_summary.csv</code></td><td>显示 6、7、12 月为高费用月；作为附录或图 2 的附表</td></tr>
+</table>
+
+<h4>成品表 T1：四策略正式期费用对照</h4>
+<table>
+<tr><th>方案</th><th class="num">计划购电费／元</th><th class="num">紧急购电费／元</th><th class="num">实际总费／元</th><th class="num">紧急购电量／kWh</th><th class="num">2/1 期初 SOC／kWh</th><th class="num">年末 SOC／kWh</th></tr>
+<tr><td>分位数＋β=1 基线</td><td class="num">13,326,707.15</td><td class="num">838,479.81</td><td class="num">14,165,186.96</td><td class="num">187,104.90</td><td class="num">2,306.45</td><td class="num">1,627.33</td></tr>
+<tr><td>分位数＋β=0 基线</td><td class="num">13,333,371.39</td><td class="num">709,464.67</td><td class="num">14,042,836.06</td><td class="num">123,759.74</td><td class="num">2,263.21</td><td class="num">1,627.33</td></tr>
+<tr><td>情景价值控制（对照）</td><td class="num">12,984,091.15</td><td class="num">999,128.15</td><td class="num">13,983,219.29</td><td class="num">192,142.96</td><td class="num">1,738.00</td><td class="num">1,315.28</td></tr>
+<tr><td><strong>分位数＋LDR（主方案）</strong></td><td class="num"><strong>13,332,849.50</strong></td><td class="num"><strong>645,227.73</strong></td><td class="num"><strong>13,978,077.23</strong></td><td class="num"><strong>129,705.32</strong></td><td class="num"><strong>2,263.21</strong></td><td class="num"><strong>1,627.33</strong></td></tr>
+</table>
+<div class="caption">表注：正式期 2025-02-01~12-31 共 334 天；四种策略均从 2025-01-02 起按各自规则连续运行，1/1 为冻结初始条件日；期初库存为各自策略 1/31 实际期末值，费用比较不依靠期初或年末库存差异；真实账单只计计划购电费与五倍紧急购电费。</div>
+
+<h4>成品表 T2：紧急购电加权单价（机制解释用）</h4>
+<table>
+<tr><th>方案</th><th class="num">紧急购电量／kWh</th><th class="num">紧急购电费／元</th><th class="num">加权单价＝费/量 ／元每kWh</th></tr>
+<tr><td>分位数＋β=1</td><td class="num">187,104.90</td><td class="num">838,479.81</td><td class="num">4.4813</td></tr>
+<tr><td>分位数＋β=0</td><td class="num">123,759.74</td><td class="num">709,464.67</td><td class="num">5.7326</td></tr>
+<tr><td>情景价值控制</td><td class="num">192,142.96</td><td class="num">999,128.15</td><td class="num">5.1999</td></tr>
+<tr><td><strong>分位数＋LDR</strong></td><td class="num"><strong>129,705.32</strong></td><td class="num"><strong>645,227.73</strong></td><td class="num"><strong>4.9746</strong></td></tr>
+</table>
+<div class="caption">表注：加权单价＝紧急购电费/紧急购电量，度量紧急补购发生的时段价格水平；LDR 紧急电量比 β=0 多 5,945.58 kWh，但加权单价低 0.7580 元/kWh，说明节费来自补购时段分布而非补购总量。</div>
+
+<h4>成品表 T3：同计划、同日初库存的控制器配对</h4>
+<table>
+<tr><th>控制器</th><th class="num">相同计划费／元</th><th class="num">紧急购电费／元</th><th class="num">配对费用合计／元</th><th class="num">相对 LDR 差额／元</th></tr>
+<tr><td><strong>LDR</strong></td><td class="num"><strong>13,332,849.50</strong></td><td class="num"><strong>645,227.73</strong></td><td class="num"><strong>13,978,077.23</strong></td><td class="num">—</td></tr>
+<tr><td>β=1</td><td class="num">13,332,849.50</td><td class="num">838,590.87</td><td class="num">14,171,440.37</td><td class="num">+193,363.14</td></tr>
+<tr><td>β=0</td><td class="num">13,332,849.50</td><td class="num">709,464.68</td><td class="num">14,042,314.18</td><td class="num">+64,236.94</td></tr>
+</table>
+<div class="caption">表注：每天使用 LDR 的同一购电计划与同一日初库存，仅替换日内控制器，逐日对齐后累计；相对 β=0，LDR 在 35 天费用更低、25 天更高、其余 274 天持平。本表是控制器消融，不是三种策略各自连续运行的年度账单。</div>
+
+<h4>成品表 T4：四个指定日期的计划购电（题目表 1 格式）</h4>
+<table>
+<tr><th>日期</th><th class="num">10:00-10:10</th><th class="num">12:00-12:10</th><th class="num">14:00-14:10</th><th class="num">16:00-16:10</th><th class="num">18:00-18:10</th><th class="num">20:00-20:10</th><th class="num">全天购电量／kWh</th><th class="num">全天计划购电费／元</th></tr>
+<tr><td>2025-03-20</td><td class="num">0</td><td class="num">622.407269</td><td class="num">0</td><td class="num">505.045638</td><td class="num">715.145983</td><td class="num">0</td><td class="num">69,766.539847</td><td class="num">42,448.79</td></tr>
+<tr><td>2025-06-21</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">270.607943</td><td class="num">526.006876</td><td class="num">0</td><td class="num">39,436.411305</td><td class="num">24,285.59</td></tr>
+<tr><td>2025-09-23</td><td class="num">0</td><td class="num">505.163579</td><td class="num">0</td><td class="num">573.257564</td><td class="num">778.577950</td><td class="num">0</td><td class="num">70,676.415695</td><td class="num">43,933.99</td></tr>
+<tr><td>2025-12-21</td><td class="num">0</td><td class="num">1,011.137769</td><td class="num">0</td><td class="num">837.735995</td><td class="num">750.787483</td><td class="num">0</td><td class="num">101,561.567062</td><td class="num">65,638.69</td></tr>
+</table>
+<div class="caption">表注：电量单位 kWh；指定时段为题目表 1 要求时点，其余 138 个区间见 result2.xlsx；"全天购电量"为当日 144 个物理区间合计（模板末列为展示映射，见 4.4 末尾口径提醒）。四日中 9/23 另发生紧急购电 74.80 kWh、285.24 元。</div>
+
+<h4>成品表 T5：2025-03-20 储能充放电（题目表 2 格式，其余三日同格式）</h4>
+<table>
+<tr><th>时间段</th><th class="num">充电量／kWh</th><th class="num">放电量／kWh</th><th>时间段</th><th class="num">充电量／kWh</th><th class="num">放电量／kWh</th></tr>
+<tr><td>0:00-4:00</td><td class="num">8,081.183478</td><td class="num">154.598733</td><td>4:00-8:00</td><td class="num">1,903.944709</td><td class="num">4,876.332138</td></tr>
+<tr><td>8:00-12:00</td><td class="num">5,621.973683</td><td class="num">2,777.377217</td><td>12:00-16:00</td><td class="num">4,162.940182</td><td class="num">563.215929</td></tr>
+<tr><td>16:00-20:00</td><td class="num">283.826814</td><td class="num">4,757.429790</td><td>20:00-24:00</td><td class="num">574.422233</td><td class="num">3,681.446550</td></tr>
+<tr><td>0:00 储电量</td><td class="num" colspan="2">2,166.601085</td><td>24:00 储电量</td><td class="num" colspan="2">2,053.840454</td></tr>
+</table>
+<div class="caption">表注：充放电量为实际执行值而非日前参考值；同一 4 小时块内同时出现充电与放电，表示块内不同 10 分钟区间分别充、放电，不表示同一区间同时充放电；其余三日数据见 <code>question2_key_battery.csv</code>。</div>
+
+<h4>成品表 T6：指定日期紧急购电（题目表 3 格式）</h4>
+<table>
+<tr><th>2025-03-20</th><th class="num">购电量／kWh</th><th>2025-06-21</th><th class="num">购电量／kWh</th><th>2025-09-23</th><th class="num">购电量／kWh</th><th>2025-12-21</th><th class="num">购电量／kWh</th></tr>
+<tr><td>无</td><td class="num">0</td><td>无</td><td class="num">0</td><td>15:00-15:10</td><td class="num">64.562451</td><td>无</td><td class="num">0</td></tr>
+<tr><td>—</td><td class="num">—</td><td>—</td><td class="num">—</td><td>20:10-20:20</td><td class="num">10.234367</td><td>—</td><td class="num">—</td></tr>
+</table>
+
+<h4>成品表 T7：物理与账单核验（论文"模型检验"节直接使用）</h4>
+<table>
+<tr><th>核验项目</th><th>结果</th></tr>
+<tr><td>最大逐时供需平衡误差</td><td>4.55×10⁻¹³ kWh</td></tr>
+<tr><td>最大库存递推误差</td><td>0 kWh</td></tr>
+<tr><td>跨日库存衔接误差</td><td>0 kWh</td></tr>
+<tr><td>实际库存范围</td><td>1200～10800 kWh</td></tr>
+<tr><td>最大单区间充／放电量</td><td>均不超过 833.333333 kWh</td></tr>
+<tr><td>同时充放电区间数</td><td>0</td></tr>
+<tr><td>紧急购电同时充电区间数</td><td>0</td></tr>
+<tr><td>独立复算正式期实际总费</td><td>13,978,077.23 元（与明细求和一致）</td></tr>
+<tr><td>核验结论</td><td>通过</td></tr>
+</table>
+
+<h3>4.3 结果段的"叙事线"：七拍逐段写法（按此顺序，评委会跟得很顺）</h3>
+<p>每一拍给出"写什么、示范句、坑在哪里"。七拍之间用过渡句串联，形成完整的结果段叙事。</p>
+
+<h4>拍 1 · 总账：正式期费用与电量</h4>
+<p><strong>写什么</strong>：先声明正式期口径（2/1–12/31、334 天、48,096 区间、1/1 冻结日），再报总费与构成、紧急购电规模。</p>
+<div class="box demo"><span class="bt">示范句</span>
+"正式期（2025-02-01 至 12-31，334 天、48,096 个 10 分钟区间）内，LDR 方案实际总购电费为 13,978,077.23 元，其中计划购电费 13,332,849.50 元、紧急购电费 645,227.73 元；紧急购电共 129,705.32 kWh，发生于 1,556 个区间、136 天，其余 198 天无需紧急补购。逐时供需平衡、库存递推与跨日连续均通过核验（见模型检验节）。"</div>
+<div class="box warn"><span class="bt">坑</span>别在这里混入全年 15,749,745.67 元（含预热）；"198 天无需补购"不能写成"可靠率 59.3%"。</div>
+
+<h4>拍 2 · 排序：四种策略对照</h4>
+<p><strong>写什么</strong>：引出 T1，报三个相对差额与百分比，落到"当前配置下最优"的限定结论。</p>
+<div class="box demo"><span class="bt">示范句</span>
+"表 T1 给出四种策略在正式期的独立连续运行账单。LDR 实际总费较分位数＋β=1 基线降低 187,109.73 元（约 1.32%），较分位数＋β=0 基线降低 64,758.83 元（约 0.46%），较情景价值控制方案降低 5,142.06 元（约 0.04%）。四种方案中 LDR 的紧急购电费最低。因此，在当前数据口径、参数边界、搜索预算和已完成对照范围内，LDR 费用最低。"</div>
+<div class="box warn"><span class="bt">坑</span>①情景价值控制的期初库存（1,738.00）与其余三方案（2,263.21/2,306.45）不同，表注必须披露，不能删掉这列；②"当前配置下最优"必须有完整限定语（见 4.6），不能说成全局最优。</div>
+
+<h4>拍 3 · 机制：为什么紧急电量多、费用反而低</h4>
+<p><strong>写什么</strong>：用 T2 加权单价解释节费的真正来源——放电时序，而不是减少补购总量。</p>
+<div class="box demo"><span class="bt">示范句</span>
+"值得注意的是，LDR 的紧急购电量（129,705.32 kWh）高于 β=0 基线（123,759.74 kWh），紧急购电费却低 64,236.94 元。表 T2 显示 LDR 的紧急购电加权单价为 4.9746 元/kWh，显著低于 β=0 的 5.7326 元/kWh。其机制是：仿射保留阈值使电池在低价缺口时段适度保留电量，将放电能力留给随后电价更高的缺口时段，从而改变紧急补购的时段分布。这说明目标不是单纯压缩紧急购电总量，而是降低其与电价加权的费用。"</div>
+<div class="box warn"><span class="bt">坑</span>不要把"紧急购电量更少"当成优化目标去写；也不要声称读出了"每个参数的独立因果贡献"——参数是联合校准的。</div>
+
+<h4>拍 4 · 隔离：同计划配对回放</h4>
+<p><strong>写什么</strong>：用 T3 把改善归因到"控制器"而非"计划"，并如实报逐日胜败。</p>
+<div class="box demo"><span class="bt">示范句</span>
+"为区分购电计划与日内控制器各自的贡献，固定 LDR 的逐日购电计划与日初库存，仅替换日内控制器进行配对回放：相对 β=1 规则，LDR 正式期累计节费 193,363.14 元；相对 β=0 规则节费 64,236.94 元。逐日层面，相对 β=0，LDR 在 35 天费用更低、25 天更高、其余 274 天持平——改善来自不同日期收益与损失的合计，并非逐日占优。"</div>
+<div class="box warn"><span class="bt">坑</span>配对累计值不是"三种策略各自连续运行的年度账单"，表注要写；逐日胜败数据要报，只报总节省会被质疑"是不是少数极端日撑起来的"。</div>
+
+<h4>拍 5 · 定位：与匹配完美信息下界比较</h4>
+<p><strong>写什么</strong>：报下界、报差额、报两个口径的比例，说明差额构成。</p>
+<div class="box demo"><span class="bt">示范句</span>
+"将正式期全部实际供需视为预先已知、并按 LDR 的 2 月 1 日期初库存匹配求解统一线性规划，得到费用下界 12,252,398.36 元（原始与对偶目标一致，对偶间隙约 1.4×10⁻⁷ 元）。LDR 实际费用较该下界高 1,725,678.87 元，占实际费用的 12.35%；若以下界为基准，则超额比例为 14.08%。该差额混合了信息不确定、风险修正、分层近似、有限搜索与边界处理等因素，不能全部归因于预测误差。"</div>
+<div class="box warn"><span class="bt">坑</span>两个比例分母不同，写清各自口径；不能写"差额是不可约误差"或"换控制器即可消除"。</div>
+
+<h4>拍 6 · 展示：四个指定日期的表 1/2/3 与图 3</h4>
+<p><strong>写什么</strong>：先给四日汇总句（总费、紧急量），再依次放 T4/T5/T6 与日内运行图，每段用同一句式收尾一句日内特征。</p>
+<div class="box demo"><span class="bt">示范句（9/23 日段示例）</span>
+"2025-09-23 全天计划购电 70,676.415695 kWh、计划费 43,933.99 元，15:00 与 20:10 出现两个短时缺口，紧急购电合计 74.80 kWh、285.24 元，实际总费 44,219.23 元；当日 0:00 储电量 1,391.03 kWh，24:00 升至 1,942.59 kWh。图 3 显示该日中午净负荷为负、白天光伏覆盖负载并充入储能，傍晚出现两次短时缺口，由放电与紧急购电共同补足。"</div>
+<div class="box warn"><span class="bt">坑</span>①6/21 零紧急购电但未利用供能达 17,540.72 kWh——主动写一句"零紧急购电不等于经济最优"，防评委反杀；②四日共用一个图（图 3 的 2×2 面板）即可，不要为每天各画一张；③表内电量保留 6 位小数、费用 2 位，与 xlsx 一致。</div>
+
+<h4>拍 7 · 收口：核验与结论边界</h4>
+<p><strong>写什么</strong>：T7 核验表＋信息边界一句话＋完整结论限定语。</p>
+<div class="box demo"><span class="bt">示范句</span>
+"表 T7 的物理与账单核验全部通过：全年 52,416 个区间逐时平衡误差不超过 4.55×10⁻¹³ kWh，库存递推与跨日衔接零误差，无同时充放电与紧急购电充电。全部决策仅使用截至决策时刻可获得的信息（残差池截止前一日、阶段信号仅用已完成区间、参数于 0:00 锁定）。综上，LDR 方案在当前数据口径、参数边界、搜索预算和已完成的四种策略对照范围内取得最低正式期总费，作为问题二的推荐策略。"</div>
+
+<h3>4.4 结果段最容易写错的三句话（务必避免）</h3>
+<table>
+<tr><th style="width:44%">错误写法</th><th style="width:34%">问题</th><th>正确写法</th></tr>
+<tr><td>"无紧急购电天数占 59.3%，供电可靠率达 59.3%"</td><td>混淆"无补购"与可靠性；实际负载 100% 满足</td><td>"198 天无需紧急补购；所有缺口均由储能放电或紧急购电补足，供电始终满足负载"</td></tr>
+<tr><td>"差额 12.35% 是不可约预测误差"</td><td>过度声称，把分层近似与搜索误差归零</td><td>"差额混合信息不确定、风险修正、分层近似与有限搜索等因素"</td></tr>
+<tr><td>"LDR 是全局最优策略"</td><td>启发式搜索无最优证书</td><td>"在当前数据口径、参数边界、搜索预算和已完成四种策略对照范围内费用最低"</td></tr>
+</table>
+
+<div class="box ok"><span class="bt">模板回填口径提醒</span>
+result2.xlsx 的"计划购电量"表前 143 列对应当天 00:10—24:00，末列"0:00-0:10+1"对应<strong>次日</strong> 00:00—00:10（12/31 末列填 0）；某日自身 00:00—00:10 出现在上一行末列。论文附录写一句此映射声明即可，避免评委按"行内 144 列求和≠全天购电量"产生误解。</div>
+
+<h3>4.5 论文各分节写法（对应正文"结果与分析/模型检验/讨论"）</h3>
+<table>
+<tr><th style="width:20%">论文分节</th><th style="width:44%">写什么</th><th>关键句与注意</th></tr>
+<tr><td>8.1 总体结果</td><td>正式期口径声明→总费与构成→紧急购电规模→引用图 1、表 T1</td><td>开篇第一句就写口径；"实际总费仅计计划费与五倍紧急费，不扣除任何期末库存价值"</td></tr>
+<tr><td>8.2 策略对照</td><td>T1＋三个相对差额→"当前配置下最优"限定结论</td><td>每个百分比写清分母；披露情景方案期初库存差异</td></tr>
+<tr><td>8.3 机制解释</td><td>T2 加权单价→放电时序机制</td><td>先现象（紧急量多、费用低）后机制（时序），引用图 2 下图的配对节费佐证</td></tr>
+<tr><td>8.4 配对回放</td><td>T3＋逐日胜败（35/25/274）</td><td>表注声明"配对≠独立连续运行"；不按真实当天结果事后挑规则</td></tr>
+<tr><td>8.5 下界定位</td><td>下界值＋对偶证据＋差额两口径</td><td>"事后反事实，不是可执行策略"；差额归因写"混合因素"</td></tr>
+<tr><td>9 指定日期</td><td>四日汇总→逐日 T4/T5＋表 3 并列＋图 3＋日内特征句</td><td>每段固定句式：购电→充放电→紧急→SOC→一句话特征；6/21 主动写"零紧急≠最优"</td></tr>
+<tr><td>10 模型检验</td><td>T7 核验表＋信息边界声明＋模板回读一句</td><td>"回读最大误差约 2.27×10⁻¹³ kWh，回读通过只证明文件符合既定映射"</td></tr>
+<tr><td>11 灵敏度与讨论</td><td>四策略消融（计划×控制器）＋预测四方案对比＋下界差额＋局限清单</td><td>如实写未做的试验（多种子/窗口/端值敏感性）；局限逐条编号（可引用本指南第三部分各 warn 框）</td></tr>
+<tr><td>12 问题二小结</td><td>方法一句话＋结果一句话＋边界一句话</td><td>直接用 4.6 的限定语收尾，与摘要呼应但不重复原句</td></tr>
+</table>
+
+<h3>4.6 结论表述的"完整限定语"（这句话请原样保留，答辩和查重都靠它）</h3>
+<div class="box ok"><span class="bt">可直接抄用的结论句</span>
+"分位数＋LDR 方案在当前数据口径（周持久化负载预测、七天均值光伏预测、21 日成对残差情景）、参数边界（δ∈[−9600,9600] kWh、λ∈[−2,2]）、搜索预算（35 个体×8 代）和已完成的四种策略对照范围内取得最低正式期实际总费，因此作为问题二推荐策略；该结论不构成对所有预测模型、参数配置与控制策略的全局最优性证明，也不涵盖未接入费用回测的相似日高斯核预测方案。"</div>
+<div class="box warn"><span class="bt">为什么限定语不能省</span>
+DE 是有限预算启发式搜索（324/337 天到达预算上限），80% 分位数是单时段简化模型的结论而非含储能完整系统的最优性定理——没有这层限定，"最优"两字在评审和答辩环节会被连续追问直至失分。限定语不是示弱，是方法学成熟的表现：它说明你清楚自己结论的证明边界。</div>
+
+<h3>4.7 消融与稳健性实验的呈现（本队已实施，成品表可直接抄用）</h3>
+<p>四项补充实验（协议先登记、只报告不回改主配置）已全部实施并核验，产物见 <code>outputs/question2/analysis/ablation_robustness/</code>。论文落点：覆盖审计→"模型检验"节；δ-only→"控制器消融"小节；共同起点→T1 之后的"公平性对照"；窗口×种子→"稳健性分析"小节。以下为成品表与措辞纪律。</p>
+
+<h4>成品表 T9：风险曲线覆盖审计（模型检验节）</h4>
+<table>
+<tr><th>指标</th><th>数值</th></tr>
+<tr><td>正式期整体覆盖率 P(N_obs ≤ Ñ)</td><td><strong>76.94%</strong>（名义 80%）</td></tr>
+<tr><td>条件覆盖率（仅 N̂&gt;0 时段）</td><td>77.45%</td></tr>
+<tr><td>越过风险曲线区间／平均超额</td><td>11,089 个／36.97 kWh</td></tr>
+<tr><td>越过区间中发生紧急购电的比例</td><td>13.36%</td></tr>
+<tr><td>紧急购电区间中 N_obs&gt;Ñ 的比例</td><td><strong>95.24%</strong></td></tr>
+<tr><td>分月覆盖率</td><td>75.09%（5/7 月）～ 79.61%（2 月）</td></tr>
+<tr><td>分日类型覆盖率</td><td>节假日 73.68% &lt; 周日 76.92% ≈ 工作日 77.05% ≈ 周六类 77.10%</td></tr>
+</table>
+<div class="box demo"><span class="bt">配套段落（直接可写）</span>
+"覆盖审计显示，80% 分位数风险曲线在正式期的实际覆盖率为 76.94%，低于名义水平约 3 个百分点。这与 21 天滚动窗内逐时段经验分位在样本少、跨窗季节漂移与正部截断下的尾部低估一致。值得注意的是，正式期 95.24% 的紧急购电区间发生在风险曲线被越过的区间上，而越过区间中仅 13.36% 最终演变为紧急购电——这定量表明：分位数计划是第一道防线，储能追索吸收了绝大部分覆盖失败，两层结构按设计分工。覆盖率偏低是如实披露的模型局限，也提示逐月/日类型校准分位水平是可行的改进方向。"</div>
+
+<h4>成品表 T10：δ-only 控制器消融（控制器消融小节）</h4>
+<table>
+<tr><th>口径</th><th class="num">δ-only（λ≡0）</th><th class="num">完整 LDR</th><th class="num">差</th></tr>
+<tr><td>独立全年账单（元）</td><td class="num">13,974,466.27</td><td class="num">13,978,077.23</td><td class="num">−3,610.97</td></tr>
+<tr><td>同计划配对回放（元）</td><td class="num">13,974,368.38</td><td class="num">13,978,077.23</td><td class="num">−3,708.85</td></tr>
+<tr><td>历史情景经验目标改善（元）</td><td class="num">210,505.77</td><td class="num">211,878.18</td><td class="num">+1,372.41</td></tr>
+</table>
+<div class="box demo"><span class="bt">配套段落</span>
+"消融显示，控制器相对基线的全部真实账单增益来自四阶段截距 δ：锁定反馈项（λ≡0）后独立全年账单为 13,974,466.27 元，与完整 LDR 仅差 3,611 元（约 0.03%），小于多种子噪声带（6,923 元）；误差反馈项在历史情景目标上仅增加约 1.4 千元改善，且未转化为样本外收益。因此论文不主张 λ 的经济价值，主方案按预先登记保留完整规则族并如实披露该结果——这与'当前配置下最优'的谨慎表述一致。"</div>
+
+<h4>成品表 T11：共同期初 SOC 公平回测（T1 之后）</h4>
+<table>
+<tr><th>方案</th><th class="num">自然账单／元</th><th class="num">共同起点账单／元</th><th class="num">差／元</th></tr>
+<tr><td><strong>分位数＋LDR</strong></td><td class="num"><strong>13,978,077.23</strong></td><td class="num"><strong>13,978,077.23</strong></td><td class="num">0</td></tr>
+<tr><td>情景价值控制</td><td class="num">13,983,219.29</td><td class="num">13,982,967.84</td><td class="num">−251.45</td></tr>
+<tr><td>分位数＋β=0</td><td class="num">14,042,836.06</td><td class="num">14,042,836.06</td><td class="num">0</td></tr>
+<tr><td>分位数＋β=1</td><td class="num">14,165,186.96</td><td class="num">14,165,207.63</td><td class="num">+20.67</td></tr>
+</table>
+<div class="caption">表注：共同 2/1 期初 SOC 取 LDR 自然值 2,263.206580 kWh；LDR 与 β=0 的自然值即该值，故两列相同。共同起点下排序不变，LDR 相对情景价值控制仍低 4,890.61 元。</div>
+
+<h4>成品表 T12：残差窗 × 种子网格（稳健性小节）</h4>
+<table>
+<tr><th>窗口 M</th><th class="num">β=1 基线</th><th class="num">β=0 基线</th><th class="num">LDR s₁</th><th class="num">LDR s₂</th><th class="num">LDR s₃</th><th class="num">LDR 种子极差</th></tr>
+<tr><td>14</td><td class="num">14,107,120.00</td><td class="num">13,954,907.47</td><td class="num">13,908,465.96</td><td class="num">13,905,512.14</td><td class="num">13,908,721.76</td><td class="num">3,209.62</td></tr>
+<tr><td><strong>21（主）</strong></td><td class="num">14,165,186.96</td><td class="num">14,042,836.06</td><td class="num"><strong>13,978,077.23</strong></td><td class="num">13,979,099.29</td><td class="num">13,985,000.49</td><td class="num">6,923.26</td></tr>
+<tr><td>28</td><td class="num">14,152,409.94</td><td class="num">14,045,459.09</td><td class="num">13,974,689.99</td><td class="num">13,974,802.63</td><td class="num">13,975,267.90</td><td class="num">577.91</td></tr>
+</table>
+<div class="box demo"><span class="bt">配套段落</span>
+"稳健性网格显示：①全部 9 个组合下 LDR 均低于两个 β 基线，排序稳定；②同窗口随机种子引起的总费极差不超过 0.05%，DE 随机性影响可忽略；③窗口长度影响费用绝对水平——M=14 时 LDR 总费比主配置低约 0.53%，9 格总极差 0.5687%——但主配置按预先登记保持 M=21 不做回调。上述结果说明结论的排序优势对窗口与种子稳健，同时如实披露绝对水平对窗口的敏感性。"</div>
+<div class="box warn"><span class="bt">呈现纪律（四项实验的共同要求）</span>
+①每张表都要注明"预先登记协议、只报告不回改主配置"；②"负面"结果（76.94% 覆盖率、λ 无增益、窗口 0.57% 敏感性）必须写，且给出机制解释——隐瞒或回避才是失分点；③这些实验只加强"当前配置下最优"的<strong>排序证据</strong>，不改变限定语的核心结构，只在"参数边界"后补"残差窗长与随机种子"并声明排序稳健。</div>
+
+<!-- ===================== 五 ===================== -->
+<h2 id="s5">五、图表生成建议（图清单＋代码＋图注引图句）</h2>
+
+<h3>5.1 图清单（编号、用途、规格）</h3>
+<table>
+<tr><th style="width:8%">图号</th><th style="width:24%">内容</th><th style="width:40%">要点与规格</th><th>对应现有产物</th></tr>
+<tr><td>F1</td><td>问题二建模流程图</td><td>预测→残差情景→80% 分位数→日前 LP→规则校准→日内执行→库存传递，闭环箭头；矢量绘制（draw.io/Graphviz/PPT），论文中建议横向全宽、300 dpi 导出</td><td>正文 mermaid 图（需转矢量图）</td></tr>
+<tr><td>F2</td><td>四策略费用对比图</td><td>堆叠柱（计划费＋紧急费）＋总费标签；柱从 0 开始；LDR 柱高亮；右侧小图放紧急费（差异被主图压缩时用）</td><td><code>figure1_cost_comparison.png</code></td></tr>
+<tr><td>F3</td><td>月度账单＋配对节费双面板</td><td>上图：LDR 分月计划/紧急/总费（折线或堆叠柱）；下图：配对节费按月累计（β=1、β=0 两条）；注明两面板统计口径不同</td><td><code>figure2_monthly_and_paired.png</code></td></tr>
+<tr><td>F4</td><td>四指定日期日内运行图</td><td>2×2 面板，每面板：净负荷/计划购电/紧急购电（面积或线）＋SOC 与保留阈值（双轴）；标注紧急购电区间；每面板标日期与当日总费</td><td><code>figure3_key_dates.png</code></td></tr>
+<tr><td>F5(可选)</td><td>某关键日预测 vs 实际＋风险带</td><td>点预测曲线、80% 分位风险曲线、实际净负荷三条线；展示"风险修正曲线抬高午后净需求"的机制</td><td>需新生成（数据在 schedule CSV）</td></tr>
+<tr><td>F6(可选)</td><td>残差/情景分布图</td><td>某时段净负荷情景的直方图＋80% 分位线＋点预测线，直观支撑式(6)</td><td>需新生成</td></tr>
+</table>
+
+<h3>5.2 通用制图规范</h3>
+<ul>
+<li><strong>分辨率</strong>：400 dpi PNG（论文插入）或矢量 PDF（排版用）；<code>fig.savefig(..., dpi=400, bbox_inches="tight")</code>；</li>
+<li><strong>中文字体</strong>：Windows 下 <code>rcParams["font.sans-serif"]=["SimHei","Microsoft YaHei"]</code>，并设 <code>axes.unicode_minus=False</code>；</li>
+<li><strong>色板</strong>：色盲友好（蓝 <code>#4C72B0</code>、橙 <code>#DD8452</code>、绿 <code>#55A868</code>、红 <code>#C44E52</code>）；费用类柱状图<strong>必须从 0 起轴</strong>；</li>
+<li><strong>图例与单位</strong>：轴标签带单位（kWh、元、%），金额大数建议除以 10⁴ 标"万元"；</li>
+<li><strong>信息密度</strong>：一张图讲一件事；对比图把 LDR 设为深色实心、基线设为浅色/斜纹；</li>
+<li><strong>引图句</strong>：正文引用图表必须"图给结论、文说机制"，如"图 2 显示 LDR 的紧急购电费显著低于三种对照（<em>现象</em>），其原因在于保留规则使放电集中在高价时段（<em>机制</em>）"。</li>
+</ul>
+
+<h3>5.3 matplotlib 代码骨架（三张核心图，可直接基于现有 CSV 改造）</h3>
+
+<h4>图 F2：四策略费用对比（堆叠柱＋总费标注）</h4>
+<pre><code>import pandas as pd, numpy as np, matplotlib
+matplotlib.rcParams["font.sans-serif"] = ["SimHei", "Microsoft YaHei"]
+matplotlib.rcParams["axes.unicode_minus"] = False
+import matplotlib.pyplot as plt
+
+df = pd.read_csv("outputs/question2/current/paper/tables/strategy_comparison.csv")
+order = np.argsort(df["total_cost"].values)          # 按总费升序排列
+labels = df["方案"].values[order]
+planned = df["planned_cost"].values[order] / 1e4     # 万元
+emerg   = df["emergency_cost"].values[order] / 1e4
+total   = df["total_cost"].values[order] / 1e4
+
+fig, ax = plt.subplots(figsize=(8.2, 4.8))
+x = np.arange(len(df)); w = 0.5
+p = ax.bar(x, planned, w, label="计划购电费", color="#4C72B0")
+e = ax.bar(x, emerg, w, bottom=planned, label="紧急购电费",
+           color="#DD8452", hatch="//", edgecolor="white")
+for xi, t in zip(x, total):
+    ax.text(xi, t + 8, f"{t:,.1f}", ha="center", fontsize=9)
+ax.set_xticks(x); ax.set_xticklabels(labels, fontsize=10)
+ax.set_ylabel("正式期费用 / 万元"); ax.set_ylim(0, max(total) * 1.15)
+ax.legend(frameon=False); ax.grid(axis="y", ls="--", alpha=.35)
+ax.set_title("四种策略正式期费用对比（2025-02-01 ~ 12-31）")
+fig.tight_layout()
+fig.savefig("figure2_cost_comparison.png", dpi=400, bbox_inches="tight")</code></pre>
+
+<h4>图 F3：月度账单＋配对节费双面板</h4>
+<pre><code>m = pd.read_csv("outputs/question2/current/paper/tables/monthly_summary.csv")
+p = pd.read_csv("outputs/question2/current/paper/tables/monthly_paired_savings.csv")
+
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8.2, 7.2), sharex=True,
+                               gridspec_kw={"height_ratios": [1.3, 1]})
+# 上图：LDR 月度实际账单（堆叠柱）
+ax1.bar(m["month"], m["planned_cost"]/1e4, 0.6, label="计划购电费", color="#4C72B0")
+ax1.bar(m["month"], m["emergency_cost"]/1e4, 0.6,
+        bottom=m["planned_cost"]/1e4, label="紧急购电费", color="#DD8452", hatch="//")
+ax1.set_ylabel("月度费用 / 万元"); ax1.legend(frameon=False, loc="upper left")
+ax1.set_title("(a) LDR 分月实际账单")
+# 下图：配对试验月度节费（LDR − 基线，正值为省）
+ax2.bar(p["month"]-0.2, p["saving_vs_beta1"]/1e4, 0.4, label="相对 β=1 节费", color="#55A868")
+ax2.bar(p["month"]+0.2, p["saving_vs_beta0"]/1e4, 0.4, label="相对 β=0 节费", color="#C44E52")
+ax2.axhline(0, color="k", lw=.8)
+ax2.set_xticks(range(2, 13)); ax2.set_xlabel("月份")
+ax2.set_ylabel("配对节费 / 万元"); ax2.legend(frameon=False, loc="upper left")
+ax2.set_title("(b) 同计划同库存配对试验的月度节费（正值为省）")
+fig.tight_layout()
+fig.savefig("figure3_monthly_and_paired.png", dpi=400, bbox_inches="tight")</code></pre>
+
+<h4>图 F4：指定日期日内运行（2×2 面板，双轴）</h4>
+<pre><code>s = pd.read_csv("outputs/question2/current/ldr/question2_schedule.csv",
+                parse_dates=["interval_start"])
+dates = ["2025-03-20", "2025-06-21", "2025-09-23", "2025-12-21"]
+
+fig, axes = plt.subplots(2, 2, figsize=(11, 7), sharex="col", sharey="row")
+for ax, d in zip(axes.ravel(), dates):
+    g = s[s["date"] == d]
+    t = np.arange(len(g))
+    ax.plot(t, g["load_kwh"]-g["pv_kwh"], lw=1.1, color="#333333",
+            label="实际净负荷")
+    ax.plot(t, g["grid_kwh"], lw=1.0, color="#4C72B0", alpha=.85,
+            label="计划购电")
+    ax.fill_between(t, 0, g["emergency_kwh"], step="mid",
+                    color="#C44E52", alpha=.85, label="紧急购电")
+    ax2 = ax.twinx()
+    ax2.plot(t, g["soc_end_kwh"], lw=1.2, color="#55A868", label="SOC")
+    ax2.plot(t, g["reserve_kwh"], lw=.9, ls="--", color="#B8860B",
+             label="保留阈值")
+    ax2.set_ylim(0, 10800); ax2.set_yticks([0, 4000, 8000])
+    ax.set_title(f"{d}   实际总费 {g['total_cost'].sum():,.2f} 元", fontsize=10)
+    ax.set_xticks(range(0, 145, 24))
+    ax.set_xticklabels([f"{h:02d}:00" for h in range(0, 25, 4)])
+    ax.set_xlabel("时间"); ax.set_ylabel("电量 / kWh"); ax2.set_ylabel("SOC / kWh")
+handles = ax.get_lines() + ax2.get_lines()
+fig.legend([h for h in handles],
+           [h.get_label() for h in handles], ncol=5, loc="upper center",
+           bbox_to_anchor=(.5, 1.02), frameon=False)
+fig.tight_layout()
+fig.savefig("figure4_key_dates.png", dpi=400, bbox_inches="tight")</code></pre>
+
+<div class="box tip"><span class="bt">图的取舍建议</span>
+正文图控制在 <strong>4～6 张</strong>：F1～F4 必放，F5/F6 视篇幅选一即可。不要为图表数量堆图——每张图都应有"文字讲不出的信息"（时序、分布、对比），能用一句话表格说清的就用表格。图 3 的 b 面板与图 2 的配对表存在信息重叠，若篇幅紧张可二选一。</div>
+
+<h3>5.4 可选图 F5/F6 代码（二选一，用于强化建模直观）</h3>
+
+<h4>图 F5：关键日"点预测 vs 风险曲线 vs 实际"（直接展示 80% 分位数的作用）</h4>
+<pre><code># 9/23 当天两次紧急购电，是展示风险修正与偏差的理想样本日
+s = pd.read_csv("outputs/question2/current/ldr/question2_schedule.csv",
+                parse_dates=["interval_start"])
+g = s[s["date"] == "2025-09-23"]
+t = np.arange(len(g))
+hat   = g["forecast_load_kwh"] - g["forecast_pv_kwh"]   # 点预测净负荷
+risk  = g["planning_net_kwh"]                           # 80% 分位数风险曲线
+actual = g["load_kwh"] - g["pv_kwh"]                    # 实际净负荷
+
+fig, ax = plt.subplots(figsize=(8.2, 4.2))
+ax.plot(t, hat, lw=1.1, color="#4C72B0", label="点预测净负荷")
+ax.plot(t, risk, lw=1.1, ls="--", color="#C44E52",
+        label="80% 分位数风险曲线")
+ax.plot(t, actual, lw=1.4, color="#333333", label="实际净负荷")
+ax.fill_between(t, hat, np.maximum(risk, hat), color="#C44E52", alpha=.15)
+# 标注两次紧急购电区间
+em = g["emergency_kwh"] > 1e-6
+ax.scatter(t[em], actual[em], s=30, color="#C44E52", zorder=5,
+           label="紧急购电区间")
+ax.set_xticks(range(0, 145, 24))
+ax.set_xticklabels([f"{h:02d}:00" for h in range(0, 25, 4)])
+ax.set_xlabel("时间"); ax.set_ylabel("净负荷 / kWh")
+ax.set_title("2025-09-23 净负荷：点预测、80% 分位数风险曲线与实际")
+ax.legend(frameon=False, ncol=4, fontsize=9)
+fig.tight_layout()
+fig.savefig("figure5_risk_band.png", dpi=400, bbox_inches="tight")</code></pre>
+
+<h4>图 F6：某时段净负荷情景直方图（直观支撑式(6) 的 80% 分位数）</h4>
+<pre><code># 从库函数重建当日 21 条情景，画单个时段的经验分布
+import numpy as np, pandas as pd
+from src.optimization.question2 import (load_inputs, forecasts,
+                                        load_forecast_weekly_persist)
+from src.optimization.question2_g_search import scenario_net_matrix
+
+dates, load, pv, prices = load_inputs()
+fl = load_forecast_weekly_persist(load)
+fv = forecasts(load, pv)[1]
+d = int(np.where(dates == "2025-09-23")[0][0])
+scen, _ = scenario_net_matrix(d, load, pv, fl, fv, residual_days=21)
+
+slot = 90                      # 15:00-15:10（该日第一个紧急购电区间前）
+samples = scen[:, slot]
+q  = np.quantile(samples, 0.8, method="linear")
+hat = fl[d, slot] - fv[d, slot]
+
+fig, ax = plt.subplots(figsize=(6.6, 4))
+ax.hist(samples, bins=12, color="#4C72B0", alpha=.75, edgecolor="white")
+ax.axvline(hat, ls="--", color="#333333", lw=1.6, label=f"点预测 {hat:.1f}")
+ax.axvline(q, ls="-", color="#C44E52", lw=1.8, label=f"80% 分位数 {q:.1f}")
+ax.set_xlabel("净负荷情景值 / kWh"); ax.set_ylabel("情景数")
+ax.set_title("2025-09-23 15:00-15:10 净负荷情景分布（21 条历史残差情景）")
+ax.legend(frameon=False)
+fig.tight_layout()
+fig.savefig("figure6_scenario_hist.png", dpi=400, bbox_inches="tight")</code></pre>
+
+<h3>5.5 图 F1 建模流程图的绘制（Graphviz DOT 可直接渲染）</h3>
+<p>流程图用 Graphviz（<code>dot -Tpng -Gdpi=300 q2.dot -o figure1_flow.png</code>）或 draw.io 绘制，节点保持与本指南 §3 各层一致：</p>
+<pre><code>digraph Q2 {
+  rankdir=LR; graph [fontname="Microsoft YaHei"];
+  node [shape=box, style="rounded,filled", fillcolor="#E8EFF8", fontname="Microsoft YaHei"];
+  edge [fontname="Microsoft YaHei"];
+  A [label="历史负载/光伏\n（截至 d−1）"];
+  B [label="周持久化负载 L_{d-7}\n＋光伏七天均值"];
+  C [label="21 日成对残差\n净负荷情景 {N_ω}"];
+  D [label="80% 分位数\n风险曲线 Ñ"];
+  E [label="日前两阶段 LP\n→ g^Q, E^p"];
+  F [label="差分进化校准\n7 个阈值参数 θ"];
+  G [label="日内因果执行\n统一充放电规则"];
+  H [label="实际库存\n跨日传递"];
+  A -> B; B -> C; C -> D; D -> E; E -> F; F -> G; G -> H; H -> A;
+}</code></pre>
+<div class="box tip"><span class="bt">流程图的两个加分细节</span>
+①在"日内因果执行"节点旁标注阶段信号 a<sub>k</sub> 的更新时刻（0/6/12/18 时），让评委一眼看到"调整点在哪"；②把箭头 H→A（跨日库存传递）画成闭环回线，直观呼应"滚动时域"的建模思想。</div>
+
+<h3>5.6 每张图的图注与引图句（照抄改编号即可）</h3>
+<table>
+<tr><th style="width:10%">图</th><th style="width:46%">建议图注</th><th>建议引图句（正文中）</th></tr>
+<tr><td>F1</td><td>图 1　问题二求解流程：预测、情景、日前计划、规则校准与日内执行</td><td>"整体求解流程如图 1 所示，全流程只使用决策时刻之前的信息。"</td></tr>
+<tr><td>F2</td><td>图 2　四种策略正式期费用对比（堆叠柱为计划费与紧急费，柱顶为总费）</td><td>"图 2 显示 LDR 的总费与紧急购电费均低于三种对照，其中紧急费的下降是主要节费来源。"</td></tr>
+<tr><td>F3</td><td>图 3　(a) LDR 分月实际账单；(b) 同计划配对试验的月度节费</td><td>"图 3(a) 显示 6、7、12 月为高费用月；图 3(b) 的配对节费按月累计为正，说明控制器的改善具有跨月度的一致性。"</td></tr>
+<tr><td>F4</td><td>图 4　四个指定日期的净负荷、计划购电、紧急购电与 SOC、保留阈值</td><td>"图 4 显示 9 月 23 日白天净负荷为负并充入储能，傍晚两次短时缺口由放电与紧急购电补足。"</td></tr>
+<tr><td>F5</td><td>图 5　2025-09-23 点预测、80% 分位数风险曲线与实际净负荷</td><td>"图 5 中风险曲线整体高于点预测，午后实际净负荷两次越过风险曲线，对应该日的紧急购电。"</td></tr>
+<tr><td>F6</td><td>图 6　2025-09-23 15:00-15:10 净负荷情景的经验分布</td><td>"图 6 直观说明 80% 分位数为何构成计划与补购成本权衡的平衡点。"</td></tr>
+</table>
+
+<!-- ===================== 六 ===================== -->
+<h2 id="s6">六、常见失分点与交稿自查清单</h2>
+
+<h3>6.1 失分点清单</h3>
+<table>
+<tr><th style="width:16%">风险项</th><th style="width:40%">典型表现</th><th>对策</th></tr>
+<tr><td><span class="pill p-red">致命</span>因果性违规</td><td>用当天实际数据选参数/回看最优；残差用决策日重拟合的预测计算</td><td>逐条声明：残差池截止 d−1；a<sub>k</sub> 只用已完成区间；参数 0:00 锁定；扰动未来数据结果不变（测试佐证）</td></tr>
+<tr><td><span class="pill p-red">致命</span>过度声称</td><td>"全局最优""不可约误差""信息前沿""LDR 必然优于 SDDP/CVaR"</td><td>统一用"当前配置下最优"＋完整限定语；下界差额归因写"混合因素"</td></tr>
+<tr><td><span class="pill p-amber">严重</span>口径混用</td><td>全年与正式期费用混排；期初库存不同仍直接比费用；把含终值代理的目标当真实账单</td><td>表注统一声明正式期口径与期初/年末 SOC；真实账单只计 Σ(cg+5cb)</td></tr>
+<tr><td><span class="pill p-amber">严重</span>数字不一致</td><td>摘要、正文、表格、xlsx 四处数字对不上；百分比分母不交代</td><td>以 <code>question2_summary.json</code> 为唯一数字源；交稿前跑校验脚本核对四处</td></tr>
+<tr><td><span class="pill p-amber">严重</span>概念误用</td><td>把"无紧急购电天数占比"当可靠率；把未利用供能全叫弃光；把 80% 分位数解释为供电可靠性</td><td>见 4.4 三句话对照表；未利用供能写"未利用供能（可能含计划电与光伏）"</td></tr>
+<tr><td><span class="pill p-green">注意</span>模板回填</td><td>跨日末列映射写错；表头/工作表名被改动；省略行未展开</td><td>回填后用 <code>validate_question2_workbook</code> 回读核验；附录写明映射口径</td></tr>
+<tr><td><span class="pill p-green">注意</span>文献堆砌</td><td>引言罗列 20 篇综述但正文模型处零引用</td><td>按第三部分"示范句"把每条文献钉在具体组件上，见 §7 引用落点表</td></tr>
+<tr><td><span class="pill p-green">注意</span>缺敏感性</td><td>全文只有一套参数一个结果</td><td>四策略对照＝计划×控制器消融；预测四方案对比；下界定位；已足够，在讨论节如实说明未做多种子/窗口敏感性</td></tr>
+</table>
+
+<h3>6.2 交稿前 24 小时核对清单（逐项打勾）</h3>
+<ol>
+<li>☐ <strong>数字四处一致</strong>：摘要、正文、表格、result2.xlsx 的总费/构成/指定日期数字完全相同（以 <code>question2_summary.json</code> 为唯一数字源核对）。</li>
+<li>☐ <strong>口径声明齐全</strong>：正式期 2/1–12/31、334 天；1/1 冻结初始条件日；全年 15,749,745.67 元不入排名；真实账单只计 Σ(cg+5cb)。</li>
+<li>☐ <strong>因果声明逐条在场</strong>：残差池截止 d−1、阶段信号只用已完成区间、参数 0:00 锁定、种子只含日序——四句至少出现一次。</li>
+<li>☐ <strong>限定语完整</strong>："当前配置下最优"后紧跟 4.6 的完整限定语，无"全局最优/不可约误差/可靠性"字样。</li>
+<li>☐ <strong>百分比分母有交代</strong>：1.32%/0.46%/0.04% 均以对照方案费用为分母；12.35% 与 14.08% 区分两口径。</li>
+<li>☐ <strong>图表规范</strong>：图 400 dpi、中文正常显示、柱状图从 0 起轴、轴带单位、图注与引图句齐全（对照 5.6）。</li>
+<li>☐ <strong>公式与符号一致</strong>：符号表与正文完全一致（η、E<sub>min</sub>、E<sub>max</sub>、S、ν、θ、a<sub>k</sub>），式(6)推导无跳步。</li>
+<li>☐ <strong>假设可辩护</strong>：逐条编号，去掉"假设电池无损耗"之类的与题面矛盾项；不售电、跨日继承库存等写清。</li>
+<li>☐ <strong>模板回读记录</strong>：附录写明 result2.xlsx 回读通过、最大误差值，以及末列"0:00-0:10+1"的映射声明。</li>
+<li>☐ <strong>文献落点</strong>：每条参考文献在正文至少出现一次（对照 §7 落点表），格式按组委会模板统一。</li>
+<li>☐ <strong>复现命令</strong>：附录给出 3 条命令（主程序/工作簿导出/校验），并注明运行环境与种子。</li>
+<li>☐ <strong>全文朗读一遍</strong>：换人朗读，凡"这个数字哪来的"答不上来的地方，补一句表注或数据来源。</li>
+</ol>
+
+<h3>6.3 答辩模拟问题清单（10 问，附回答要点）</h3>
+<table>
+<tr><th style="width:34%">可能的提问</th><th>回答要点（背下逻辑即可，不必背词）</th></tr>
+<tr><td>Q1 为什么是 80% 分位数，不是 70% 或 90%？</td><td>报童推导：单时段 min cg+5cE[(N−g)⁺] 的一阶条件给出 P(N≤g)=1−1/5=0.8，5 倍紧急价直接确定分位水平；α=0.8 是事前固定的风险设计，未按全年结果扫描反选。同时说明它是简化模型结论，接入储能后是风险设计而非完整最优性定理；并主动交代覆盖审计：21 条滚动残差情景的经验分位实际覆盖率 76.94%，低于名义 80% 约 3 个百分点（滚动窗短、跨窗漂移、正部截断），缺口由储能追索吸收。</td></tr>
+<tr><td>Q2 差分进化不保证全局最优，凭什么说你的方案最优？</td><td>结论限定为"当前配置下最优"：同一正式期实际账单排序＋同计划配对回放＋零参数保底三条证据；另有 9 格窗口×种子网格全部 LDR&lt;β 基线（排序稳定）、共同起点回测排序不变；337 天中 324 天达预算上限是如实披露的局限，不声称全局收敛。</td></tr>
+<tr><td>Q3 负载为什么用周持久化这种简单方法？</td><td>数据有强周内日型结构（周五/周六约 3260 kW vs 其余约 5150 kW）；四方案正式期对比 MAPE：周持久化 4.13% vs 昨日持久化 15.66%、七天均值 19.07%，简单方法在该数据结构下最优；相似日高斯核 4.02% 略优但暂未接入费用回测，故主方案用周持久化。</td></tr>
+<tr><td>Q4 问题 2 为什么不用附件 3 的光伏滚动预报？</td><td>题目问题 2 的信息集是附件 1 电价与附件 2 负载/光伏实际数据；附件 3 是问题 3 才引入的预报。6/12/18 时更新的是"本地已观测误差"信号 a<sub>k</sub>，不是新预报，也未调整购电计划。</td></tr>
+<tr><td>Q5 目标函数里的 νE<sub>T</sub> 是不是把库存"卖"了钱？</td><td>不是。ν=当日最低电价/η 是跨日价值的一阶代理，只用于规划层防止单日耗尽电池；真实账单只计计划费与五倍紧急费，不扣除任何期末库存价值。</td></tr>
+<tr><td>Q6 配对回放和独立连续运行有什么区别，为什么要两个？</td><td>配对回放固定同一计划、同一日初库存，隔离"控制器"贡献（节费 193,363.14/64,236.94 元）；独立连续运行是各自完整策略的真实年度账单（T1）。前者解释"为什么赢"，后者回答"整体赢多少"，二者不能互相替代。</td></tr>
+<tr><td>Q7 紧急购电量比 β=0 多，费用反而低，怎么解释？</td><td>加权单价：LDR 4.9746 元/kWh vs β=0 5.7326 元/kWh；保留规则让电池在低价缺口忍耐、在高价缺口放电，改变紧急补购的时段分布，节费来自时序而非总量。</td></tr>
+<tr><td>Q8 怎么保证没有用到未来数据？</td><td>四道闸：残差池只含 d−1 及以前；a<sub>k</sub> 只用量阶段开始前已完成区间；计划与参数 0:00 锁定；校准种子只含基准值＋日序。另有扰动测试佐证（扰动未来实际数据不改变此前决策）。</td></tr>
+<tr><td>Q9 与下界差 172.6 万元，还能不能再缩小？</td><td>差额混合信息不确定、风险修正、分层近似、有限搜索与边界处理；可能方向（联合优化 g 与规则、更大搜索预算、更精细跨日价值函数）值得探索，但不能声称可消除，也不把差额归因于单一因素。</td></tr>
+<tr><td>Q10 result2.xlsx 怎么保证填对了？</td><td>回读校验：334 日计划、2004 个四小时块、604 条紧急记录全部回读并与逐时明细对照，最大误差约 2.27×10⁻¹³ kWh；费用独立复算与明细求和一致；末列映射口径在附录声明。</td></tr>
+<tr><td>Q11（新增）消融里 δ-only 比完整 LDR 还低 3,611 元，为什么主方案不改成 δ-only？</td><td>差异（0.026%）小于 M=21 的种子噪声带（6,923 元），统计上不可区分；主方案按预先登记保留完整规则族，消融只作归因证据（增益来自截距 δ、λ 无样本外增益），不因事后结果回调主配置——回调即构成数据窥探。</td></tr>
+<tr><td>Q12（新增）覆盖率只有 76.94%，风险设计是不是失效了？</td><td>没有失效，是"偏乐观"：95.24% 的紧急购电确实发生在覆盖失败区间，但越过区间中仅 13.36% 演变为紧急购电——储能追索吸收了绝大部分。审计的价值是定量刻画两层分工，并指出逐月/日类型校准分位水平是可改进方向。</td></tr>
+</table>
+
+<!-- ===================== 七 ===================== -->
+<h2 id="s7">七、参考文献与引用落点</h2>
+
+<p>以下按 GB/T 7714 风格整理，均已核实可查证；<strong>第 9 条作者名单请以期刊官网为准再行核对</strong>。建模类赛题论文引用 8～12 条足够，重点是"每一条都出现在正文具体位置"。</p>
+
+<ol class="refs">
+<li>[1] ARROW K J, HARRIS T, MARSCHAK J. Optimal inventory policy[J]. <em>Econometrica</em>, 1951, 19(3): 250-272.（报童最优订货量＝需求分布分位数）</li>
+<li>[2] BEN-TAL A, GORYASHKO A, GUSLITZER E, NEMIROVSKI A. Adjustable robust solutions of uncertain linear programs[J]. <em>Mathematical Programming</em>, 2004, 99(2): 351-376.（仿射决策规则的经典出处）</li>
+<li>[3] KUHN D, WIESEMANN W, GEORGHIOU A. Primal and dual linear decision rules in stochastic and robust optimization[J]. <em>Mathematical Programming</em>, 2011, 130(1): 177-209.（线性决策规则的对偶刻画与最优性条件）</li>
+<li>[4] STORN R, PRICE K. Differential evolution — a simple and efficient heuristic for global optimization over continuous spaces[J]. <em>Journal of Global Optimization</em>, 1997, 11(4): 341-359.</li>
+<li>[5] KLEYWEKT A J, SHAPIRO A, HOMEM-DE-MELLO T. The sample average approximation method for stochastic discrete optimization[J]. <em>SIAM Journal on Optimization</em>, 2002, 12(2): 479-502.（SAA 方法）</li>
+<li>[6] BIRGE J R, LOUVEAUX F. <em>Introduction to Stochastic Programming</em>[M]. 2nd ed. New York: Springer, 2011.（两阶段追索、EVPI/VSS、滚动时域价值函数）</li>
+<li>[7] HONG T, FAN S. Probabilistic electric load forecasting: a tutorial review[J]. <em>International Journal of Forecasting</em>, 2016, 32(3): 914-938.（持久化基准与负荷预测方法论）</li>
+<li>[8] PARISIO A, RIKOS E, GLIELMO L. A model predictive control approach to microgrid operation optimization[J]. <em>IEEE Transactions on Control Systems Technology</em>, 2014, 22(5): 1813-1827.（微网两级优化/MPC 框架）</li>
+<li>[9] A review of the optimization and control techniques in the presence of uncertainties for the energy management of microgrids[J]. <em>Energies</em>, 2022, 15(23): 9114. DOI: 10.3390/en15239114.（微网不确定性优化与控制综述；作者名单请核对期刊官网）</li>
+<li>[10]（可选）ROCKAFELLAR R T, URYASEV S. Optimization of conditional value-at-risk[J]. <em>Journal of Risk</em>, 2000, 2(3): 21-41.（仅在讨论 CVaR 风险度量拓展时引用，未采用不要硬引）</li>
+</ol>
+
+<h4>引用落点速查</h4>
+<table>
+<tr><th>论文位置</th><th>引用</th></tr>
+<tr><td>问题分析/背景（微网两级结构、不确定性方法谱系）</td><td>[8][9]</td></tr>
+<tr><td>负载预测方法选择（持久化基准、日型结构）</td><td>[7]</td></tr>
+<tr><td>残差情景构造（经验分布、SAA）</td><td>[5]，可加 [6]</td></tr>
+<tr><td>80% 分位数推导（报童）</td><td>[1]</td></tr>
+<tr><td>日末库存价值代理（滚动时域/价值函数近似）</td><td>[6]</td></tr>
+<tr><td>截断仿射保留规则（仿射决策规则、非预见性）</td><td>[2][3]</td></tr>
+<tr><td>差分进化求解（不可微黑箱直接搜索）</td><td>[4]</td></tr>
+<tr><td>完美信息下界（事后反事实、EVPI 概念）</td><td>[6]</td></tr>
+</table>
+
+<!-- ===================== 附录 ===================== -->
+<h2 id="s8">附录：本指南与本队产物对照索引</h2>
+<table>
+<tr><th style="width:42%">本指南涉及内容</th><th>本队现有文件</th></tr>
+<tr><td>问题二完整方案与审查修订（模型演进、参数口径、撤回结论）</td><td><code>docs/问题二/问题二完整方案与审查修订.md</code></td></tr>
+<tr><td>问题二完整解答正文（可直接改写成论文章节）</td><td><code>outputs/question2/current/paper/问题二完整解答_LDR主方案.md</code></td></tr>
+<tr><td>正式结果与模板文件</td><td><code>outputs/question2/current/ldr/result2.xlsx</code>、<code>question2_summary.json</code></td></tr>
+<tr><td>策略对照、月度、配对、关键日期数据表</td><td><code>outputs/question2/current/paper/tables/*.csv</code></td></tr>
+<tr><td>现有三张论文图（F2/F3/F4 的对应图）</td><td><code>outputs/question2/current/paper/figures/*.png</code></td></tr>
+<tr><td>负载预测四方案对比证据</td><td><code>outputs/question2/analysis/load_forecast/负载预测方案对比说明.md</code></td></tr>
+<tr><td>匹配完美信息下界</td><td><code>outputs/question2/benchmark/perfect_foresight/matched_ldr_summary.json</code></td></tr>
+<tr><td>消融与稳健性实验（协议/网格/δ-only/共同起点/结论）</td><td><code>outputs/question2/analysis/ablation_robustness/</code></td></tr>
+<tr><td>补充实验决策与论证逻辑统筹</td><td><code>docs/问题二/问题二补充实验决策与论证逻辑.md</code></td></tr>
+<tr><td>主程序（复现）</td><td><code>src/optimization/question2_ldr.py</code></td></tr>
+</table>
+
+<footer>
+本指导文档基于本队问题二实际实施数据撰写（2026 高教社杯 C 题），数据口径已于 2026-09-13 全面更新：2025-01-01 为冻结初始条件日（无计划、电池不动作、SOC 恒 6000 kWh、不入统计），预热期负载退化为昨日持久化（不再使用附件 1 负载曲线），正式期 2/1–12/31 结果不变（13,978,077.23 元），全年账本更新为 15,749,745.67 元。文中所有费用、电量与核验数字均引自重跑后的现有结果文件；文献条目经公开来源核实，正式投稿前请按期刊/组委会格式规范再次核对，尤其第 9 条作者名单。文档中的 matplotlib 代码骨架可直接结合本队 CSV 运行，字体与配色可按校赛/国赛排版要求微调。
+</footer>
+
+</div>
+</body>
+</html>

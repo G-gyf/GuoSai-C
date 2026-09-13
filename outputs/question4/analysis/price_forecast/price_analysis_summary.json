@@ -1,0 +1,491 @@
+{
+  "eda": {
+    "year": {
+      "mean": 0.7661969406392694,
+      "std": 0.34067072299768236,
+      "min": 0.0076,
+      "max": 1.7936,
+      "p05": 0.338895,
+      "p50": 0.73845,
+      "p95": 1.3419
+    },
+    "share_below_0p1": 0.000532724505327245,
+    "share_above_1p5": 0.017636986301369863,
+    "mean_slot_lag1d_corr": 0.5126228177422306,
+    "mean_slot_lag7d_corr": 0.8381371186053552,
+    "daily_mean_acf_lag1": 0.5039233534263449,
+    "daily_mean_acf_lag7": 0.9628793160594402,
+    "daily_mean_acf_lag14": 0.9247804710567981,
+    "weekday_weekend_mean_diff": 0.05888184589596224
+  },
+  "kernel_grid": {
+    "tuning_window": [
+      "2025-01-20",
+      "2025-01-27"
+    ],
+    "combinations": 72,
+    "best": {
+      "k": 10,
+      "h": 1.0,
+      "tau": 21.0,
+      "mape_pct": 4.38530656636789
+    },
+    "load_params_k10_h2_tau14_mape_pct": 4.392450051837344
+  },
+  "formal_metrics": [
+    {
+      "scheme": "c0",
+      "scope": "formal",
+      "days": 334,
+      "mape_pct": 16.330671762303815,
+      "mape_trim_pct": 16.202608168846652,
+      "smape_pct": 14.222866287073558,
+      "mae_yuan_per_kwh": 0.10023226150810968,
+      "rmse_yuan_per_kwh": 0.136878327519459,
+      "bias_yuan_per_kwh": 0.013164544316258301,
+      "corr": 0.9144134112915419
+    },
+    {
+      "scheme": "c0",
+      "scope": "workday",
+      "days": 185,
+      "mape_pct": 9.676008680674247,
+      "mape_trim_pct": 9.676008680674247,
+      "smape_pct": 10.081063499334334,
+      "mae_yuan_per_kwh": 0.07850989281439594,
+      "rmse_yuan_per_kwh": 0.10928111701548175,
+      "bias_yuan_per_kwh": -0.04120738042379875,
+      "corr": 0.9533690304079958
+    },
+    {
+      "scheme": "c0",
+      "scope": "sat_class",
+      "days": 93,
+      "mape_pct": 34.081562138273576,
+      "mape_trim_pct": 33.622935625171756,
+      "smape_pct": 25.47809914989777,
+      "mae_yuan_per_kwh": 0.16061487779892647,
+      "rmse_yuan_per_kwh": 0.19366506350058366,
+      "bias_yuan_per_kwh": 0.15025533640065172,
+      "corr": 0.9220842024985044
+    },
+    {
+      "scheme": "c0",
+      "scope": "sunday",
+      "days": 46,
+      "mape_pct": 9.133990031531546,
+      "mape_trim_pct": 9.133990031531546,
+      "smape_pct": 9.608415003496162,
+      "mae_yuan_per_kwh": 0.07538330583299926,
+      "rmse_yuan_per_kwh": 0.10531440351313619,
+      "bias_yuan_per_kwh": -0.04227066528228053,
+      "corr": 0.9576533230520113
+    },
+    {
+      "scheme": "c0",
+      "scope": "holiday",
+      "days": 10,
+      "mape_pct": 7.4633942374846125,
+      "mape_trim_pct": 7.4633942374846125,
+      "smape_pct": 7.399028140439889,
+      "mae_yuan_per_kwh": 0.05484294694272559,
+      "rmse_yuan_per_kwh": 0.07079168548799605,
+      "bias_yuan_per_kwh": -0.0008972502242660311,
+      "corr": 0.9755343768571637
+    },
+    {
+      "scheme": "b0",
+      "scope": "formal",
+      "days": 334,
+      "mape_pct": 13.78009171976237,
+      "mape_trim_pct": 13.737234459999812,
+      "smape_pct": 13.088952204216863,
+      "mae_yuan_per_kwh": 0.08432562999001995,
+      "rmse_yuan_per_kwh": 0.12383705069717323,
+      "bias_yuan_per_kwh": -0.0005931823852295407,
+      "corr": 0.9320466561926088
+    },
+    {
+      "scheme": "b0",
+      "scope": "workday",
+      "days": 185,
+      "mape_pct": 6.323949097618313,
+      "mape_trim_pct": 6.323949097618313,
+      "smape_pct": 6.382788485190829,
+      "mae_yuan_per_kwh": 0.04344296171171171,
+      "rmse_yuan_per_kwh": 0.05947363184437083,
+      "bias_yuan_per_kwh": -0.002832293543543543,
+      "corr": 0.9842982063076109
+    },
+    {
+      "scheme": "b0",
+      "scope": "sat_class",
+      "days": 93,
+      "mape_pct": 24.131031701855914,
+      "mape_trim_pct": 23.97787891503655,
+      "smape_pct": 19.304698813542878,
+      "mae_yuan_per_kwh": 0.11794481780167262,
+      "rmse_yuan_per_kwh": 0.1586089407873032,
+      "bias_yuan_per_kwh": 0.09701905615292712,
+      "corr": 0.9261465905663859
+    },
+    {
+      "scheme": "b0",
+      "scope": "sunday",
+      "days": 46,
+      "mape_pct": 24.32771853812299,
+      "mape_trim_pct": 24.32771853812299,
+      "smape_pct": 28.85763726145512,
+      "mae_yuan_per_kwh": 0.1893838768115942,
+      "rmse_yuan_per_kwh": 0.21333098843819978,
+      "bias_yuan_per_kwh": -0.18918740942028986,
+      "corr": 0.9575728581108994
+    },
+    {
+      "scheme": "b0",
+      "scope": "holiday",
+      "days": 10,
+      "mape_pct": 6.935905031498568,
+      "mape_trim_pct": 6.935905031498568,
+      "smape_pct": 6.8105862761705565,
+      "mae_yuan_per_kwh": 0.04472861111111111,
+      "rmse_yuan_per_kwh": 0.05889180097621588,
+      "bias_yuan_per_kwh": 0.0005699999999999995,
+      "corr": 0.982508847464911
+    },
+    {
+      "scheme": "b1",
+      "scope": "formal",
+      "days": 334,
+      "mape_pct": 7.64920245304143,
+      "mape_trim_pct": 7.605123393336798,
+      "smape_pct": 7.4981088916564,
+      "mae_yuan_per_kwh": 0.04715133898868929,
+      "rmse_yuan_per_kwh": 0.06534803830793451,
+      "bias_yuan_per_kwh": -0.00015489437791084518,
+      "corr": 0.9810846920037065
+    },
+    {
+      "scheme": "b1",
+      "scope": "workday",
+      "days": 185,
+      "mape_pct": 6.584484206111428,
+      "mape_trim_pct": 6.584484206111428,
+      "smape_pct": 6.550567290511788,
+      "mae_yuan_per_kwh": 0.046129624624624624,
+      "rmse_yuan_per_kwh": 0.06377331208926532,
+      "bias_yuan_per_kwh": -0.0009395270270270267,
+      "corr": 0.9818399516704504
+    },
+    {
+      "scheme": "b1",
+      "scope": "sat_class",
+      "days": 93,
+      "mape_pct": 10.186815906682124,
+      "mape_trim_pct": 10.028691437782063,
+      "smape_pct": 9.74981136072104,
+      "mae_yuan_per_kwh": 0.0479339605734767,
+      "rmse_yuan_per_kwh": 0.06603078731212086,
+      "bias_yuan_per_kwh": -0.00039910394265232945,
+      "corr": 0.9757644390868876
+    },
+    {
+      "scheme": "b1",
+      "scope": "sunday",
+      "days": 46,
+      "mape_pct": 6.713134176959196,
+      "mape_trim_pct": 6.713134176959196,
+      "smape_pct": 6.677472938970724,
+      "mae_yuan_per_kwh": 0.04777140700483092,
+      "rmse_yuan_per_kwh": 0.06724102161569755,
+      "bias_yuan_per_kwh": 0.0002901570048309185,
+      "corr": 0.9798122098010262
+    },
+    {
+      "scheme": "b1",
+      "scope": "holiday",
+      "days": 10,
+      "mape_pct": 8.052598972366326,
+      "mape_trim_pct": 8.052598972366326,
+      "smape_pct": 7.8617209328846585,
+      "mae_yuan_per_kwh": 0.05592236111111111,
+      "rmse_yuan_per_kwh": 0.07773826688889385,
+      "bias_yuan_per_kwh": 0.014584722222222225,
+      "corr": 0.9728175396240097
+    },
+    {
+      "scheme": "b2",
+      "scope": "formal",
+      "days": 334,
+      "mape_pct": 13.650712825426197,
+      "mape_trim_pct": 13.5578461142266,
+      "smape_pct": 12.343427788943732,
+      "mae_yuan_per_kwh": 0.08266989117004088,
+      "rmse_yuan_per_kwh": 0.10526567023993323,
+      "bias_yuan_per_kwh": -0.0003238689288090477,
+      "corr": 0.9496774885011333
+    },
+    {
+      "scheme": "b2",
+      "scope": "workday",
+      "days": 185,
+      "mape_pct": 8.11330468192165,
+      "mape_trim_pct": 8.11330468192165,
+      "smape_pct": 8.523912164373112,
+      "mae_yuan_per_kwh": 0.062369592449592455,
+      "rmse_yuan_per_kwh": 0.07842415406276862,
+      "bias_yuan_per_kwh": -0.05356201415701416,
+      "corr": 0.9857173712834978
+    },
+    {
+      "scheme": "b2",
+      "scope": "sat_class",
+      "days": 93,
+      "mape_pct": 28.21034055241334,
+      "mape_trim_pct": 27.877888543794306,
+      "smape_pct": 22.43678444609741,
+      "mae_yuan_per_kwh": 0.13705338154975252,
+      "rmse_yuan_per_kwh": 0.15582239138057288,
+      "bias_yuan_per_kwh": 0.13666899214883085,
+      "corr": 0.9728941866493016
+    },
+    {
+      "scheme": "b2",
+      "scope": "sunday",
+      "days": 46,
+      "mape_pct": 7.631285974094254,
+      "mape_trim_pct": 7.631285974094254,
+      "smape_pct": 8.056628703804833,
+      "mae_yuan_per_kwh": 0.05897859730848861,
+      "rmse_yuan_per_kwh": 0.07301564812612582,
+      "bias_yuan_per_kwh": -0.05275473602484472,
+      "corr": 0.9889665708571352
+    },
+    {
+      "scheme": "b2",
+      "scope": "holiday",
+      "days": 10,
+      "mape_pct": 8.377589135406824,
+      "mape_trim_pct": 8.377589135406824,
+      "smape_pct": 8.855525723609931,
+      "mae_yuan_per_kwh": 0.061438908730158726,
+      "rmse_yuan_per_kwh": 0.07736715681970664,
+      "bias_yuan_per_kwh": -0.04826980158730158,
+      "corr": 0.9814909826649709
+    },
+    {
+      "scheme": "gk",
+      "scope": "formal",
+      "days": 334,
+      "mape_pct": 6.592803150670652,
+      "mape_trim_pct": 6.54479691076003,
+      "smape_pct": 6.35396928095938,
+      "mae_yuan_per_kwh": 0.04091741443242785,
+      "rmse_yuan_per_kwh": 0.05882748109537591,
+      "bias_yuan_per_kwh": -0.0004264691087849956,
+      "corr": 0.9845709197926785
+    },
+    {
+      "scheme": "gk",
+      "scope": "workday",
+      "days": 185,
+      "mape_pct": 5.534172875855931,
+      "mape_trim_pct": 5.534172875855931,
+      "smape_pct": 5.428007759312372,
+      "mae_yuan_per_kwh": 0.03872165710401026,
+      "rmse_yuan_per_kwh": 0.056211996095297145,
+      "bias_yuan_per_kwh": -0.0009739116917079126,
+      "corr": 0.9858279607356473
+    },
+    {
+      "scheme": "gk",
+      "scope": "sat_class",
+      "days": 93,
+      "mape_pct": 8.735076278603803,
+      "mape_trim_pct": 8.562817460339783,
+      "smape_pct": 8.151286169320219,
+      "mae_yuan_per_kwh": 0.041443752318285065,
+      "rmse_yuan_per_kwh": 0.05797970023402794,
+      "bias_yuan_per_kwh": -0.0006247598279815945,
+      "corr": 0.9811682503953747
+    },
+    {
+      "scheme": "gk",
+      "scope": "sunday",
+      "days": 46,
+      "mape_pct": 6.139575073878696,
+      "mape_trim_pct": 6.139575073878696,
+      "smape_pct": 6.080191082790728,
+      "mae_yuan_per_kwh": 0.04519539442608361,
+      "rmse_yuan_per_kwh": 0.06441390577100063,
+      "bias_yuan_per_kwh": -0.0005268912758359239,
+      "corr": 0.9813063099795374
+    },
+    {
+      "scheme": "gk",
+      "scope": "holiday",
+      "days": 10,
+      "mape_pct": 8.339172298207737,
+      "mape_trim_pct": 8.339172298207737,
+      "smape_pct": 8.028590081248963,
+      "mae_yuan_per_kwh": 0.05696527469886452,
+      "rmse_yuan_per_kwh": 0.08234667571519444,
+      "bias_yuan_per_kwh": 0.01200726433225161,
+      "corr": 0.9685237774554991
+    },
+    {
+      "scheme": "gk_wd",
+      "scope": "formal",
+      "days": 334,
+      "mape_pct": 10.458122146155354,
+      "mape_trim_pct": 10.390668348244674,
+      "smape_pct": 9.99257589020279,
+      "mae_yuan_per_kwh": 0.06493579254040671,
+      "rmse_yuan_per_kwh": 0.09097478651618057,
+      "bias_yuan_per_kwh": -0.0028070089042945452,
+      "corr": 0.9627259426963227
+    },
+    {
+      "scheme": "gk_wd",
+      "scope": "workday",
+      "days": 185,
+      "mape_pct": 5.534172875855931,
+      "mape_trim_pct": 5.534172875855931,
+      "smape_pct": 5.428007759312372,
+      "mae_yuan_per_kwh": 0.03872165710401026,
+      "rmse_yuan_per_kwh": 0.056211996095297145,
+      "bias_yuan_per_kwh": -0.0009739116917079126,
+      "corr": 0.9858279607356473
+    },
+    {
+      "scheme": "gk_wd",
+      "scope": "sat_class",
+      "days": 93,
+      "mape_pct": 16.40442364514275,
+      "mape_trim_pct": 16.16260121895984,
+      "smape_pct": 13.674945270007491,
+      "mae_yuan_per_kwh": 0.07697223168108804,
+      "rmse_yuan_per_kwh": 0.0968715966852454,
+      "bias_yuan_per_kwh": 0.06996121772101004,
+      "corr": 0.9758524499549508
+    },
+    {
+      "scheme": "gk_wd",
+      "scope": "sunday",
+      "days": 46,
+      "mape_pct": 17.47581151863033,
+      "mape_trim_pct": 17.47581151863033,
+      "smape_pct": 19.706430841517914,
+      "mae_yuan_per_kwh": 0.13754447850130208,
+      "rmse_yuan_per_kwh": 0.15816958902553765,
+      "bias_yuan_per_kwh": -0.13630296971031616,
+      "corr": 0.9727132599438567
+    },
+    {
+      "scheme": "gk_wd",
+      "scope": "holiday",
+      "days": 10,
+      "mape_pct": 13.969208592727114,
+      "mape_trim_pct": 13.969208592727114,
+      "smape_pct": 15.507318303442188,
+      "mae_yuan_per_kwh": 0.10395845868528626,
+      "rmse_yuan_per_kwh": 0.12499132444610904,
+      "bias_yuan_per_kwh": -0.09938239524478051,
+      "corr": 0.9707957114660057
+    }
+  ],
+  "cost_impact": [
+    {
+      "scheme": "c0",
+      "scope": "formal",
+      "days": 334,
+      "mean_daily_cost_error_yuan": -758.9093035591304,
+      "mean_abs_daily_cost_error_yuan": 8987.174472230516,
+      "rmse_daily_cost_error_yuan": 11091.491858525776,
+      "mean_daily_actual_cost_yuan": 89547.21947512926,
+      "abs_error_share_of_cost_pct": 10.036240683862443
+    },
+    {
+      "scheme": "b0",
+      "scope": "formal",
+      "days": 334,
+      "mean_daily_cost_error_yuan": -1567.706656976652,
+      "mean_abs_daily_cost_error_yuan": 6894.094589817321,
+      "rmse_daily_cost_error_yuan": 11583.712757021807,
+      "mean_daily_actual_cost_yuan": 89547.21947512926,
+      "abs_error_share_of_cost_pct": 7.698837138915385
+    },
+    {
+      "scheme": "b1",
+      "scope": "formal",
+      "days": 334,
+      "mean_daily_cost_error_yuan": -86.46429875279934,
+      "mean_abs_daily_cost_error_yuan": 2339.3314893808833,
+      "rmse_daily_cost_error_yuan": 3598.370300815891,
+      "mean_daily_actual_cost_yuan": 89547.21947512926,
+      "abs_error_share_of_cost_pct": 2.6123999193862257
+    },
+    {
+      "scheme": "b2",
+      "scope": "formal",
+      "days": 334,
+      "mean_daily_cost_error_yuan": -2202.7928869499838,
+      "mean_abs_daily_cost_error_yuan": 8578.756292773927,
+      "rmse_daily_cost_error_yuan": 9048.31758985025,
+      "mean_daily_actual_cost_yuan": 89547.21947512926,
+      "abs_error_share_of_cost_pct": 9.580148153183675
+    },
+    {
+      "scheme": "gk",
+      "scope": "formal",
+      "days": 334,
+      "mean_daily_cost_error_yuan": -204.76431082077443,
+      "mean_abs_daily_cost_error_yuan": 2494.078622483534,
+      "rmse_daily_cost_error_yuan": 3701.888987997587,
+      "mean_daily_actual_cost_yuan": 89547.21947512926,
+      "abs_error_share_of_cost_pct": 2.7852105705819676
+    },
+    {
+      "scheme": "gk_wd",
+      "scope": "formal",
+      "days": 334,
+      "mean_daily_cost_error_yuan": -1585.6347751682129,
+      "mean_abs_daily_cost_error_yuan": 5880.458600193952,
+      "rmse_daily_cost_error_yuan": 8657.181917596212,
+      "mean_daily_actual_cost_yuan": 89547.21947512926,
+      "abs_error_share_of_cost_pct": 6.566880171893204
+    }
+  ],
+  "daily_shape": [
+    {
+      "scheme": "c0",
+      "mean_daily_pearson": 0.967851636260685,
+      "mean_daily_spearman": 0.923376388847834
+    },
+    {
+      "scheme": "b0",
+      "mean_daily_pearson": 0.9778152986132234,
+      "mean_daily_spearman": 0.9384335372243668
+    },
+    {
+      "scheme": "b1",
+      "mean_daily_pearson": 0.9842070605912974,
+      "mean_daily_spearman": 0.9454886678302841
+    },
+    {
+      "scheme": "b2",
+      "mean_daily_pearson": 0.9851437428338722,
+      "mean_daily_spearman": 0.9505529880438524
+    },
+    {
+      "scheme": "gk",
+      "mean_daily_pearson": 0.9891871386441276,
+      "mean_daily_spearman": 0.9566077953592957
+    },
+    {
+      "scheme": "gk_wd",
+      "mean_daily_pearson": 0.9865446589637815,
+      "mean_daily_spearman": 0.9532487912480151
+    }
+  ]
+}

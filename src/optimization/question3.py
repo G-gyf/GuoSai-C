@@ -101,6 +101,7 @@ class Q3Settings:
     search_popsize: int = 5
     delta_bound_kwh: float = DELTA_BOUND
     lambda_bound: float = LAMBDA_BOUND
+    nu_factor: float = 1.0
 
 
 # --------------------------------------------------------------------------
@@ -261,6 +262,75 @@ def solve_adjustment(q0, risk_net, prices, initial, terminal_value):
 # shared rule execution (scenario evaluation and live execution alike)
 # --------------------------------------------------------------------------
 
+try:
+    from numba import njit
+    _HAS_NUMBA = True
+except Exception:  # pragma: no cover - numba is optional
+    _HAS_NUMBA = False
+
+
+if _HAS_NUMBA:
+
+    @njit(cache=True)
+    def _run_rule_kernel(net, q, ref, prices, s0s, s1s, has_lam, deltas,
+                         lams, signals, initial, emin, emax, s, eta):
+        """Compiled per-stage clipped-affine reserve simulation.
+
+        Mirrors the numpy arithmetic of the reference implementation
+        EXACTLY (same expression trees, same IEEE double operations), so
+        results are bit-identical to the scalar-numpy path.  Stage error
+        signals are precomputed by the wrapper with ``np.mean`` (pairwise
+        summation), keeping their bit pattern identical too.
+        """
+        m = net.shape[0]
+        n_stages = s0s.shape[0]
+        energy = np.empty(m)
+        for i in range(m):
+            energy[i] = initial
+        emergency_cost = np.zeros(m)
+        for j in range(n_stages):
+            s0 = s0s[j]
+            s1 = s1s[j]
+            delta = deltas[j]
+            lam = lams[j]
+            for t in range(s0, s1):
+                for i in range(m):
+                    reserve = ref[t] + delta + lam * signals[i, j]
+                    if reserve < emin:
+                        reserve = emin
+                    elif reserve > emax:
+                        reserve = emax
+                    r = net[i, t] - q[t]
+                    # charge = min(min(max(-r,0),S), max((EMAX-e)/ETA,0))
+                    v = -r
+                    if v < 0.0:
+                        v = 0.0
+                    if v > s:
+                        v = s
+                    w = (emax - energy[i]) / eta
+                    if w < 0.0:
+                        w = 0.0
+                    charge = w if w < v else v
+                    # discharge = min(min(max(r,0),S), ETA*max(e-target,0))
+                    v = r
+                    if v < 0.0:
+                        v = 0.0
+                    if v > s:
+                        v = s
+                    w = eta * (energy[i] - reserve)
+                    if w < 0.0:
+                        w = 0.0
+                    discharge = w if w < v else v
+                    # emergency = max(r - discharge, 0)
+                    em = r - discharge
+                    if em < 0.0:
+                        em = 0.0
+                    emergency_cost[i] += 5.0 * prices[i, t] * em
+                    # end = e + ETA*charge - discharge/ETA
+                    energy[i] = energy[i] + eta * charge - discharge / eta
+        return emergency_cost, energy
+
+
 def run_rule_horizon(net, q, ref, prices, initial, forecast_in_effect, stages,
                      observed, theta):
     """Per-stage clipped-affine reserve simulation over one horizon.
@@ -270,6 +340,11 @@ def run_rule_horizon(net, q, ref, prices, initial, forecast_in_effect, stages,
     from the path: stage-local mean of the previous stage's errors against
     ``forecast_in_effect``).  Returns (emergency_cost_per_path,
     end_energy_per_path).
+
+    The heavy loop runs in a numba kernel that mirrors the reference numpy
+    arithmetic bit-for-bit (theta-independent stage signals are computed
+    with numpy ``mean`` in the wrapper), so switching kernels never changes
+    any downstream result.
     """
     net = np.asarray(net, float)
     single = net.ndim == 1
@@ -279,29 +354,61 @@ def run_rule_horizon(net, q, ref, prices, initial, forecast_in_effect, stages,
     q = np.asarray(q, float)
     ref = np.asarray(ref, float)
     prices = np.asarray(prices, float)
+    # A 1-D price vector is broadcast across scenarios (fixed-price Q3);
+    # an (m, h) matrix supplies one price path per scenario (Q4 option B).
+    if prices.ndim == 1:
+        if prices.shape != (h,):
+            raise ValueError("price vector must match the horizon")
+        prices = np.broadcast_to(prices, net.shape)
+    elif prices.shape != net.shape:
+        raise ValueError("price paths must match the net scenario matrix shape")
     forecast_in_effect = np.asarray(forecast_in_effect, float)
-    energy = np.full(m, float(initial))
-    emergency_cost = np.zeros(m)
+
+    n_stages = len(stages)
+    s0s = np.array([s[0] for s in stages], dtype=np.int64)
+    s1s = np.array([s[1] for s in stages], dtype=np.int64)
+    has_lam = np.array([s[2] for s in stages], dtype=np.int64)
+    deltas = np.zeros(n_stages, dtype=float)
+    lams = np.zeros(n_stages, dtype=float)
     pos = 0
-    for j, (s0, s1, has_lam) in enumerate(stages):
-        delta = float(theta[pos])
+    for j in range(n_stages):
+        deltas[j] = float(theta[pos])
         pos += 1
-        lam = float(theta[pos]) if has_lam else 0.0
-        pos += 1 if has_lam else 0
+        if has_lam[j]:
+            lams[j] = float(theta[pos])
+            pos += 1
+    # theta-independent stage signals, computed exactly as the reference path
+    signals = np.zeros((m, n_stages), dtype=float)
+    for j in range(n_stages):
         obs = observed[j]
         if not np.isnan(obs):
-            a = np.full(m, float(obs))
+            signals[:, j] = float(obs)
         elif j == 0:
-            a = np.zeros(m)
+            signals[:, j] = 0.0
         else:
             prev_start = stages[j - 1][0]
-            a = (net[:, prev_start:s0] - forecast_in_effect[prev_start:s0]).mean(axis=1)
-        for t in range(s0, s1):
-            reserve = np.clip(ref[t] + delta + lam * a, EMIN, EMAX)
-            charge, discharge, emergency, unused, energy = rule_transition(
-                net[:, t], q[t], energy, reserve
-            )
-            emergency_cost += 5.0 * prices[t] * emergency
+            signals[:, j] = (
+                net[:, prev_start:stages[j][0]]
+                - forecast_in_effect[prev_start:stages[j][0]]
+            ).mean(axis=1)
+
+    if _HAS_NUMBA:
+        emergency_cost, energy = _run_rule_kernel(
+            net, q, ref, prices, s0s, s1s, has_lam, deltas, lams, signals,
+            float(initial), EMIN, EMAX, S, ETA)
+    else:  # pragma: no cover - reference numpy loop (no numba installed)
+        energy = np.full(m, float(initial))
+        emergency_cost = np.zeros(m)
+        for j in range(n_stages):
+            s0, s1 = int(s0s[j]), int(s1s[j])
+            delta, lam = float(deltas[j]), float(lams[j])
+            a = signals[:, j]
+            for t in range(s0, s1):
+                reserve = np.clip(ref[t] + delta + lam * a, EMIN, EMAX)
+                charge, discharge, emergency, unused, energy = rule_transition(
+                    net[:, t], q[t], energy, reserve
+                )
+                emergency_cost += 5.0 * prices[:, t] * emergency
     if single:
         return emergency_cost[0], energy[0]
     return emergency_cost, energy
@@ -344,8 +451,13 @@ def execute_segment(net, q, ref, prices, initial, a_signal, theta):
 
 def calibrate_staged(scenarios, q, ref, prices, initial, terminal_value,
                      forecast_in_effect, stages, observed, residual_count,
-                     settings: Q3Settings, seed: int):
-    """Bounded DE with explicit beta=1 (zero) and beta=0 (R=Emin) floors."""
+                     settings: Q3Settings, seed: int, price_paths=None):
+    """Bounded DE with explicit beta=1 (zero) and beta=0 (R=Emin) floors.
+
+    ``price_paths`` optionally supplies one price path per scenario (Q4
+    option B); when None the single ``prices`` vector is broadcast to every
+    scenario, reproducing the fixed-price Q3 rule exactly.
+    """
     started = time.perf_counter()
     has_lam = [s[2] for s in stages]
     n_params = sum(1 + int(hl) for hl in has_lam)
@@ -360,7 +472,9 @@ def calibrate_staged(scenarios, q, ref, prices, initial, terminal_value,
 
     def score(theta):
         ec, e_end = run_rule_horizon(
-            scenarios, q, ref, prices, initial, forecast_in_effect,
+            scenarios, q, ref,
+            prices if price_paths is None else price_paths,
+            initial, forecast_in_effect,
             stages, observed, theta,
         )
         return float(np.mean(ec - terminal_value * e_end))
@@ -500,64 +614,181 @@ def _segment_records(seg_start, seg, d, date, load_d, pv_d, prices, fl_d,
 # one causal day
 # --------------------------------------------------------------------------
 
-def run_day(d, date, load_d, pv_d, prices, fl, fc, energy, settings, load, pv):
-    """Return (rows, segments, diagnostics, end_energy, q0, qA)."""
+def run_day(d, date, load_d, pv_d, prices, fl, fc, energy, settings, load, pv,
+            prices_plan=None, scen_prices_fn=None, candidate_ops=None):
+    """Return (rows, segments, diagnostics, end_energy, q0, qA).
+
+    ``prices`` settles the realized bill (Q4: attachment-4 actuals);
+    ``prices_plan`` optionally supplies the decision prices for the day
+    (Q4: 0:00 weekly-persistence forecast).  ``scen_prices_fn(d, h0, m)``
+    optionally returns the (m, 144-h0) scenario price matrix for the
+    calibration horizons.  All three default to None and reproduce the
+    fixed-price Q3 behavior exactly.
+
+    ``candidate_ops`` optionally lists second-sub-question integer-hour
+    operations, each ``{"slot": 60|84, "info": "state"|"self"|"oracle",
+    "recalibrate": bool}`` (self-forecast arrays are passed on the op as
+    ``self_fc``/``self_err`` (365, 144) matrices).  Default None leaves the
+    M612/M61218 path bit-identical.
+    """
     strategy = settings.strategy
     if strategy == "M0":
         return _run_day_m0(d, date, load_d, pv_d, prices, fl, fc, energy,
-                           settings, load, pv)
+                           settings, load, pv, prices_plan, scen_prices_fn)
     return _run_day_staged(d, date, load_d, pv_d, prices, fl, fc, energy,
-                           settings, load, pv)
+                           settings, load, pv, prices_plan, scen_prices_fn,
+                           candidate_ops)
 
 
-def _run_day_m0(d, date, load_d, pv_d, prices, fl, fc, energy, settings, load, pv):
+def _scen_price_paths(d, h0, m, scen, p_decide, scen_prices_fn):
+    """Scenario price matrix (m, 144-h0) or None for the fixed-price path."""
+    if scen_prices_fn is None:
+        return None
+    paths = scen_prices_fn(d, h0, m)
+    if paths is None:
+        return np.asarray(p_decide[h0:], float)[None, :]
+    return np.asarray(paths, float)
+
+
+def decision_prices_with_realized(p_decide, settle_row, update_slots):
+    """Decision prices with realized values at update instants.
+
+    At an update instant h0 (0, 36, 72, 108) the delivery interval starting
+    at h0 begins now, so its interval-START price is already realized and
+    replaces the forecast in the decision row; later slots keep the locked
+    forecast.  In fixed-price mode ``p_decide`` already equals the settle
+    row and the replacement is a no-op.  (Review correction 2: at 00:00 the
+    00:00 price/load/PV are realized actuals; prices are interval starts.)
+    """
+    row = np.asarray(p_decide, float).copy()
+    for h0 in update_slots:
+        row[h0] = float(settle_row[h0])
+    return row
+
+
+# --------------------------------------------------------------------------
+# second sub-question: candidate integer-hour operations (10:00 / 14:00)
+# --------------------------------------------------------------------------
+
+def _candidate_self_scenarios(d, h0, self_fc, self_err, load, pv, fl,
+                              residual_days):
+    """Net-load scenarios for a self-forecast candidate op at slot ``h0``.
+
+    Load scenarios reuse the weekly-persistence residuals; PV scenarios use
+    the errors of the historical self-forecasts (each computed causally
+    from its own history), mirroring ``scenario_matrix``.  Returns
+    (scenarios, count) with scenarios of shape (count, 144-h0).
+    """
+    first = max(7, d - residual_days)
+    count = d - first
+    if count <= 0:
+        return None, 0
+    eps_l = load[first:d] - fl[first:d]
+    eps_self = self_err[first:d, h0:]
+    sl = np.maximum(0.0, fl[d, h0:] + eps_l[:, h0:])
+    sv = np.maximum(0.0, self_fc[d, h0:] + eps_self)
+    return sl - sv, count
+
+
+def _candidate_curve(d, slot, op, fl, fc, load, pv, q0, scen_official,
+                     settings, self_fc=None, self_err=None):
+    """(fc_eff, scen, risk) for a candidate op at ``slot`` in [37, 107].
+
+    state:  latest official issuance curve (6:00 for morning slots < 72,
+            12:00 for afternoon slots >= 72) with its scenarios on the
+            remaining horizon;
+    self:   self-forecast curve with self-forecast scenario errors;
+    oracle: deterministic actual net load (perfect PV information).
+    """
+    info = op["info"]
+    h0 = slot
+    if info == "state":
+        k = 1 if slot < 72 else 2
+        base_slot = 36 if slot < 72 else 72
+        scen = (None if scen_official is None
+                else scen_official[:, slot - base_slot:])
+        fc_eff = fc[d, k, slot:]
+        risk = adjustment_curve(fl[d], fc[d, k], scen, q0[slot:], slot,
+                                q_up=settings.adjustment_up_quantile)
+        return fc_eff, scen, risk
+    if info == "self":
+        scen, _count = _candidate_self_scenarios(
+            d, h0, self_fc, self_err, load, pv, fl, settings.residual_days)
+        fc_eff = self_fc[d, h0:]
+        risk = adjustment_curve(fl[d], self_fc[d], scen, q0[h0:], h0,
+                                q_up=settings.adjustment_up_quantile)
+        return fc_eff, scen, risk
+    if info == "oracle":
+        # Perfect PV information inside the SAME rolling optimizer: the point
+        # forecast is the actual net load and the scenarios keep the load
+        # uncertainty (weekly-persistence residuals) with the PV component
+        # fixed at the actuals.  A fully deterministic curve would drop the
+        # load-risk buffer that the S/F curves carry, and the resulting plan
+        # would not be a valid perfect-information upper bound.
+        first = max(7, d - settings.residual_days)
+        count = d - first
+        if count > 0:
+            eps_l = load[first:d] - fl[first:d]
+            scen = np.maximum(0.0, fl[d, h0:] + eps_l[:, h0:]) - pv[d, h0:]
+        else:
+            scen = None
+        risk = adjustment_curve(fl[d], pv[d], scen, q0[h0:], h0,
+                                q_up=settings.adjustment_up_quantile)
+        return pv[d, h0:], scen, risk
+    raise ValueError(f"unknown candidate op info {info!r}")
+
+
+def _record_candidate_op(diagnostics, slot, op):
+    """Append a candidate-operation entry to the day diagnostics."""
+    entry = {"update_slot": int(slot), "info": op.get("info"),
+             "recalibrate": bool(op.get("recalibrate", False))}
+    diagnostics.setdefault("candidate_ops", []).append(entry)
+
+
+def _run_day_m0(d, date, load_d, pv_d, prices, fl, fc, energy, settings, load, pv,
+                prices_plan=None, scen_prices_fn=None):
     """M0 = question-2-style strategy with the 0:00-issuance PV forecast."""
-    nu = float(prices.min() / ETA)
+    p_decide = prices if prices_plan is None else prices_plan
+    p_decide = decision_prices_with_realized(p_decide, prices, (0,))
+    nu = float(p_decide.min() / ETA) * settings.nu_factor
     diagnostics = {"calibrations": []}
     if d == 0:
-        q0 = np.zeros(T)
-        plan_ref = np.full(T, EMIN)
-        theta = np.zeros(7)
-        residual_count = 0
-        n_hat = np.zeros(T)
-        risk_by_slot = np.zeros(T)
-        diagnostics["planner"] = "zero_plan_cold_start"
-        diagnostics["calibrations"].append(
-            {"update_slot": 0, "stages_covered": [[0, 36], [36, 72], [72, 108], [108, 144]],
-             "theta": np.zeros(7).tolist(), "beta1_score": None, "beta0_score": None,
-             "selected_score": None, "evaluations": 0, "seconds": 0.0,
-             "method": "zero_plan_cold_start", "accepted_search": False,
-             "solver_message": "1 January cold start"}
+        raise ValueError(
+            "2025-01-01 is a frozen initial-condition day: no plan, no battery "
+            "action, SOC stays 6000 kWh and the day is excluded from all "
+            "statistics. run_strategy never passes d=0."
         )
-    else:
-        n_hat = fl[d] - fc[d, 0]
-        scen0, residual_count = scenario_matrix(d, fl, fc, load, pv, 0, 0,
-                                                settings.residual_days)
-        risk0 = risk_curve(fl[d], fc[d, 0], scen0, 0, settings.alpha)
-        risk_by_slot = risk0
-        plan, _ = solve_plan(risk0, prices, energy, nu)
-        q0 = plan[0]
-        plan_ref = plan[4]
-        if scen0 is None:
-            scen0 = n_hat[None, :]
-        q2_settings = LDRSettings(search_seed=settings.search_seed,
-                                  search_maxiter=settings.search_maxiter,
-                                  search_popsize=settings.search_popsize,
-                                  load_forecast="weekly_persist")
-        cal = calibrate_rule(scen0, n_hat, q0, plan_ref, prices, energy, nu,
-                             residual_count, q2_settings,
-                             settings.search_seed + d)
-        theta = cal.theta
-        diagnostics["planner"] = "quantile_LP_alpha_0.8"
-        diagnostics["residual_count"] = residual_count
-        diagnostics["calibrations"].append(
-            {"update_slot": 0, "stages_covered": [[0, 36], [36, 72], [72, 108], [108, 144]],
-             "theta": theta.tolist(), "beta1_score": cal.zero_score,
-             "beta0_score": None, "selected_score": cal.selected_score,
-             "evaluations": cal.evaluations, "seconds": cal.seconds,
-             "method": cal.method, "accepted_search": cal.accepted_search,
-             "solver_message": cal.solver_message}
-        )
+    n_hat = fl[d] - fc[d, 0]
+    scen0, residual_count = scenario_matrix(d, fl, fc, load, pv, 0, 0,
+                                            settings.residual_days)
+    risk0 = risk_curve(fl[d], fc[d, 0], scen0, 0, settings.alpha)
+    risk_by_slot = risk0
+    plan, _ = solve_plan(risk0, p_decide, energy, nu)
+    q0 = plan[0]
+    plan_ref = plan[4]
+    if scen0 is None:
+        scen0 = n_hat[None, :]
+    q2_settings = LDRSettings(search_seed=settings.search_seed,
+                              search_maxiter=settings.search_maxiter,
+                              search_popsize=settings.search_popsize,
+                              load_forecast="weekly_persist")
+    cal = calibrate_rule(scen0, n_hat, q0, plan_ref, p_decide, energy, nu,
+                         residual_count, q2_settings,
+                         settings.search_seed + d,
+                         price_paths=_scen_price_paths(
+                             d, 0, scen0.shape[0], scen0, p_decide,
+                             scen_prices_fn))
+    theta = cal.theta
+    diagnostics["planner"] = "quantile_LP_alpha_0.8"
+    diagnostics["residual_count"] = residual_count
+    diagnostics["calibrations"].append(
+        {"update_slot": 0, "stages_covered": [[0, 36], [36, 72], [72, 108], [108, 144]],
+         "theta": theta.tolist(), "beta1_score": cal.zero_score,
+         "beta0_score": None, "selected_score": cal.selected_score,
+         "evaluations": cal.evaluations, "seconds": cal.seconds,
+         "method": cal.method, "accepted_search": cal.accepted_search,
+         "solver_message": cal.solver_message}
+    )
 
     initial_soc = float(energy)
     out = execute_actual_day(load_d, pv_d, q0, plan_ref, prices, energy, n_hat, theta)
@@ -597,14 +828,34 @@ def _run_day_m0(d, date, load_d, pv_d, prices, fl, fc, energy, settings, load, p
     return rows, segments, diagnostics, end_energy, q0, qA
 
 
-def _run_day_staged(d, date, load_d, pv_d, prices, fl, fc, energy, settings, load, pv):
+def _run_day_staged(d, date, load_d, pv_d, prices, fl, fc, energy, settings, load, pv,
+                    prices_plan=None, scen_prices_fn=None, candidate_ops=None):
     strategy = settings.strategy
     spec = STRATEGIES[strategy]
     actual_net = load_d - pv_d
     segments = []
     rows = []
     diagnostics = {"calibrations": []}
-    nu = float(prices.min() / ETA)
+    p_decide = prices if prices_plan is None else prices_plan
+    nu = float(p_decide.min() / ETA) * settings.nu_factor
+
+    ops = list(candidate_ops or [])
+    op_morning = None
+    op_afternoon = None
+    for op in ops:
+        slot = op.get("slot")
+        if slot is None or not (37 <= slot <= 107):
+            raise ValueError(f"candidate op slot must be in [37, 107], got {op}")
+        if op.get("info") == "self" and ("self_fc" not in op or "self_err" not in op):
+            raise ValueError("self-forecast op requires self_fc/self_err arrays")
+        if slot < 72:
+            if op_morning is not None:
+                raise ValueError("at most one morning candidate op per day")
+            op_morning = op
+        else:
+            if op_afternoon is not None:
+                raise ValueError("at most one afternoon candidate op per day")
+            op_afternoon = op
 
     q0 = None
     qA = np.zeros(T)
@@ -617,41 +868,45 @@ def _run_day_staged(d, date, load_d, pv_d, prices, fl, fc, energy, settings, loa
     risk_by_slot = np.zeros(T)
     residual_count = 0
 
+    p_decide = prices if prices_plan is None else prices_plan
+    p_decide = np.asarray(p_decide, float)
+    pd0 = decision_prices_with_realized(p_decide, prices, (0,))
+    nu = float(pd0.min() / ETA) * settings.nu_factor
+
     if d == 0:
-        q0 = np.zeros(T)
-        qA[:] = q0
-        ref[:] = EMIN
-        diagnostics["planner"] = "zero_plan_cold_start"
-        diagnostics["calibrations"].append(
-            {"update_slot": 0, "stages_covered": [[0, 36]], "theta": [0.0],
-             "beta1_score": None, "beta0_score": None, "selected_score": None,
-             "evaluations": 0, "seconds": 0.0, "method": "zero_plan_cold_start",
-             "accepted_search": False, "solver_message": "1 January cold start"}
+        raise ValueError(
+            "2025-01-01 is a frozen initial-condition day: no plan, no battery "
+            "action, SOC stays 6000 kWh and the day is excluded from all "
+            "statistics. run_strategy never passes d=0."
         )
-    else:
-        # ---- 0:00 ----
-        scen0, residual_count = scenario_matrix(d, fl, fc, load, pv, 0, 0,
-                                                settings.residual_days)
-        risk0 = risk_curve(fl[d], fc[d, 0], scen0, 0, settings.alpha)
-        plan, _ = solve_plan(risk0, prices, energy, nu)
-        q0 = plan[0]
-        qA[:] = q0
-        ref[:] = plan[4]
-        risk_by_slot[:] = risk0
-        fc_in_effect[:] = fc[d, 0]
-        n_hat[:] = fl[d] - fc[d, 0]
-        diagnostics["planner"] = "quantile_LP_alpha_0.8"
-        diagnostics["residual_count"] = residual_count
-        cal0 = calibrate_staged(
-            scen0[:, :36] if scen0 is not None else None,
-            q0[:36], plan[4][:36], prices[:36], energy, nu, n_hat[:36],
-            stages=[(0, 36, False)], observed=[np.nan],
-            residual_count=residual_count, settings=settings,
-            seed=settings.search_seed + 10 * d,
-        )
-        deltas[0] = float(cal0["theta"][0])
-        lambdas[0] = 0.0
-        diagnostics["calibrations"].append(cal0)
+
+    # ---- 0:00 ----
+    scen0, residual_count = scenario_matrix(d, fl, fc, load, pv, 0, 0,
+                                            settings.residual_days)
+    risk0 = risk_curve(fl[d], fc[d, 0], scen0, 0, settings.alpha)
+    plan, _ = solve_plan(risk0, pd0, energy, nu)
+    q0 = plan[0]
+    qA[:] = q0
+    ref[:] = plan[4]
+    risk_by_slot[:] = risk0
+    fc_in_effect[:] = fc[d, 0]
+    n_hat[:] = fl[d] - fc[d, 0]
+    diagnostics["planner"] = "quantile_LP_alpha_0.8"
+    diagnostics["residual_count"] = residual_count
+    sp0 = _scen_price_paths(d, 0, 1 if scen0 is None else scen0.shape[0],
+                            scen0, pd0, scen_prices_fn)
+    sp0 = None if sp0 is None else sp0[:, :36]
+    cal0 = calibrate_staged(
+        scen0[:, :36] if scen0 is not None else None,
+        q0[:36], plan[4][:36], pd0[:36], energy, nu, n_hat[:36],
+        stages=[(0, 36, False)], observed=[np.nan],
+        residual_count=residual_count, settings=settings,
+        seed=settings.search_seed + 10 * d,
+        price_paths=sp0,
+    )
+    deltas[0] = float(cal0["theta"][0])
+    lambdas[0] = 0.0
+    diagnostics["calibrations"].append(cal0)
 
     # ---- execute stage 0 (0:00-6:00) ----
     seg0 = execute_segment(actual_net[:36], qA[:36], ref[:36], prices[:36],
@@ -665,26 +920,33 @@ def _run_day_staged(d, date, load_d, pv_d, prices, fl, fc, energy, settings, loa
                                  deltas, lambdas, signals, residual_count, settings))
     diagnostics["initial_soc_kwh"] = initial_soc
 
+    scen6_hold = None
+    scen12_hold = None
     if d > 0:
         # ---- 6:00 ----
         a6 = float((actual_net[:36] - n_hat[:36]).mean())
         signals[1] = a6
+        pd6 = decision_prices_with_realized(p_decide, prices, (36,))
         scen6, _ = scenario_matrix(d, fl, fc, load, pv, 1, 36, settings.residual_days)
+        scen6_hold = scen6
         risk6 = adjustment_curve(fl[d], fc[d, 1], scen6, q0[36:], 36,
                                  q_up=settings.adjustment_up_quantile)
-        a6plan, ep6, _ = solve_adjustment(q0[36:], risk6, prices[36:], energy, nu)
+        a6plan, ep6, _ = solve_adjustment(q0[36:], risk6, pd6[36:], energy, nu)
         qA[36:] = a6plan
         ref[36:] = ep6
         risk_by_slot[36:] = risk6
         fc_in_effect[36:] = fc[d, 1, 36:]
         n_hat[36:] = fl[d, 36:] - fc[d, 1, 36:]
+        sp6 = _scen_price_paths(d, 36, 1 if scen6 is None else scen6.shape[0],
+                                scen6, pd6, scen_prices_fn)
         if strategy == "M6":
             stages6 = [(0, 36, True), (36, 72, True), (72, 108, True)]
             cal6 = calibrate_staged(
-                scen6, a6plan, ep6, prices[36:], energy, nu, n_hat[36:],
+                scen6, a6plan, ep6, pd6[36:], energy, nu, n_hat[36:],
                 stages=stages6, observed=[a6, np.nan, np.nan],
                 residual_count=residual_count, settings=settings,
                 seed=settings.search_seed + 10 * d + 1,
+                price_paths=sp6,
             )
             pos = 0
             for j, (_, _, hl) in enumerate(stages6):
@@ -692,12 +954,14 @@ def _run_day_staged(d, date, load_d, pv_d, prices, fl, fc, energy, settings, loa
                 lambdas[j + 1] = float(cal6["theta"][pos + 1]) if hl else 0.0
                 pos += 1 + int(hl)
         else:
+            sp6a = None if sp6 is None else sp6[:, :36]
             cal6 = calibrate_staged(
                 scen6[:, :36] if scen6 is not None else None,
-                a6plan[:36], ep6[:36], prices[36:72], energy, nu, n_hat[36:72],
+                a6plan[:36], ep6[:36], pd6[36:72], energy, nu, n_hat[36:72],
                 stages=[(0, 36, True)], observed=[a6],
                 residual_count=residual_count, settings=settings,
                 seed=settings.search_seed + 10 * d + 1,
+                price_paths=sp6a,
             )
             deltas[1] = float(cal6["theta"][0])
             lambdas[1] = float(cal6["theta"][1])
@@ -705,34 +969,91 @@ def _run_day_staged(d, date, load_d, pv_d, prices, fl, fc, energy, settings, loa
         cal6["update_slot"] = 36
 
     # ---- execute stage 1 (6:00-12:00) ----
-    seg1 = execute_segment(actual_net[36:72], qA[36:72], ref[36:72], prices[36:72],
-                           energy, signals[1], np.array([deltas[1], lambdas[1]]))
-    energy = float(seg1["soc_end_kwh"][-1])
-    segments.append(dict(net=actual_net[36:72], q=qA[36:72], ref=ref[36:72],
-                         prices=prices[36:72], initial=float(seg1["soc_start_kwh"][0]),
-                         signal=signals[1], delta=deltas[1], lam=lambdas[1]))
-    rows.extend(_segment_records(36, seg1, d, date, load_d, pv_d, prices, fl[d],
-                                 fc_in_effect, n_hat, risk_by_slot, q0, qA, ref,
-                                 deltas, lambdas, signals, residual_count, settings))
+    if op_morning is None:
+        seg1 = execute_segment(actual_net[36:72], qA[36:72], ref[36:72],
+                               prices[36:72], energy, signals[1],
+                               np.array([deltas[1], lambdas[1]]))
+        energy = float(seg1["soc_end_kwh"][-1])
+        segments.append(dict(net=actual_net[36:72], q=qA[36:72], ref=ref[36:72],
+                             prices=prices[36:72], initial=float(seg1["soc_start_kwh"][0]),
+                             signal=signals[1], delta=deltas[1], lam=lambdas[1]))
+        rows.extend(_segment_records(36, seg1, d, date, load_d, pv_d, prices, fl[d],
+                                     fc_in_effect, n_hat, risk_by_slot, q0, qA, ref,
+                                     deltas, lambdas, signals, residual_count, settings))
+    else:
+        # ---- execute 6:00-candidate_slot with the 6:00-locked plans ----
+        m = int(op_morning["slot"])
+        seg1a = execute_segment(actual_net[36:m], qA[36:m], ref[36:m],
+                                prices[36:m], energy, signals[1],
+                                np.array([deltas[1], lambdas[1]]))
+        energy = float(seg1a["soc_end_kwh"][-1])
+        segments.append(dict(net=actual_net[36:m], q=qA[36:m], ref=ref[36:m],
+                             prices=prices[36:m], initial=float(seg1a["soc_start_kwh"][0]),
+                             signal=signals[1], delta=deltas[1], lam=lambdas[1]))
+        rows.extend(_segment_records(36, seg1a, d, date, load_d, pv_d, prices, fl[d],
+                                     fc_in_effect, n_hat, risk_by_slot, q0, qA, ref,
+                                     deltas, lambdas, signals, residual_count, settings))
+        # ---- candidate operation (no LDR recalibration by default) ----
+        pdm = decision_prices_with_realized(p_decide, prices, (m,))
+        fcm, scenm, riskm = _candidate_curve(
+            d, m, op_morning, fl, fc, load, pv, q0, scen6_hold, settings,
+            self_fc=op_morning.get("self_fc"), self_err=op_morning.get("self_err"))
+        amplan, epm, _ = solve_adjustment(q0[m:], riskm, pdm[m:], energy, nu)
+        qA[m:72] = amplan[: 72 - m]
+        ref[m:72] = epm[: 72 - m]
+        qA[72:] = amplan[72 - m:]   # provisional; overwritten by the 12:00 update
+        ref[72:] = epm[72 - m:]
+        fc_in_effect[m:] = fcm
+        n_hat[m:] = fl[d, m:] - fcm
+        risk_by_slot[m:] = riskm
+        if op_morning.get("recalibrate"):
+            calm = calibrate_staged(
+                scenm[:, : 72 - m] if scenm is not None else None,
+                amplan[: 72 - m], epm[: 72 - m], pdm[m:72], energy, nu,
+                n_hat[m:72], stages=[(0, 72 - m, True)], observed=[signals[1]],
+                residual_count=residual_count, settings=settings,
+                seed=settings.search_seed + 10 * d + 5,
+            )
+            deltas[1] = float(calm["theta"][0])
+            lambdas[1] = float(calm["theta"][1])
+            calm["update_slot"] = m
+            diagnostics["calibrations"].append(calm)
+        _record_candidate_op(diagnostics, m, op_morning)
+        # ---- execute candidate_slot-12:00 with the candidate-locked plans ----
+        seg1b = execute_segment(actual_net[m:72], qA[m:72], ref[m:72],
+                                prices[m:72], energy, signals[1],
+                                np.array([deltas[1], lambdas[1]]))
+        energy = float(seg1b["soc_end_kwh"][-1])
+        segments.append(dict(net=actual_net[m:72], q=qA[m:72], ref=ref[m:72],
+                             prices=prices[m:72], initial=float(seg1b["soc_start_kwh"][0]),
+                             signal=signals[1], delta=deltas[1], lam=lambdas[1]))
+        rows.extend(_segment_records(m, seg1b, d, date, load_d, pv_d, prices, fl[d],
+                                     fc_in_effect, n_hat, risk_by_slot, q0, qA, ref,
+                                     deltas, lambdas, signals, residual_count, settings))
 
     if d > 0 and strategy in ("M612", "M61218-S", "M61218-F"):
         # ---- 12:00 ----
         a12 = float((actual_net[36:72] - n_hat[36:72]).mean())
         signals[2] = a12
+        pd12 = decision_prices_with_realized(p_decide, prices, (72,))
         scen12, _ = scenario_matrix(d, fl, fc, load, pv, 2, 72, settings.residual_days)
+        scen12_hold = scen12
         risk12 = adjustment_curve(fl[d], fc[d, 2], scen12, q0[72:], 72,
                                   q_up=settings.adjustment_up_quantile)
-        a12plan, ep12, _ = solve_adjustment(q0[72:], risk12, prices[72:], energy, nu)
+        a12plan, ep12, _ = solve_adjustment(q0[72:], risk12, pd12[72:], energy, nu)
         qA[72:] = a12plan
         ref[72:] = ep12
         risk_by_slot[72:] = risk12
         fc_in_effect[72:] = fc[d, 2, 72:]
         n_hat[72:] = fl[d, 72:] - fc[d, 2, 72:]
+        sp12 = _scen_price_paths(d, 72, 1 if scen12 is None else scen12.shape[0],
+                                 scen12, pd12, scen_prices_fn)
         cal12 = calibrate_staged(
-            scen12, a12plan, ep12, prices[72:], energy, nu, n_hat[72:],
+            scen12, a12plan, ep12, pd12[72:], energy, nu, n_hat[72:],
             stages=[(0, 36, True), (36, 72, True)], observed=[a12, np.nan],
             residual_count=residual_count, settings=settings,
             seed=settings.search_seed + 10 * d + 2,
+            price_paths=sp12,
         )
         deltas[2] = float(cal12["theta"][0])
         lambdas[2] = float(cal12["theta"][1])
@@ -747,27 +1068,82 @@ def _run_day_staged(d, date, load_d, pv_d, prices, fl, fc, energy, settings, loa
         signals[2] = float((actual_net[36:72] - n_hat[36:72]).mean())
 
     # ---- execute stage 2 (12:00-18:00) ----
-    seg2 = execute_segment(actual_net[72:108], qA[72:108], ref[72:108],
-                           prices[72:108], energy, signals[2],
-                           np.array([deltas[2], lambdas[2]]))
-    energy = float(seg2["soc_end_kwh"][-1])
-    segments.append(dict(net=actual_net[72:108], q=qA[72:108], ref=ref[72:108],
-                         prices=prices[72:108], initial=float(seg2["soc_start_kwh"][0]),
-                         signal=signals[2], delta=deltas[2], lam=lambdas[2]))
-    rows.extend(_segment_records(72, seg2, d, date, load_d, pv_d, prices, fl[d],
-                                 fc_in_effect, n_hat, risk_by_slot, q0, qA, ref,
-                                 deltas, lambdas, signals, residual_count, settings))
+    if op_afternoon is None:
+        seg2 = execute_segment(actual_net[72:108], qA[72:108], ref[72:108],
+                               prices[72:108], energy, signals[2],
+                               np.array([deltas[2], lambdas[2]]))
+        energy = float(seg2["soc_end_kwh"][-1])
+        segments.append(dict(net=actual_net[72:108], q=qA[72:108], ref=ref[72:108],
+                             prices=prices[72:108], initial=float(seg2["soc_start_kwh"][0]),
+                             signal=signals[2], delta=deltas[2], lam=lambdas[2]))
+        rows.extend(_segment_records(72, seg2, d, date, load_d, pv_d, prices, fl[d],
+                                     fc_in_effect, n_hat, risk_by_slot, q0, qA, ref,
+                                     deltas, lambdas, signals, residual_count, settings))
+    else:
+        # ---- execute 12:00-candidate_slot with the 12:00-locked plans ----
+        a = int(op_afternoon["slot"])
+        seg2a = execute_segment(actual_net[72:a], qA[72:a], ref[72:a],
+                                prices[72:a], energy, signals[2],
+                                np.array([deltas[2], lambdas[2]]))
+        energy = float(seg2a["soc_end_kwh"][-1])
+        segments.append(dict(net=actual_net[72:a], q=qA[72:a], ref=ref[72:a],
+                             prices=prices[72:a], initial=float(seg2a["soc_start_kwh"][0]),
+                             signal=signals[2], delta=deltas[2], lam=lambdas[2]))
+        rows.extend(_segment_records(72, seg2a, d, date, load_d, pv_d, prices, fl[d],
+                                     fc_in_effect, n_hat, risk_by_slot, q0, qA, ref,
+                                     deltas, lambdas, signals, residual_count, settings))
+        # ---- candidate operation (no LDR recalibration by default) ----
+        pda = decision_prices_with_realized(p_decide, prices, (a,))
+        fca, scena, riska = _candidate_curve(
+            d, a, op_afternoon, fl, fc, load, pv, q0, scen12_hold, settings,
+            self_fc=op_afternoon.get("self_fc"), self_err=op_afternoon.get("self_err"))
+        aplan, epa, _ = solve_adjustment(q0[a:], riska, pda[a:], energy, nu)
+        qA[a:] = aplan
+        ref[a:] = epa
+        fc_in_effect[a:] = fca
+        n_hat[a:] = fl[d, a:] - fca
+        risk_by_slot[a:] = riska
+        if op_afternoon.get("recalibrate"):
+            if a < 108:
+                cala = calibrate_staged(
+                    scena, aplan, epa, pda[a:], energy, nu, n_hat[a:],
+                    stages=[(0, 108 - a, True), (108 - a, 144 - a, True)],
+                    observed=[signals[2], np.nan],
+                    residual_count=residual_count, settings=settings,
+                    seed=settings.search_seed + 10 * d + 6,
+                )
+                deltas[2] = float(cala["theta"][0])
+                lambdas[2] = float(cala["theta"][1])
+                deltas[3] = float(cala["theta"][2])
+                lambdas[3] = float(cala["theta"][3])
+                cala["update_slot"] = a
+                diagnostics["calibrations"].append(cala)
+            else:
+                raise ValueError("afternoon recalibration requires slot < 108")
+        _record_candidate_op(diagnostics, a, op_afternoon)
+        # ---- execute candidate_slot-18:00 with the candidate-locked plans ----
+        seg2b = execute_segment(actual_net[a:108], qA[a:108], ref[a:108],
+                                prices[a:108], energy, signals[2],
+                                np.array([deltas[2], lambdas[2]]))
+        energy = float(seg2b["soc_end_kwh"][-1])
+        segments.append(dict(net=actual_net[a:108], q=qA[a:108], ref=ref[a:108],
+                             prices=prices[a:108], initial=float(seg2b["soc_start_kwh"][0]),
+                             signal=signals[2], delta=deltas[2], lam=lambdas[2]))
+        rows.extend(_segment_records(a, seg2b, d, date, load_d, pv_d, prices, fl[d],
+                                     fc_in_effect, n_hat, risk_by_slot, q0, qA, ref,
+                                     deltas, lambdas, signals, residual_count, settings))
 
     if d > 0 and strategy in ("M61218-S", "M61218-F"):
         # ---- 18:00 purchase re-optimisation, no recalibration ----
         a18 = float((actual_net[72:108] - n_hat[72:108]).mean())
         signals[3] = a18
+        pd18 = decision_prices_with_realized(p_decide, prices, (108,))
         k18 = spec["issuance"][108]
         scen18, _ = scenario_matrix(d, fl, fc, load, pv, k18, 108,
                                     settings.residual_days)
         risk18 = adjustment_curve(fl[d], fc[d, k18], scen18, q0[108:], 108,
                                   q_up=settings.adjustment_up_quantile)
-        a18plan, ep18, _ = solve_adjustment(q0[108:], risk18, prices[108:],
+        a18plan, ep18, _ = solve_adjustment(q0[108:], risk18, pd18[108:],
                                             energy, nu)
         qA[108:] = a18plan
         ref[108:] = ep18
@@ -889,14 +1265,25 @@ def _period_metrics(frame):
 
 
 def run_strategy(dates, load, pv, prices, fl, fc, settings, limit=None,
-                 start_idx=0, initial_energy=6000.0):
+                 start_idx=0, initial_energy=6000.0, prices_plan=None,
+                 prices_actual=None, scen_prices_fn=None, candidate_ops=None):
     """Continuous causal run from ``start_idx`` at ``initial_energy``.
+
+    2025-01-01 is a frozen initial-condition day (no plan, no battery
+    action, SOC stays 6000 kWh, excluded from all statistics), so the
+    effective start is always at least 2025-01-02.
 
     When ``start_idx > 0`` the strategy never touches its own January
     execution: all five strategies then fork from one common February
     opening inventory produced by the shared warm-up (the 0:00-only M0
     policy).  History before ``start_idx`` is still available for
     residuals, so 1 February keeps a complete 21-day residual window.
+
+    Q4 option B: ``prices_actual[d]`` settles the realized bill and
+    ``prices_plan[d]`` feeds the planning/adjustment LPs and calibrations
+    (both (len(dates), 144)); ``scen_prices_fn(d, h0, m)`` returns scenario
+    price paths for calibration horizons.  Defaults reproduce the
+    fixed-price Q3 behavior exactly.
     """
     started = time.perf_counter()
     if limit is None:
@@ -906,18 +1293,23 @@ def run_strategy(dates, load, pv, prices, fl, fc, settings, limit=None,
     records = []
     day_diags = []
     paired = []
-    for d in range(start_idx, limit):
+    start = max(start_idx, 1)  # 1 January is frozen: never planned or executed
+    for d in range(start, limit):
         date = dates[d]
         day_started = time.perf_counter()
+        p_settle = prices if prices_actual is None else prices_actual[d]
+        p_decide = prices if prices_plan is None else prices_plan[d]
         rows, segments, diag, energy, q0, qA = run_day(
-            d, date, load[d], pv[d], prices, fl, fc, energy, settings, load, pv
+            d, date, load[d], pv[d], p_settle, fl, fc, energy, settings, load, pv,
+            prices_plan=p_decide, scen_prices_fn=scen_prices_fn,
+            candidate_ops=candidate_ops,
         )
         records.extend(rows)
-        retained, down, up = settle_of(q0, qA, prices)
+        retained, down, up = settle_of(q0, qA, p_settle)
         settlement_day = float((retained + down + up).sum())
         if strategy == "M0":
             seg = segments[0]
-            ldr_em = float(np.sum(5.0 * prices * np.asarray([r[23] for r in rows])))
+            ldr_em = float(np.sum(5.0 * p_settle * np.asarray([r[23] for r in rows])))
             beta1_em = replay_m0(seg, load[d], pv[d], "beta1")
             beta0_em = replay_m0(seg, load[d], pv[d], "beta0")
         else:
@@ -942,7 +1334,7 @@ def run_strategy(dates, load, pv, prices, fl, fc, settings, limit=None,
             "initial_soc_kwh": initial_soc,
             "final_soc_kwh": float(energy),
             "residual_count": diag.get("residual_count", 0),
-            "q0_cost_face": float(np.dot(prices, q0)),
+            "q0_cost_face": float(np.dot(p_settle, q0)),
             "settlement_cost": settlement_day,
             "retained_cost": float(retained.sum()),
             "down_cost": float(down.sum()),
@@ -956,8 +1348,8 @@ def run_strategy(dates, load, pv, prices, fl, fc, settings, limit=None,
             "day_seconds": time.perf_counter() - day_started,
             **{f"cal_{i}_{key}": (c.get(key) if not isinstance(c.get(key), (list, np.ndarray)) else json.dumps(c.get(key))) for i, c in enumerate(diag["calibrations"]) for key in ["update_slot", "method", "accepted_search", "evaluations", "selected_score", "nit", "success", "termination"]},
         })
-        if (d - start_idx + 1) % 30 == 0 or d + 1 == limit:
-            print(f"{strategy} {d - start_idx + 1}/{limit - start_idx} days; date={date.date()} "
+        if (d - start + 1) % 30 == 0 or d + 1 == limit:
+            print(f"{strategy} {d - start + 1}/{limit - start} days; date={date.date()} "
                   f"calib={day_diags[-1]['calibration_seconds']:.2f}s", flush=True)
 
     frame = pd.DataFrame.from_records(records, columns=COLUMNS)
@@ -989,13 +1381,17 @@ def run_strategy(dates, load, pv, prices, fl, fc, settings, limit=None,
             "adjustment_curve": "median(Q_up, Q90, q0) with point-forecast floor; "
             "Q_up=0.7 derived from R'=1.5c vs 5c emergency",
             "calibration_acceptance": "candidate must not exceed min(beta1, beta0) floor",
-            "start_idx": start_idx,
-            "run_start_date": str(dates[start_idx].date()),
+            "terminal_value_rule": "nu_d = min(day-d decision price)/ETA per day; the summary field below records the global minimum of the decision price matrix",
+            "start_idx": start,
+            "run_start_date": str(dates[start].date()),
             "common_initial_soc_kwh": float(initial_energy),
+            "frozen_jan1": "2025-01-01 is a frozen initial-condition day: no plan, "
+            "no battery action, excluded from statistics; first planning day is "
+            "2025-01-02",
             "warmup": "January executed once by the shared 0:00-only policy; "
             "all strategies fork from its 1 February inventory",
         },
-        "terminal_value": float(prices.min() / ETA),
+        "terminal_value": float((prices if prices_plan is None else prices_plan).min() / ETA),
         "seconds": time.perf_counter() - started,
         "result_days": formal_metrics.get("days"),
         "result_intervals": formal_metrics.get("intervals"),
@@ -1087,8 +1483,21 @@ def summarize_emergency(frame):
 
 
 def write_main_outputs(out: Path, frame, prices):
-    """Key-date tables and the official result3 workbook payload for M612."""
+    """Key-date tables and the official result3 workbook payload for M612.
+
+    ``prices`` is the fixed 144-vector for Q3; for Q4-3 it may be the
+    (365, 144) realized price matrix, in which case the face value and the
+    template purchase-row bills use each day's own actual prices.
+    """
     formal = frame[frame.date >= pd.Timestamp("2025-02-01")].copy()
+    price_2d = np.asarray(prices, float)
+
+    def day_price(date):
+        if price_2d.ndim == 1:
+            return price_2d
+        d = (pd.Timestamp(date).normalize() - pd.Timestamp("2025-01-01")).days
+        return price_2d[d]
+
     daily = formal.groupby("date").agg(
         q0_kwh=("q0_kwh", "sum"), qA_kwh=("qA_kwh", "sum"),
         retained_cost=("retained_cost", "sum"), down_cost=("down_cost", "sum"),
@@ -1107,7 +1516,7 @@ def write_main_outputs(out: Path, frame, prices):
             row[f"qA_{h:02d}_00"] = float(g.qA_kwh.iloc[0])
         row.update({
             "day_q0_kwh": float(d.q0_kwh), "day_qA_kwh": float(d.qA_kwh),
-            "face_cost": float(np.dot(prices, day.q0_kwh.to_numpy())),
+            "face_cost": float(np.dot(day_price(date), day.q0_kwh.to_numpy())),
             "settlement_cost": float(d.retained_cost + d.down_cost + d.up_cost),
             "retained_cost": float(d.retained_cost),
             "down_cost": float(d.down_cost),
@@ -1145,7 +1554,7 @@ def write_main_outputs(out: Path, frame, prices):
         next_first_q0 = float(grid_by_date[next_date][0]) if next_date in grid_by_date else 0.0
         next_first_qA = float(adj_by_date[next_date][0]) if next_date in adj_by_date else 0.0
         purchases.append([str(date.date()), *np.r_[g0[1:], next_first_q0].tolist(),
-                          float(g0.sum()), float(np.dot(prices, g0))])
+                          float(g0.sum()), float(np.dot(day_price(date), g0))])
         settlement = float(day.retained_cost.sum() + day.down_cost.sum() + day.up_cost.sum())
         adjusted.append([str(date.date()), *np.r_[ga[1:], next_first_qA].tolist(),
                          float(ga.sum()), settlement])
@@ -1159,12 +1568,17 @@ def write_main_outputs(out: Path, frame, prices):
                 float(day.soc_start_kwh.iloc[0]) if block == 0 else (float(day.soc_end_kwh.iloc[-1]) if block == 1 else None),
             ])
     emergency = summarize_emergency(formal)
+    if price_2d.ndim == 1:
+        template_order = np.r_[price_2d[1:], price_2d[0]]
+    else:
+        ref_day = day_price(pd.Timestamp(KEY_DATES[0]))
+        template_order = np.r_[ref_day[1:], ref_day[0]]
     payload = {
         "purchases": purchases,
         "adjusted": adjusted,
         "batteries": batteries,
         "emergency": emergency,
-        "prices_template_order": np.r_[prices[1:], prices[0]].tolist(),
+        "prices_template_order": template_order.tolist(),
     }
     (out / "question3_workbook_payload.json").write_text(
         json.dumps(payload, ensure_ascii=False), encoding="utf-8"
@@ -1219,7 +1633,7 @@ def write_report(out: Path, summaries: list, frame, diag_frame, pair_frame):
         "- 18:00：不调整购电、不使用 18:00 预报、不重新校准；仅代入实测 a18 更新保留阈值。",
         "- 风险水平按结算结构先验固定（单时段无储能报童条件 R'(a)=5c·P(D>a)）：0:00 计划 R'=c → F=1−1/5=0.8；调整下调区 R'=0.5c → F=1−0.5/5=0.9；调整上调区 R'=1.5c → F=1−1.5/5=0.7；曲线为 median(Q70,Q90,q0)，点预测作下限。Q50/Q80/Q90 仅作敏感性对照，不按回测费用选参。",
         "- 校准均以最近 21 个完整历史日为情景、β=1 与 β=0 为显式保底候选；不劣于两者较优者才接受搜索结果。",
-        "- 共同起点：1月仅由 M0（仅0:00）从6000 kWh 预热一次，五种策略在2月1日以同一库存分叉，此后状态差异为策略真实结果。",
+        "- 共同起点：2025-01-01 冻结（无计划、电池不动作、SOC 恒 6000 kWh、不入统计）；1/2–1/31 仅由 M0（仅0:00）从6000 kWh 预热一次，五种策略在2月1日以同一库存分叉，此后状态差异为策略真实结果。每次计划/调整只覆盖当日起至 24:00，不含次日 00:00+ 购电。",
         "",
         "## 校验",
         "",
@@ -1253,11 +1667,7 @@ def main():
     strategies = args.strategies or STRATEGY_ORDER
 
     dates, load, pv, prices = load_inputs()
-    representative = (
-        pd.read_excel(ROOT / "附件/附件1.xlsx", sheet_name=0).iloc[:, 2].to_numpy(float) / 6.0
-    )
-    assert representative.shape == (T,)
-    fl = load_forecast_weekly_persist(load, representative)
+    fl = load_forecast_weekly_persist(load)
     fc = build_issuance_curves(ROOT)
 
     if args.days != 365:

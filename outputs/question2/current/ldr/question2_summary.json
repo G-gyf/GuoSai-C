@@ -24,16 +24,17 @@
         "lambda_12_18",
         "lambda_18_24"
       ],
-      "search_acceptance": "selected empirical objective must not exceed zero-parameter objective"
+      "search_acceptance": "selected empirical objective must not exceed zero-parameter objective",
+      "terminal_value_rule": "nu_d = min(day-d decision price)/ETA per day; the summary field below keeps the last day's value"
     },
     "terminal_value": 0.41255555555555556,
-    "seconds": 101.94007600000259,
-    "planner_seconds": 20.195985399972415,
-    "calibration_seconds": 80.68388890001006,
+    "seconds": 93.1204859999998,
+    "planner_seconds": 17.73654910006735,
+    "calibration_seconds": 74.56522389996098,
     "calibrated_days": 337,
     "accepted_search_days": 337,
     "search_evaluations": 106309,
-    "empirical_scenario_improvement": 213291.2539055213,
+    "empirical_scenario_improvement": 213291.25390552133,
     "result_days": 334,
     "result_intervals": 48096,
     "grid_kwh": 21648740.952936564,
@@ -63,19 +64,19 @@
       "emergency_intervals": 1556
     },
     "full_year": {
-      "days": 365,
-      "intervals": 52560,
-      "grid_kwh": 24091866.156587433,
-      "charge_kwh": 6869733.24450874,
-      "discharge_kwh": 5568419.334461579,
-      "emergency_kwh": 286936.8204000244,
-      "unused_kwh": 2804676.928323631,
-      "planned_cost": 14844325.292302536,
-      "emergency_cost": 1311995.607431924,
-      "total_cost": 16156320.899734462,
+      "days": 364,
+      "intervals": 52416,
+      "grid_kwh": 24098939.94874153,
+      "charge_kwh": 6877006.688909543,
+      "discharge_kwh": 5574310.82442623,
+      "emergency_kwh": 184918.1377738522,
+      "unused_kwh": 2800385.253432069,
+      "planned_cost": 14847195.327400964,
+      "emergency_cost": 902550.340381884,
+      "total_cost": 15749745.667782849,
       "initial_soc_kwh": 6000.0,
       "final_soc_kwh": 1627.3262116666697,
-      "emergency_intervals": 2370
+      "emergency_intervals": 2080
     },
     "validation": {
       "max_balance_error_kwh": 4.547473508864641e-13,
@@ -101,7 +102,7 @@
       "load_forecast": "weekly_persist"
     },
     "terminal_value": 0.41255555555555556,
-    "seconds": 11.856263100002252,
+    "seconds": 10.976625099996454,
     "result_days": 334,
     "result_intervals": 48096,
     "grid_kwh": 21634385.855838973,
@@ -139,7 +140,7 @@
       "load_forecast": "weekly_persist"
     },
     "terminal_value": 0.41255555555555556,
-    "seconds": 12.098532500000147,
+    "seconds": 10.826111999995192,
     "result_days": 334,
     "result_intervals": 48096,
     "grid_kwh": 21649952.897676516,

@@ -79,14 +79,15 @@ def build_pv_forecast_10min(
     return pd.concat(blocks, ignore_index=True)
 
 
-def build_day_ahead_baseline(
-    dispatch: pd.DataFrame, representative: pd.DataFrame
-) -> pd.DataFrame:
+def build_day_ahead_baseline(dispatch: pd.DataFrame) -> pd.DataFrame:
     """Build 00:00 forecasts of calendar-day endpoint observations.
 
     Each forecast row contains the endpoints 00:10, ..., 00:00+1.  These are
     observation targets and are not yet the official result-template slots.
     ``training_start`` and ``training_end`` identify source calendar dates.
+    The 2025-01-01 row has no history at all: it is marked as no-forecast
+    (NaN) and excluded from error statistics.  Attachment 1 load and PV are
+    never used.
     """
     ordered_dates = pd.DatetimeIndex(dispatch["plan_date"].drop_duplicates()).sort_values()
     load_matrix = (
@@ -99,18 +100,16 @@ def build_day_ahead_baseline(
         .reindex(ordered_dates)
         .to_numpy(float)
     )
-    representative_load = pd.to_numeric(representative.iloc[:, 2], errors="raise").to_numpy(float)
-    representative_pv = pd.to_numeric(representative.iloc[:, 3], errors="raise").to_numpy(float)
 
     blocks: list[pd.DataFrame] = []
     for idx, plan_date in enumerate(ordered_dates):
         if idx == 0:
-            load_forecast = representative_load
-            pv_forecast = representative_pv
+            load_forecast = np.full(load_matrix.shape[1], np.nan)
+            pv_forecast = np.full(pv_matrix.shape[1], np.nan)
             history_days = 0
             training_start = pd.NaT
             training_end = pd.NaT
-            source = "attachment_1_cold_start"
+            source = "no_forecast_cold_start"
         else:
             start = max(0, idx - 7)
             load_forecast = load_matrix[start:idx].mean(axis=0)

@@ -35,10 +35,7 @@ def main() -> None:
     assert common_soc > 0
 
     dates, load, pv, prices = load_inputs()
-    representative = (
-        pd.read_excel(ROOT / "附件/附件1.xlsx", sheet_name=0).iloc[:, 2].to_numpy(float) / 6.0
-    )
-    fl = load_forecast_weekly_persist(load, representative)
+    fl = load_forecast_weekly_persist(load)
     fc = build_issuance_curves(ROOT)
 
     rows = []

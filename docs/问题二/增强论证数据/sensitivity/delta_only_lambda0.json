@@ -1,0 +1,38 @@
+{
+  "case": "delta_only_lambda0",
+  "settings": {
+    "name": "delta_only_lambda0",
+    "alpha": 0.8,
+    "forecast_days": 7,
+    "residual_days": 21,
+    "stages": 4,
+    "search_seed": 20250912,
+    "search_maxiter": 8,
+    "search_popsize": 5,
+    "delta_bound_kwh": 9600.0,
+    "lambda_bound": 0.0,
+    "load_forecast": "weekly_persist"
+  },
+  "formal_period": {
+    "days": 334,
+    "intervals": 48096,
+    "grid_kwh": 21648959.896088224,
+    "charge_kwh": 6208765.59296551,
+    "discharge_kwh": 5029672.4226334905,
+    "emergency_kwh": 129939.27080082125,
+    "unused_kwh": 2660616.501590359,
+    "planned_cost": 13332947.384221531,
+    "emergency_cost": 641518.8809998251,
+    "total_cost": 13974466.265221355,
+    "initial_soc_kwh": 2263.2065799206325,
+    "final_soc_kwh": 1627.3262116666697,
+    "emergency_intervals": 1594
+  },
+  "calibrated_days": 337,
+  "accepted_search_days": 337,
+  "search_evaluations": 60904,
+  "empirical_scenario_improvement": 211918.84895444804,
+  "seconds": 211.42800569999963,
+  "planner_seconds": 56.86550299996452,
+  "calibration_seconds": 150.82717499994033
+}

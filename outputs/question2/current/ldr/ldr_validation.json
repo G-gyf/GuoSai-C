@@ -1,8 +1,9 @@
 {
   "passed": true,
-  "schedule_rows_full_year": 52560,
+  "frozen_jan1": "2025-01-01 has no schedule rows: no plan, no battery action, SOC stays 6000 kWh",
+  "schedule_rows_planning_year": 52416,
   "schedule_rows_formal_period": 48096,
-  "dates_full_year": 365,
+  "dates_planning_year": 364,
   "dates_formal_period": 334,
   "physical_validation": {
     "max_balance_error_kwh": 6.821210263296962e-13,

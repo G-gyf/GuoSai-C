@@ -1,0 +1,12 @@
+{
+  "tag": "delta_only_paired",
+  "note": "daily LDR plan g^Q and daily initial SOC taken from the main ledger; delta-only parameters re-calibrated each morning with lambda locked; paired totals are NOT an independent annual strategy bill.",
+  "planned_cost": 13332849.502003,
+  "delta_only_emergency_cost": 641518.880999825,
+  "paired_total_cost": 13974368.383002825,
+  "ldr_paired_total_cost": 13978077.233121704,
+  "ldr_paired_emergency_cost": 645227.7311187075,
+  "seconds": 217.00190809999185,
+  "accepted_search_days": 334,
+  "total_evaluations": 60334
+}

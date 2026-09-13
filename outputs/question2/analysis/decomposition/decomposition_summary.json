@@ -67,5 +67,6 @@
       "emergency": null,
       "seconds": null
     }
-  ]
+  ],
+  "口径": "历史口径(修订前): 2025-01-01 为运行日、七天均值负载预测时期; 现行冻结日口径见 outputs/question2/current 与 benchmark/perfect_foresight"
 }
